@@ -556,6 +556,29 @@
     })));
   }
 
+  // Fonti dei simboli: ognuna con stile e "quando sceglierla"; attivazione salvata in 'symbolSources'
+  // (la ricerca e i pacchetti arrivano con la Tappa 3: per ora si sceglie quali useremo)
+  const SYMBOL_SOURCES = [
+    { id: 'arasaac', nameKey: 'srcArasaac', descKey: 'srcArasaacDesc', def: true },
+    { id: 'mulberry', nameKey: 'srcMulberry', descKey: 'srcMulberryDesc', def: false },
+    { id: 'openmoji', nameKey: 'srcOpenmoji', descKey: 'srcOpenmojiDesc', def: false },
+    { id: 'photo', nameKey: 'srcPhoto', descKey: 'srcPhotoDesc', def: true },
+  ];
+
+  async function renderSourcesSection() {
+    const wrap = section('secSourcesTitle', 'secSourcesHelp');
+    const saved = (await storage.get('symbolSources')) || {};
+    SYMBOL_SOURCES.forEach((src) => {
+      const active = saved[src.id] ?? src.def;
+      wrap.append(settingRow(src.nameKey, src.descKey, segmented([['on', 'valOn2'], ['off', 'valOff2']], active ? 'on' : 'off',
+        async (value) => {
+          const next = { ...((await storage.get('symbolSources')) || {}), [src.id]: value === 'on' };
+          await storage.set('symbolSources', next);
+          renderSettings();
+        })));
+    });
+  }
+
   // Crediti: attribuzione obbligatoria per i pittogrammi ARASAAC (CC BY-NC-SA 4.0)
   function renderCreditsSection() {
     const wrap = section('secCreditsTitle', 'secCreditsHelp');
@@ -975,6 +998,8 @@
       render: [renderLanguageSection, renderOnlineSection, renderInstallSection, renderCreditsSection] },
     { id: 'appearance', icon: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
       render: [renderPresetSection, renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
+    { id: 'sources', icon: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="9" cy="9.5" r="1.8"/><path d="m20.5 15-4.5-4.5-9 9"/>', titleKey: 'catSources', introKey: 'catSourcesIntro',
+      render: [renderSourcesSection] },
     { id: 'voice', icon: '<path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
     { id: 'security', icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
