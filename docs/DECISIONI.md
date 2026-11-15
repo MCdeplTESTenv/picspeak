@@ -257,4 +257,21 @@ Formato: data – decisione – motivo.
   ottenuti: ciò che è salvato nel tool resta utilizzabile. Le API invece sono servizi gratuiti che potrebbero cambiare: per
   questo ogni simbolo viene salvato in locale e Mulberry/OpenMoji sono inclusi nel tool.
   Le immagini SVG di Global Symbols vengono convertite in PNG sul dispositivo (mai SVG salvati così come sono).
+- **Fonti dei simboli – decisione finale: niente Global Symbols** (scelta di Marcello, per evitare ogni dubbio futuro).
+  Tutte le fonti si usano direttamente dalla fonte originale, senza chiavi né account:
+  | Fonte | Licenza (verificata alla fonte, 15/11/2026) | Come arriva in PicSpeak |
+  |---|---|---|
+  | ARASAAC | CC BY-NC-SA 4.0 | ricerca online con l'API pubblica `api.arasaac.org` + simboli già inclusi |
+  | Mulberry | Creative Commons BY-SA (repository GitHub `mulberrysymbols/mulberry-symbols`) | pacchetto incluso |
+  | OpenMoji | CC BY-SA 4.0 (repository GitHub `hfg-gmuend/openmoji`) | pacchetto incluso |
+  | Tawasol (Mada) | CC BY-NC 4.0 secondo il sito ufficiale tawasol.mada.org.qa (altrove indicato BY-SA: vale la più restrittiva, comunque compatibile con un tool gratuito) | pacchetto incluso da GitHub/"Download" ufficiale |
+  | Sclera | Creative Commons 2.0, uso gratuito non commerciale con attribuzione a www.sclera.be | pacchetto incluso dal "Download" ufficiale |
+  Per non appesantire il tool, ogni set aggiuntivo è un **pacchetto separato** (sottoinsieme del vocabolario più utile, con
+  indice delle parole) pubblicato sul nostro stesso sito: viene scaricato una sola volta solo se l'adulto attiva quella
+  fonte nelle impostazioni, poi funziona offline. Nessuna richiesta di permesso obbligatoria; attribuzione automatica nei
+  Crediti. Sostituisce la decisione precedente che usava Global Symbols.
+- **Per ora si parte senza Global Symbols e senza Tawasol** (decisione di Marcello): restano nelle idee future "in attesa"
+  con il motivo (vedi ROADMAP). Esclusa per ora anche Sclera (in attesa). Fonti attive: ARASAAC (ricerca online),
+  Mulberry e OpenMoji (pacchetti inclusi), foto personali.
+  Nelle impostazioni ogni fonte ha una breve spiegazione dello stile e di quando conviene sceglierla.
 

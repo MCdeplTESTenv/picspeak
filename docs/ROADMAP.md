@@ -46,9 +46,8 @@
 - [ ] La ricerca rispetta l'interruttore (blocca, consente o chiede conferma)
 - [ ] Struttura a provider intercambiabili per le fonti dei simboli
 - [ ] Ricerca ARASAAC in italiano
-- [ ] Ricerca in italiano propagata in inglese (ponte ARASAAC, dizionario locale, MyMemory come riserva)
-- [ ] Provider Global Symbols
-- [ ] Set di base incluso con licenza libera (es. Mulberry, OpenMoji)
+- [ ] Ricerca in italiano propagata in inglese per i pacchetti con parole inglesi (ponte ARASAAC, dizionario locale, MyMemory come riserva)
+- [ ] Pacchetti Mulberry e OpenMoji (sottoinsieme + indice parole), scaricati solo se attivati
 - [ ] Download unico, ridimensionamento (~256 px) e salvataggio locale dei pittogrammi (con fonte e licenza)
 - [ ] Ricerca offline: simboli già salvati + set incluso; cella solo testo come ultima riserva
 - [ ] Caricamento immagini personali con compressione automatica
@@ -115,6 +114,13 @@
 - [ ] Versione italiana e inglese
 
 ## Idee future (non pianificate)
+- **In attesa – Global Symbols** (raccolta di molti set): lasciato fuori perché è un servizio di terzi la cui API
+  potrebbe in futuro richiedere una chiave o cambiare condizioni; si preferiscono le fonti originali.
+- **In attesa – Tawasol** (simboli arabi di Mada, Qatar): licenza incerta (BY-NC secondo il sito ufficiale, BY-SA
+  altrove) e parole solo in inglese e arabo; da riprendere se arriva un utente arabofono, dopo aver chiarito la licenza.
+- **In attesa – Sclera** (pittogrammi bianchi su fondo nero, ad alto contrasto, utili per l'ipovisione): gratuito per
+  uso non commerciale con attribuzione a sclera.be, rimandato per tenere il tool snello; da riprendere se serve un set
+  ad alto contrasto.
 - Sincronizzazione casa–scuola
 - Suggeritore IA opzionale con chiave dell'utente
 - Tastiera con predizione di parole e affissi/morfologia (plurali, tempi verbali) per chi scrive
