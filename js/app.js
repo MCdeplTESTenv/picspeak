@@ -27,7 +27,6 @@
     clear: document.getElementById('btn-clear'),
     home: document.getElementById('btn-home'),
     crumbs: document.getElementById('crumbs'),
-    homeBig: document.getElementById('btn-home-big'),
   };
 
   // Restituisce l'etichetta nella lingua corrente (con l'italiano come riserva)
@@ -71,7 +70,6 @@
     // Nella Home il percorso mostra solo "HOME"; nelle altre pagine "HOME › pagina"
     const isHome = state.pageId === sampleData.homePage;
     el.crumbs.classList.toggle('is-home', isHome);
-    el.homeBig.hidden = isHome;
     if (isHome) el.home.setAttribute('aria-current', 'page');
     else el.home.removeAttribute('aria-current');
 
@@ -97,6 +95,7 @@
   // Sceglie il numero di colonne che rende le celle più grandi possibile
   // nello spazio disponibile (poche celle = celle grandi, come chiede la logopedista)
   const MIN_COMFORT_CELL = 88;
+  const MIN_COMFORT_WIDTH = 108;
   function layoutGrid() {
     const count = el.grid.childElementCount;
     if (!count) return;
@@ -110,8 +109,12 @@
       const cellW = (width - gap * (cols - 1)) / cols;
       const cellH = (height - gap * (rows - 1)) / rows;
       // Conta il lato minore: celle il più possibile grandi e quadrate
-      const size = Math.min(cellW, cellH);
-      if (size > best.size) best = { cols, size };
+      // Celle mai più strette di una misura comoda (le parole devono restare leggibili):
+      // su schermi bassi, come il telefono in orizzontale, la griglia scorre invece di stringersi
+      if (cols > 1 && cellW < MIN_COMFORT_WIDTH) continue;
+      const size = Math.min(cellW, Math.max(cellH, MIN_COMFORT_CELL));
+      // A parità di misura si preferiscono più colonne (meno righe da scorrere)
+      if (size > best.size || (size === best.size && cols > best.cols)) best = { cols, size };
     }
     const rows = Math.ceil(count / best.cols);
     el.grid.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`;
@@ -292,9 +295,56 @@
     });
   }
 
+  // "Spingi via": un colpo deciso del dito sulla striscia frase (in alto o in basso, oppure
+  // di lato se la frase è corta e non scorre) cancella tutta la frase.
+  let swallowClick = false;
+  function bindSwipeToClear() {
+    let start = null;
+    el.strip.addEventListener('pointerdown', (event) => {
+      start = { x: event.clientX, y: event.clientY, t: Date.now() };
+    });
+    el.strip.addEventListener('pointerup', (event) => {
+      // Il gesto è attivo solo se abilitato in Impostazioni → Aspetto → Disposizione e tocco
+      if (document.documentElement.dataset.swipeClear !== 'on') { start = null; return; }
+      if (!start || !state.sentence.length) { start = null; return; }
+      const dx = event.clientX - start.x;
+      const dy = event.clientY - start.y;
+      const fast = Date.now() - start.t < 700;
+      const scrolls = el.strip.scrollWidth > el.strip.clientWidth + 1;
+      const vertical = Math.abs(dy) > 45 && Math.abs(dy) > Math.abs(dx) * 1.2;
+      const horizontal = !scrolls && Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 1.5;
+      start = null;
+      if (fast && (vertical || horizontal)) {
+        swallowClick = true;
+        setTimeout(() => { swallowClick = false; }, 300);
+        clearSentenceAnimated(vertical ? (dy < 0 ? 'up' : 'down') : (dx < 0 ? 'left' : 'right'));
+      }
+    });
+    el.strip.addEventListener('pointercancel', () => { start = null; });
+  }
+
+  function clearSentenceAnimated(direction) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      state.sentence = [];
+      renderSentence();
+      return;
+    }
+    el.strip.dataset.clearing = direction;
+    setTimeout(() => {
+      delete el.strip.dataset.clearing;
+      state.sentence = [];
+      renderSentence();
+    }, 160);
+  }
+
   function bindEvents() {
     el.grid.addEventListener('click', onCellTap);
-    el.strip.addEventListener('click', onChipTap);
+    el.strip.addEventListener('click', (event) => {
+      if (swallowClick) return;
+      onChipTap(event);
+    });
+    bindSwipeToClear();
     el.speak.addEventListener('click', () => {
       flash(el.speak);
       say(sentenceText());
@@ -308,7 +358,6 @@
       renderSentence();
     });
     el.home.addEventListener('click', () => goToPage(sampleData.homePage));
-    el.homeBig.addEventListener('click', () => goToPage(sampleData.homePage));
     bindShakeToHome();
     // Ricalcola la griglia quando cambia la dimensione o l'orientamento dello schermo
     let resizeTimer = null;
