@@ -115,6 +115,43 @@
     // Immagine ed etichetta proporzionate al lato minore della cella
     const cellW = (width - gap * (best.cols - 1)) / best.cols;
     el.grid.style.setProperty('--cell-size', `${Math.min(cellW, cellH)}px`);
+    fitLabels();
+  }
+
+  // Riduce il carattere delle parole che non entrano nella cella (mai parole spezzate a metà).
+  // Massimo due righe; si scende fino a 10 px, poi interviene il troncamento con i puntini.
+  function fitLabels() {
+    el.grid.querySelectorAll('.symbol-label').forEach((label) => {
+      label.style.fontSize = '';
+      if (getComputedStyle(label).position === 'absolute') return;
+      let size = parseFloat(getComputedStyle(label).fontSize);
+      const lineHeight = () => parseFloat(getComputedStyle(label).lineHeight) || size * 1.15;
+      const overflows = () => label.scrollWidth > label.clientWidth + 1
+        || label.scrollHeight > lineHeight() * 2 + 2
+        || longestWordTooWide(label);
+      while (overflows() && size > 10) {
+        size -= 1;
+        label.style.fontSize = `${size}px`;
+      }
+    });
+  }
+
+  // Una parola più larga della cella verrebbe spezzata: la misuriamo a parte
+  const measurer = document.createElement('span');
+  measurer.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;left:-9999px;top:0';
+  document.body.append(measurer);
+  function longestWordTooWide(label) {
+    const style = getComputedStyle(label);
+    measurer.style.font = style.font;
+    measurer.style.letterSpacing = style.letterSpacing;
+    measurer.style.textTransform = style.textTransform;
+    const available = label.parentElement.clientWidth
+      - parseFloat(getComputedStyle(label.parentElement).paddingLeft)
+      - parseFloat(getComputedStyle(label.parentElement).paddingRight);
+    return label.textContent.split(/\s+/).some((word) => {
+      measurer.textContent = word;
+      return measurer.offsetWidth > available + 1;
+    });
   }
 
   function renderSentence() {

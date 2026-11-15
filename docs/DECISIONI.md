@@ -170,4 +170,9 @@ Formato: data – decisione – motivo.
   tessere che deve rendere PicSpeak riconoscibile. Collocazione: modello dati (righe/colonne, posizione fissa delle
   celle) nella Tappa 2; template core denso nella Tappa 4; densità di stile e livelli nella Tappa 8; tastiera e affissi
   tra le idee future pianificate.
+- **Controllo grafico obbligatorio prima di proporre modifiche** con `dev/verifica-layout.js` (contenuti fuori dal
+  riquadro, parole tagliate o spezzate, celle sovrapposte) su tablet, telefono e PC, in tutte le modalità colori e opzioni.
+  Motivo: su Safari Mac la parola delle tessere della frase usciva dal bordo. Correzione: tessere della frase a misura
+  fissa con immagine contenuta; nelle celle l'immagine si adatta allo spazio libero, la parola va al massimo su due righe
+  e il carattere si riduce da solo se una parola non entra (mai parole spezzate a metà).
 
