@@ -1236,3 +1236,28 @@ body > .adult-bar { order: 0; }
   .page-nav { padding-top: 4px; padding-bottom: 0; }
   .crumbs { min-height: 36px; }
 }
+
+/* Barra delle impostazioni sbloccate: sempre su una sola riga, anche su telefono */
+.adult-bar { flex-wrap: nowrap; gap: 8px; padding: 8px 10px; }
+.adult-badge { margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.adult-btn { min-height: 44px; padding: 0 12px; white-space: nowrap; flex: none; }
+.adult-btn-text.short { display: none; }
+.zoom-control { display: inline-flex; align-items: center; flex: none; padding: 2px; background: rgba(255, 255, 255, 0.14); border-radius: 12px; }
+.zoom-btn, .zoom-value { min-height: 40px; border: 0; color: #ffffff; background: transparent; font-weight: 700; }
+.zoom-btn { width: 40px; font-size: 22px; border-radius: 10px; }
+.zoom-btn:disabled { opacity: 0.35; }
+.zoom-value { min-width: 58px; padding: 0 6px; font-size: 14px; background: rgba(255, 255, 255, 0.16); border-radius: 10px; }
+@media (max-width: 700px) {
+  .adult-badge-text, .adult-btn-text.long, #btn-open-settings .adult-btn-text { display: none; }
+  .adult-btn-text.short { display: inline; }
+  .adult-btn { padding: 0 10px; }
+}
+.setting-status { align-self: center; font-weight: 600; color: #3a3f47; }
+/* Parola che non entra nemmeno al carattere minimo: va a capo sillabando, fino a tre righe */
+.symbol-cell .symbol-label.is-hyphenated {
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}

@@ -22,12 +22,18 @@
 <body>
   <!-- Barra della modalità adulto (nascosta in modalità bambino) -->
   <div class="adult-bar" id="adult-bar" hidden>
-    <span class="adult-badge"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 7.5-1.9"/></svg> <span data-i18n="adultMode"></span></span>
+    <span class="adult-badge" data-i18n-label="adultMode"><svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 7.5-1.9"/></svg> <span class="adult-badge-text" data-i18n="adultMode"></span></span>
+    <!-- Zoom delle tessere: visibile solo con le impostazioni sbloccate, l'effetto si vede subito sulla griglia -->
+    <div class="zoom-control" role="group" data-i18n-label="zoomTiles">
+      <button type="button" class="zoom-btn" id="btn-zoom-out" data-i18n-label="zoomOut">−</button>
+      <button type="button" class="zoom-value" id="btn-zoom-reset" data-i18n-label="zoomReset">100%</button>
+      <button type="button" class="zoom-btn" id="btn-zoom-in" data-i18n-label="zoomIn">+</button>
+    </div>
     <button type="button" class="adult-btn" id="btn-open-settings">
-      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/></svg> <span data-i18n="settings"></span>
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/></svg> <span class="adult-btn-text" data-i18n="settings"></span>
     </button>
     <button type="button" class="adult-btn adult-btn-primary" id="btn-exit-adult">
-      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7"/></svg> <span data-i18n="backToCommunication"></span>
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17.5 19 7"/></svg> <span class="adult-btn-text long" data-i18n="backToCommunication"></span><span class="adult-btn-text short" data-i18n="done"></span>
     </button>
   </div>
 

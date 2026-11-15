@@ -95,35 +95,67 @@
   // Sceglie il numero di colonne che rende le celle più grandi possibile
   // nello spazio disponibile (poche celle = celle grandi, come chiede la logopedista)
   const MIN_COMFORT_CELL = 88;
-  const MIN_COMFORT_WIDTH = 108;
-  function layoutGrid() {
-    const count = el.grid.childElementCount;
-    if (!count) return;
+  const MIN_COMFORT_WIDTH = 76;
+  const MIN_ZOOM_WIDTH = 90; // con − non si scende sotto questa larghezza di tessera
+
+  function gridMetrics() {
     const style = getComputedStyle(el.grid);
-    const gap = parseFloat(style.columnGap) || 0;
-    const width = el.grid.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-    const height = el.grid.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    return {
+      count: el.grid.childElementCount,
+      gap: parseFloat(style.columnGap) || 0,
+      width: el.grid.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      height: el.grid.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
+    };
+  }
+
+  // Numero di colonne "automatico": celle il più possibile grandi e quadrate nello spazio disponibile
+  function autoColumns() {
+    const { count, gap, width, height } = gridMetrics();
+    if (!count) return 1;
     let best = { cols: 1, size: 0 };
     for (let cols = 1; cols <= count; cols += 1) {
       const rows = Math.ceil(count / cols);
       const cellW = (width - gap * (cols - 1)) / cols;
       const cellH = (height - gap * (rows - 1)) / rows;
-      // Conta il lato minore: celle il più possibile grandi e quadrate
-      // Celle mai più strette di una misura comoda (le parole devono restare leggibili):
-      // su schermi bassi, come il telefono in orizzontale, la griglia scorre invece di stringersi
+      // Celle mai più strette di una misura comoda: su schermi bassi la griglia scorre invece di stringersi
       if (cols > 1 && cellW < MIN_COMFORT_WIDTH) continue;
-      const size = Math.min(cellW, Math.max(cellH, MIN_COMFORT_CELL));
+      // Se le righe non entrano senza scorrere, la soluzione vale un po' meno (si preferisce vedere tutto)
+      const size = cellH >= MIN_COMFORT_CELL
+        ? Math.min(cellW, cellH)
+        : Math.min(cellW, MIN_COMFORT_CELL) * 0.85;
       // A parità di misura si preferiscono più colonne (meno righe da scorrere)
       if (size > best.size || (size === best.size && cols > best.cols)) best = { cols, size };
     }
-    const rows = Math.ceil(count / best.cols);
-    el.grid.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`;
-    // Se lo schermo è troppo piccolo, le righe restano comode e la griglia scorre
+    return best.cols;
+  }
+
+  // Massimo di colonne che lo schermo permette senza tessere troppo strette per le parole
+  function maxColumns() {
+    const { count, gap, width } = gridMetrics();
+    return Math.max(1, Math.min(count || 1, Math.floor((width + gap) / (MIN_ZOOM_WIDTH + gap))));
+  }
+
+  // Colonne effettive: quelle scelte con lo zoom (data-columns su <html>) oppure automatiche
+  function currentColumns() {
+    const fixed = parseInt(document.documentElement.dataset.columns, 10);
+    if (fixed > 0) return Math.max(1, Math.min(fixed, maxColumns()));
+    return autoColumns();
+  }
+
+  function layoutGrid() {
+    const { count, gap, width, height } = gridMetrics();
+    if (!count) return;
+    const cols = currentColumns();
+    const zoomed = parseInt(document.documentElement.dataset.columns, 10) > 0;
+    const rows = Math.ceil(count / cols);
+    el.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    const cellW = (width - gap * (cols - 1)) / cols;
     const fitH = (height - gap * (rows - 1)) / rows;
-    const cellH = Math.max(fitH, MIN_COMFORT_CELL);
+    // Con lo zoom le tessere restano quasi quadrate (la griglia scorre); in automatico riempiono lo spazio
+    const cellH = zoomed ? Math.max(fitH, Math.min(cellW, height), MIN_COMFORT_CELL * 0.8)
+      : Math.max(fitH, MIN_COMFORT_CELL);
     el.grid.style.gridAutoRows = `${cellH}px`;
     // Immagine ed etichetta proporzionate al lato minore della cella
-    const cellW = (width - gap * (best.cols - 1)) / best.cols;
     el.grid.style.setProperty('--cell-size', `${Math.min(cellW, cellH)}px`);
     fitLabels();
   }
@@ -139,10 +171,14 @@
       const overflows = () => label.scrollWidth > label.clientWidth + 1
         || label.scrollHeight > lineHeight() * 2 + 2
         || longestWordTooWide(label);
+      label.classList.remove('is-hyphenated');
       while (overflows() && size > 10) {
         size -= 1;
         label.style.fontSize = `${size}px`;
       }
+      // Ultima risorsa su tessere molto strette: sillabazione con il trattino (es. COSTRU-ZIONI),
+      // mai parole che escono dal bordo o restano tagliate
+      if (overflows()) label.classList.add('is-hyphenated');
     });
   }
 
@@ -378,6 +414,10 @@
     setMode,
     refreshTexts,
     layoutGrid,
+    autoColumns,
+    currentColumns,
+    maxColumns,
+    itemCount: () => el.grid.childElementCount,
     get mode() { return state.mode; },
   };
 })();
