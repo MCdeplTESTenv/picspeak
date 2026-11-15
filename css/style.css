@@ -990,3 +990,14 @@ body > .adult-bar { order: 0; }
 .preset-preview.is-square span { border-radius: 1px; }
 .preset-preview.is-thick span { border-width: 3px; }
 .preset-custom-note { font-size: 13px; color: #6b717b; }
+
+/* Pittogrammi: l'immagine segue la dimensione prevista per l'emoji */
+.symbol-image img {
+  display: block;
+  width: 1.3em;
+  height: 1.3em;
+  object-fit: contain;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+.settings-list a { color: #1f6feb; overflow-wrap: anywhere; }
