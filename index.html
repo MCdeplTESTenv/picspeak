@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <!-- Sicurezza: solo script e stili del sito stesso; rete solo verso i servizi di simboli previsti (vedi docs/SICUREZZA.md) -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://static.arasaac.org https://api.arasaac.org https://globalsymbols.com https://*.globalsymbols.com; connect-src 'self' https://api.arasaac.org https://globalsymbols.com https://api.mymemory.translated.net; media-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'; worker-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://static.arasaac.org; connect-src 'self' https://api.arasaac.org https://static.arasaac.org https://api.mymemory.translated.net; media-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'; worker-src 'self'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
@@ -101,9 +101,11 @@
   <script src="js/install.js"></script>
   <script src="js/sample-data.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/symbols.js"></script>
   <script src="js/speech.js"></script>
   <script src="js/app.js"></script>
   <script src="js/adult.js"></script>
+  <script src="js/symbol-search.js"></script>
   <script src="js/editor.js"></script>
 </body>
 </html>

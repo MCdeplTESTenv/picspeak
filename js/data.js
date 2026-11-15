@@ -264,6 +264,15 @@
     return image;
   }
 
+  // Salva un'immagine con id stabile (es. img_ar_2462): se esiste già sul dispositivo la riusa
+  async function saveImage(record) {
+    if (model.images.has(record.id)) return model.images.get(record.id);
+    const image = { addedAt: now(), ...record };
+    model.images.set(image.id, image);
+    await storage.putRecord('images', image);
+    return image;
+  }
+
   window.PicSpeak.data = {
     WORD_TYPES,
     load,
@@ -280,5 +289,7 @@
     deleteCell,
     moveCell,
     addImage,
+    saveImage,
+    allImages: () => [...model.images.values()],
   };
 })();
