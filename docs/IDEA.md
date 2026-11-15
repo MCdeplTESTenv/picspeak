@@ -1,0 +1,122 @@
+# PicSpeak – Idea di progetto
+
+## Visione
+Uno strumento di CAA gratuito, leggerissimo e senza installazione, che funziona su
+qualsiasi dispositivo e browser. Ogni persona ha il proprio spazio personalizzato
+(pagine, simboli, voce, abitudini di comunicazione) che cresce con lei negli anni,
+dall'infanzia all'età adulta, e può essere salvato, spostato e ripristinato con un
+semplice file.
+
+## Destinatari
+- Bambini con disabilità comunicative, dai 3 anni in su.
+- Adulti di riferimento: genitori (riferimento principale), logopedisti, insegnanti, educatori.
+- In futuro: la persona stessa, diventata adulta, che gestisce in autonomia il proprio strumento.
+
+## Principi
+1. **Gratuito** per sempre (codice GPL-3.0, nessuna funzione a pagamento).
+2. **Snello**: una pagina web, nessuna dipendenza pesante.
+3. **Universale**: PC, Mac, tablet, smartphone; Chrome, Safari, Firefox, Edge.
+4. **Offline**: deve funzionare anche senza connessione (PWA).
+5. **Privato**: nessun server, nessun account, i dati dei minori restano sul dispositivo.
+6. **Durevole**: backup in formato aperto e versionato, leggibile anche tra anni.
+7. **Cresce con la persona**: l'interfaccia si adatta all'uso reale e non resta "da bambino".
+
+## Accesso
+- Il tool è pubblicato su GitHub Pages a un indirizzo pubblico
+  (es. `https://mcdepltestenv.github.io/picspeak/`): chiunque lo apre dal browser
+  e può aggiungerlo alla schermata Home. Nessun file da distribuire a mano.
+- Il sito è uguale per tutti; i dati (tabella, statistiche, regole) restano nel browser
+  di ciascun dispositivo, quindi l'esperienza è personale e privata.
+- Limiti di GitHub Pages ampiamente sufficienti (sito ≤ 1 GB, ~100 GB/mese di traffico
+  consigliato; dopo il primo caricamento il tool lavora dalla cache). Il repository deve
+  essere pubblico.
+
+## Funzionalità previste
+
+### Comunicazione (modalità utente)
+- Tabella CAA libera che cresce con la persona (pagine e categorie, vocabolario
+  che si arricchisce nel tempo, fino eventualmente a lettere e parole).
+- Griglia di simboli con immagine + etichetta.
+- Tocco su un simbolo → pronuncia vocale (sintesi vocale del browser in italiano).
+- Striscia frase in stile PECS (es. "Io voglio" + simbolo), con lettura dell'intera frase.
+- Navigazione tra pagine/categorie (es. Cibo, Giochi, Emozioni, Persone).
+- Nessuna possibilità di modificare per errore.
+- Fasi PECS guidate come modalità opzionale (più avanti).
+
+### Interfaccia adattiva ("T9 con le immagini")
+- Registrazione locale delle statistiche d'uso: quali simboli, quando, in che sequenza.
+- Le statistiche diventano regole che parametrizzano lo strumento, per esempio:
+  - simboli più usati più grandi o in posizione più comoda;
+  - dopo un simbolo, proposta dei 3–4 simboli che di solito lo seguono (sequenze n-gram);
+  - suggerimenti che cambiano con il contesto (es. ora del giorno).
+- Tutto calcolato sul dispositivo: offline, gratuito, privato.
+- Statistiche, regole e vocabolario fanno parte del backup: cambiando dispositivo
+  non si riparte da zero.
+- L'adulto (o la persona stessa) può vedere, correggere o azzerare le regole.
+
+### Gestione (modalità adulto, protetta da PIN o pressione prolungata)
+- Pensata per un genitore senza competenze tecniche; opzioni avanzate
+  (griglia, fasi PECS, profili, regole adattive) in una sezione "Avanzate"
+  per logopedisti e insegnanti.
+- Utilizzabile in autonomia dalla persona stessa quando sarà adulta.
+- Creazione/modifica di pagine e celle.
+- Ricerca simboli da più fonti (vedi "Fonti dei simboli").
+- Caricamento di immagini personali (foto di oggetti, persone, luoghi),
+  ridimensionate e compresse automaticamente (~256–300 px, WebP/JPEG).
+- Registrazione opzionale della voce di un adulto per ogni simbolo.
+- Configurazione griglia: numero di righe/colonne, dimensione celle.
+- Temi e stile regolabili (aspetto non infantile disponibile per l'età adulta).
+- Colori per categoria (chiave di Fitzgerald), opzionali.
+- Più profili sullo stesso dispositivo.
+
+### Fonti dei simboli
+- Architettura a "provider" intercambiabili: la ricerca può interrogare più fonti
+  insieme e l'adulto sceglie quali attivare.
+- Fonti previste (licenze da riverificare al momento dell'implementazione):
+  - **ARASAAC** (CC BY-NC-SA 4.0): fonte principale, ottima copertura in italiano.
+  - **Global Symbols**: raccolta di più set (ARASAAC, Mulberry, Sclera e altri).
+  - **Set di base incluso nel tool** (es. Mulberry CC BY-SA, OpenMoji CC BY-SA 4.0):
+    funziona anche senza alcun servizio esterno.
+  - **Immagini personali** caricate dall'utente.
+- Escluse per ora: OpenSymbols (API su richiesta di una chiave), Sclera come set
+  incluso (licenza non commerciale con condizioni proprie, usabile via Global Symbols).
+- Ogni simbolo aggiunto viene salvato localmente con la sua fonte e licenza:
+  anche se un servizio esterno cambiasse condizioni o chiudesse, le tabelle
+  esistenti continuano a funzionare.
+- La pagina Crediti elenca le fonti e le licenze effettivamente usate.
+
+### Dati e backup
+- Salvataggio locale in IndexedDB.
+- Simboli scaricati e conservati localmente quando aggiunti (funzionano offline).
+- Esportazione/importazione manuale in un unico file `nomeutente.caa.json`
+  con immagini incorporate (base64), statistiche, regole e numero di versione del formato.
+- Promemoria di backup ("Ultimo backup: X giorni fa").
+
+## Sviluppi futuri annotati
+- **Salvataggio automatico sul cloud personale** dell'utente (es. Google Drive, cartella
+  nascosta dell'app, con accesso Google direttamente dal browser, senza server nostri);
+  su Chrome/Edge desktop anche salvataggio automatico su un file scelto dall'utente
+  (es. in una cartella iCloud/Dropbox). Servirebbe anche per lo scambio casa–scuola.
+- **Suggeritore IA opzionale**: spento di default, attivabile dall'adulto con una
+  propria chiave gratuita (es. Gemini). Da valutare: privacy dei dati di un minore
+  inviati a un servizio esterno e termini d'uso che cambiano nel tempo.
+
+## Rischi noti
+- Safari iOS può cancellare i dati di siti non usati a lungo se NON aggiunti alla Home:
+  incoraggiare "Aggiungi a schermata Home" e il backup regolare.
+- Le API dei simboli richiedono connessione solo per la ricerca di nuovi simboli;
+  i loro termini possono cambiare (mitigato da più provider e salvataggio locale).
+- La qualità delle voci di sintesi varia tra dispositivi → la voce registrata è un'alternativa.
+- Dati in browser diversi sullo stesso dispositivo sono separati: si passa dall'uno
+  all'altro col file di backup.
+
+## Decisioni sulle domande iniziali (2026-11-15)
+1. **Utente adulto**: tutti (genitore, logopedista, insegnante) con il genitore come
+   riferimento; in futuro la persona stessa da adulta.
+2. **Impostazione**: tabella CAA libera che cresce con la persona, con interfaccia
+   adattiva; PECS a fasi come modalità opzionale.
+3. **Casa–scuola / cambio dispositivo**: per ora file di backup manuale con promemoria;
+   cloud personale come sviluppo futuro.
+4. **Dispositivo**: tablet (iPad/Android) come riferimento, ma deve aprirsi bene anche
+   su smartphone e PC/Mac (lo sviluppo si testa soprattutto su PC/Mac).
+5. **Nome**: PicSpeak. **Licenza del codice**: GPL-3.0.
