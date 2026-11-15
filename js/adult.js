@@ -518,6 +518,56 @@
     wrap.append(button(t('changePin'), changePinFlow, false));
   }
 
+  // Ricerca online di nuovi simboli: attiva, solo con Wi-Fi, disattivata (nessun traffico dati)
+  const ONLINE_SEARCH_VALUES = [['on', 'valOnlineOn'], ['wifi', 'valOnlineWifi'], ['off', 'valOnlineOff']];
+  let onlineSearch = 'on';
+
+  // Usata dalla ricerca simboli (Tappa 3): decide se si può usare la rete.
+  // 'wifi': Chrome su Android dice il tipo di connessione; dove il browser non lo dice
+  // (Safari, Firefox, PC) la ricerca chiederà conferma prima di usare internet.
+  function onlineSearchStatus() {
+    if (onlineSearch === 'off' || !navigator.onLine) return 'blocked';
+    if (onlineSearch === 'wifi') {
+      const type = navigator.connection && navigator.connection.type;
+      if (type === 'wifi' || type === 'ethernet') return 'allowed';
+      if (type) return 'blocked';
+      return 'ask';
+    }
+    return 'allowed';
+  }
+
+  function renderOnlineSection() {
+    const wrap = section('secOnlineTitle', 'secOnlineHelp');
+    wrap.append(settingRow('optOnlineSearch', 'optOnlineSearchHelp', segmented(ONLINE_SEARCH_VALUES, onlineSearch, async (value) => {
+      onlineSearch = value;
+      await storage.set('onlineSearch', value);
+      renderSettings();
+    })));
+  }
+
+  // Crediti: attribuzione obbligatoria per i pittogrammi ARASAAC (CC BY-NC-SA 4.0)
+  function renderCreditsSection() {
+    const wrap = section('secCreditsTitle', 'secCreditsHelp');
+    const items = [
+      [t('creditsArasaac'), 'https://arasaac.org', 'arasaac.org'],
+      [t('creditsArasaacLicense'), 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.it', 'CC BY-NC-SA 4.0'],
+      [t('creditsCode'), 'https://github.com/MCdeplTESTenv/picspeak', 'github.com/MCdeplTESTenv/picspeak'],
+    ];
+    const ul = document.createElement('ul');
+    ul.className = 'settings-list';
+    items.forEach(([text, href, label]) => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = href;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = label;
+      li.append(`${text} `, link);
+      ul.append(li);
+    });
+    wrap.append(ul);
+  }
+
   function renderComingSection() {
     const wrap = section('secComingTitle', 'secComingHelp');
     wrap.append(list(t('comingList')));
@@ -803,7 +853,7 @@
   // Categorie delle impostazioni: icona, titolo, sezioni contenute
   const CATEGORIES = [
     { id: 'general', icon: '⚙️', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
-      render: [renderLanguageSection, renderInstallSection] },
+      render: [renderLanguageSection, renderOnlineSection, renderInstallSection, renderCreditsSection] },
     { id: 'appearance', icon: '🎨', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
       render: [renderPresetSection, renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
     { id: 'voice', icon: '🔊', titleKey: 'catVoice', introKey: 'catVoiceIntro',
@@ -946,7 +996,15 @@
     applyAppearance();
   }
 
+  async function restoreOnlineSearch() {
+    const saved = await storage.get('onlineSearch');
+    if (ONLINE_SEARCH_VALUES.some(([value]) => value === saved)) onlineSearch = saved;
+  }
+
+  window.PicSpeak.network = { onlineSearchStatus };
+
   bindEvents();
+  restoreOnlineSearch();
   restorePageBackground();
   restoreAppearance();
   restoreLanguage();
