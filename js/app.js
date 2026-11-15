@@ -1,11 +1,12 @@
 /*
- * PicSpeak – Tappa 1: griglia di simboli, voce al tocco, striscia frase.
- * Modalità utente: nessun elemento modifica i dati salvati.
+ * PicSpeak – comunicazione: griglia di simboli, voce al tocco, striscia frase.
+ * Le schede arrivano dal modello dati (data.js). In modalità comunicazione nulla modifica i dati;
+ * con le impostazioni sbloccate il tocco su una tessera apre la modifica (editor.js).
  */
 (function () {
   'use strict';
 
-  const { i18n, sampleData, speech } = window.PicSpeak;
+  const { i18n, speech, data } = window.PicSpeak;
   const t = i18n.t;
 
   // Limite di simboli nella frase, per tenerla leggibile su tablet
@@ -14,8 +15,10 @@
   const state = {
     // 'child' = modalità utente (nessuna modifica possibile); 'adult' arriverà nella Tappa 2
     mode: 'child',
-    pageId: sampleData.homePage,
-    sentence: [], // elenco di identificativi di simboli
+    pageId: null,
+    // Frase: copie delle tessere scelte (parola, voce, tipo, immagine), indipendenti dalla scheda
+    sentence: [],
+    ready: false,
   };
 
   const el = {
@@ -29,13 +32,29 @@
     crumbs: document.getElementById('crumbs'),
   };
 
-  // Restituisce l'etichetta nella lingua corrente (con l'italiano come riserva)
   function labelOf(item) {
-    return item.label[i18n.language] ?? item.label.it;
+    return item.label || '';
   }
 
-  function findItem(id) {
-    return sampleData.symbols[id] || sampleData.folders[id] || null;
+  // Testo pronunciato: quello dedicato, se presente, altrimenti la parola mostrata
+  function speechOf(item) {
+    return item.speak || item.label || '';
+  }
+
+  // Classe di colore: cartella oppure categoria grammaticale (Fitzgerald)
+  function typeOf(item) {
+    return item.kind === 'folder' ? 'folder' : (item.wordType || 'noun');
+  }
+
+  // Colore scelto a mano per una tessera (vuoto = colore Fitzgerald automatico)
+  function applyCustomColor(node, item) {
+    // Solo colori nel formato #RRGGBB: un valore diverso (es. da un file importato) viene ignorato
+    if (!item.color || !/^#[0-9a-f]{6}$/i.test(item.color)) return;
+    node.classList.add('has-custom-color');
+    node.style.setProperty('--cat', item.color);
+    node.style.setProperty('--card-line', item.color);
+    node.style.setProperty('--card-fill', `color-mix(in srgb, ${item.color} 18%, white)`);
+    node.style.setProperty('--tint', `color-mix(in srgb, ${item.color} 25%, white)`);
   }
 
   // Crea il contenuto visivo (immagine + etichetta) condiviso da celle e striscia
@@ -44,18 +63,18 @@
     const image = document.createElement('span');
     image.className = `symbol-image ${sizeClass}`;
     image.setAttribute('aria-hidden', 'true');
-    const src = sampleData.imageOf(item);
+    const src = data.imageUrl(item.imageId);
     if (src) {
       const img = document.createElement('img');
       img.src = src;
       img.alt = '';
       img.draggable = false;
       img.decoding = 'async';
-      // Se l'immagine non si carica, resta l'emoji: la cella continua a funzionare
-      img.addEventListener('error', () => { image.textContent = item.emoji; }, { once: true });
+      // Se l'immagine non si carica resta la parola: la cella continua a funzionare
+      img.addEventListener('error', () => { img.remove(); }, { once: true });
       image.append(img);
     } else {
-      image.textContent = item.emoji;
+      image.classList.add('is-empty');
     }
     const label = document.createElement('span');
     label.className = 'symbol-label';
@@ -65,27 +84,50 @@
   }
 
   function renderGrid() {
-    const page = sampleData.pages[state.pageId];
-    el.title.textContent = page.title[i18n.language] ?? page.title.it;
+    if (!state.ready) return;
+    const page = data.page(state.pageId) || data.page(data.homePageId);
+    if (!page) return;
+    state.pageId = page.id;
+    el.title.textContent = page.title;
     // Nella Home il percorso mostra solo "HOME"; nelle altre pagine "HOME › pagina"
-    const isHome = state.pageId === sampleData.homePage;
+    const isHome = state.pageId === data.homePageId;
     el.crumbs.classList.toggle('is-home', isHome);
     if (isHome) el.home.setAttribute('aria-current', 'page');
     else el.home.removeAttribute('aria-current');
 
-    const cells = page.cells.map((id) => {
-      const item = findItem(id);
-      if (!item) return null;
+    // In modalità impostazioni si vedono anche le tessere nascoste (attenuate) e la tessera "+"
+    const editing = state.mode === 'adult';
+    const cells = data.orderedCells(page, { includeHidden: editing }).map((item) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = `symbol-cell type-${item.type}`;
-      button.dataset.id = id;
-      if (item.type === 'folder') {
+      button.className = `symbol-cell type-${typeOf(item)}`;
+      if (item.hidden) button.classList.add('is-hidden-cell');
+      if (item.locked) button.classList.add('is-locked-cell');
+      if (item.kind === 'empty') button.classList.add('is-empty-cell');
+      button.dataset.id = item.id;
+      applyCustomColor(button, item);
+      if (item.kind === 'folder') {
         button.setAttribute('aria-label', `${t('openPage')}: ${labelOf(item)}`);
       }
       button.append(buildFace(item, 'size-cell'));
       return button;
-    }).filter(Boolean);
+    });
+    if (editing) {
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'symbol-cell add-cell';
+      add.dataset.action = 'add';
+      add.setAttribute('aria-label', t('addTile'));
+      const plus = document.createElement('span');
+      plus.className = 'symbol-image add-plus';
+      plus.setAttribute('aria-hidden', 'true');
+      plus.textContent = '+';
+      const label = document.createElement('span');
+      label.className = 'symbol-label';
+      label.textContent = t('addTile');
+      add.append(plus, label);
+      cells.push(add);
+    }
 
     el.grid.replaceChildren(...cells);
     el.grid.dataset.count = String(cells.length);
@@ -95,35 +137,67 @@
   // Sceglie il numero di colonne che rende le celle più grandi possibile
   // nello spazio disponibile (poche celle = celle grandi, come chiede la logopedista)
   const MIN_COMFORT_CELL = 88;
-  const MIN_COMFORT_WIDTH = 108;
-  function layoutGrid() {
-    const count = el.grid.childElementCount;
-    if (!count) return;
+  const MIN_COMFORT_WIDTH = 76;
+  const MIN_ZOOM_WIDTH = 90; // con − non si scende sotto questa larghezza di tessera
+
+  function gridMetrics() {
     const style = getComputedStyle(el.grid);
-    const gap = parseFloat(style.columnGap) || 0;
-    const width = el.grid.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-    const height = el.grid.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+    return {
+      count: el.grid.childElementCount,
+      gap: parseFloat(style.columnGap) || 0,
+      width: el.grid.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      height: el.grid.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
+    };
+  }
+
+  // Numero di colonne "automatico": celle il più possibile grandi e quadrate nello spazio disponibile
+  function autoColumns() {
+    const { count, gap, width, height } = gridMetrics();
+    if (!count) return 1;
     let best = { cols: 1, size: 0 };
     for (let cols = 1; cols <= count; cols += 1) {
       const rows = Math.ceil(count / cols);
       const cellW = (width - gap * (cols - 1)) / cols;
       const cellH = (height - gap * (rows - 1)) / rows;
-      // Conta il lato minore: celle il più possibile grandi e quadrate
-      // Celle mai più strette di una misura comoda (le parole devono restare leggibili):
-      // su schermi bassi, come il telefono in orizzontale, la griglia scorre invece di stringersi
+      // Celle mai più strette di una misura comoda: su schermi bassi la griglia scorre invece di stringersi
       if (cols > 1 && cellW < MIN_COMFORT_WIDTH) continue;
-      const size = Math.min(cellW, Math.max(cellH, MIN_COMFORT_CELL));
+      // Se le righe non entrano senza scorrere, la soluzione vale un po' meno (si preferisce vedere tutto)
+      const size = cellH >= MIN_COMFORT_CELL
+        ? Math.min(cellW, cellH)
+        : Math.min(cellW, MIN_COMFORT_CELL) * 0.85;
       // A parità di misura si preferiscono più colonne (meno righe da scorrere)
       if (size > best.size || (size === best.size && cols > best.cols)) best = { cols, size };
     }
-    const rows = Math.ceil(count / best.cols);
-    el.grid.style.gridTemplateColumns = `repeat(${best.cols}, minmax(0, 1fr))`;
-    // Se lo schermo è troppo piccolo, le righe restano comode e la griglia scorre
+    return best.cols;
+  }
+
+  // Massimo di colonne che lo schermo permette senza tessere troppo strette per le parole
+  function maxColumns() {
+    const { count, gap, width } = gridMetrics();
+    return Math.max(1, Math.min(count || 1, Math.floor((width + gap) / (MIN_ZOOM_WIDTH + gap))));
+  }
+
+  // Colonne effettive: quelle scelte con lo zoom (data-columns su <html>) oppure automatiche
+  function currentColumns() {
+    const fixed = parseInt(document.documentElement.dataset.columns, 10);
+    if (fixed > 0) return Math.max(1, Math.min(fixed, maxColumns()));
+    return autoColumns();
+  }
+
+  function layoutGrid() {
+    const { count, gap, width, height } = gridMetrics();
+    if (!count) return;
+    const cols = currentColumns();
+    const zoomed = parseInt(document.documentElement.dataset.columns, 10) > 0;
+    const rows = Math.ceil(count / cols);
+    el.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    const cellW = (width - gap * (cols - 1)) / cols;
     const fitH = (height - gap * (rows - 1)) / rows;
-    const cellH = Math.max(fitH, MIN_COMFORT_CELL);
+    // Con lo zoom le tessere restano quasi quadrate (la griglia scorre); in automatico riempiono lo spazio
+    const cellH = zoomed ? Math.max(fitH, Math.min(cellW, height), MIN_COMFORT_CELL * 0.8)
+      : Math.max(fitH, MIN_COMFORT_CELL);
     el.grid.style.gridAutoRows = `${cellH}px`;
     // Immagine ed etichetta proporzionate al lato minore della cella
-    const cellW = (width - gap * (best.cols - 1)) / best.cols;
     el.grid.style.setProperty('--cell-size', `${Math.min(cellW, cellH)}px`);
     fitLabels();
   }
@@ -139,10 +213,14 @@
       const overflows = () => label.scrollWidth > label.clientWidth + 1
         || label.scrollHeight > lineHeight() * 2 + 2
         || longestWordTooWide(label);
+      label.classList.remove('is-hyphenated');
       while (overflows() && size > 10) {
         size -= 1;
         label.style.fontSize = `${size}px`;
       }
+      // Ultima risorsa su tessere molto strette: sillabazione con il trattino (es. COSTRU-ZIONI),
+      // mai parole che escono dal bordo o restano tagliate
+      if (overflows()) label.classList.add('is-hyphenated');
     });
   }
 
@@ -165,12 +243,12 @@
   }
 
   function renderSentence() {
-    const chips = state.sentence.map((id, index) => {
-      const item = findItem(id);
+    const chips = state.sentence.map((item, index) => {
       const li = document.createElement('li');
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = `sentence-chip type-${item.type}`;
+      chip.className = `sentence-chip type-${typeOf(item)}`;
+      applyCustomColor(chip, item);
       chip.dataset.index = String(index);
       chip.setAttribute('aria-label', state.mode === 'adult'
         ? `${t('removeFromSentence')}: ${labelOf(item)}`
@@ -190,7 +268,7 @@
   }
 
   function sentenceText() {
-    return state.sentence.map((id) => labelOf(findItem(id))).join(' ');
+    return state.sentence.map((item) => speechOf(item)).join(' ');
   }
 
   function say(text) {
@@ -204,7 +282,7 @@
   }
 
   function goToPage(pageId) {
-    if (!sampleData.pages[pageId]) return;
+    if (!data.page(pageId)) return;
     state.pageId = pageId;
     renderGrid();
     el.grid.scrollTop = 0;
@@ -213,16 +291,27 @@
   function onCellTap(event) {
     const cell = event.target.closest('.symbol-cell');
     if (!cell) return;
-    const item = findItem(cell.dataset.id);
     flash(cell);
-    if (item.type === 'folder') {
-      say(labelOf(item));
-      goToPage(item.target);
+    // Impostazioni sbloccate: il tocco apre la modifica della tessera (o ne aggiunge una)
+    if (state.mode === 'adult' && window.PicSpeak.editor) {
+      if (cell.dataset.action === 'add') window.PicSpeak.editor.add(state.pageId);
+      else window.PicSpeak.editor.edit(state.pageId, cell.dataset.id);
       return;
     }
-    say(labelOf(item));
+    const page = data.page(state.pageId);
+    const item = page && page.cells.find((c) => c.id === cell.dataset.id);
+    if (!item || item.kind === 'empty') return;
+    if (item.kind === 'folder') {
+      say(speechOf(item));
+      goToPage(item.targetPageId);
+      return;
+    }
+    say(speechOf(item));
     if (state.sentence.length < MAX_SENTENCE_LENGTH) {
-      state.sentence.push(cell.dataset.id);
+      state.sentence.push({
+        cellId: item.id, label: item.label, speak: item.speak, kind: item.kind,
+        wordType: item.wordType, color: item.color, imageId: item.imageId,
+      });
       renderSentence();
     }
   }
@@ -239,7 +328,7 @@
       renderSentence();
       return;
     }
-    say(labelOf(findItem(state.sentence[index])));
+    say(speechOf(state.sentence[index]));
   }
 
   function applyStaticLabels() {
@@ -251,8 +340,8 @@
   function setMode(mode) {
     state.mode = mode === 'adult' ? 'adult' : 'child';
     document.body.classList.toggle('mode-adult', state.mode === 'adult');
+    renderGrid();
     renderSentence();
-    layoutGrid();
   }
 
   // Ridisegna tutti i testi dopo un cambio di lingua
@@ -287,7 +376,7 @@
             // Scossa = "ricomincia": torna alla Home e svuota la frase, pronta per una nuova
             state.sentence = [];
             renderSentence();
-            if (state.pageId !== sampleData.homePage) goToPage(sampleData.homePage);
+            if (state.pageId !== data.homePageId) goToPage(data.homePageId);
           }
         }
       }
@@ -357,7 +446,7 @@
       state.sentence = [];
       renderSentence();
     });
-    el.home.addEventListener('click', () => goToPage(sampleData.homePage));
+    el.home.addEventListener('click', () => goToPage(data.homePageId));
     bindShakeToHome();
     // Ricalcola la griglia quando cambia la dimensione o l'orientamento dello schermo
     let resizeTimer = null;
@@ -371,13 +460,26 @@
 
   applyStaticLabels();
   bindEvents();
-  renderGrid();
   renderSentence();
+
+  // Caricamento dei dati salvati sul dispositivo (al primo avvio: schede di prova)
+  data.load().then(() => {
+    state.ready = true;
+    state.pageId = data.homePageId;
+    renderGrid();
+  });
 
   window.PicSpeak.app = {
     setMode,
     refreshTexts,
     layoutGrid,
+    renderGrid,
+    goToPage,
+    get pageId() { return state.pageId; },
+    autoColumns,
+    currentColumns,
+    maxColumns,
+    itemCount: () => el.grid.childElementCount,
     get mode() { return state.mode; },
   };
 })();
