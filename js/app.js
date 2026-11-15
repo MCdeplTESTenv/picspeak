@@ -48,7 +48,8 @@
 
   // Colore scelto a mano per una tessera (vuoto = colore Fitzgerald automatico)
   function applyCustomColor(node, item) {
-    if (!item.color) return;
+    // Solo colori nel formato #RRGGBB: un valore diverso (es. da un file importato) viene ignorato
+    if (!item.color || !/^#[0-9a-f]{6}$/i.test(item.color)) return;
     node.classList.add('has-custom-color');
     node.style.setProperty('--cat', item.color);
     node.style.setProperty('--card-line', item.color);
