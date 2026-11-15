@@ -460,6 +460,21 @@ button:focus-visible {
 .settings-list li + li { margin-top: 4px; }
 
 .choice-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.settings-field { display: flex; flex-direction: column; gap: 6px; width: 100%; font-weight: 600; }
+.settings-field select {
+  min-height: 52px;
+  padding: 0 12px;
+  font: inherit;
+  font-weight: 400;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 100%;
+}
+.settings-field input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--focus); }
+.settings-field output { font-weight: 400; color: var(--text-muted); }
 .choice-group [aria-pressed="true"] { border-color: var(--focus); background: var(--pressed); }
 
 .settings-open { overflow: hidden; }

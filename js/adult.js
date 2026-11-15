@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  const { i18n, storage, security, install, app } = window.PicSpeak;
+  const { i18n, storage, security, install, app, speech } = window.PicSpeak;
   const t = i18n.t;
 
   const HOLD_MS = 3000;
@@ -395,6 +395,69 @@
     wrap.append(group);
   }
 
+  function renderVoiceSection() {
+    const wrap = section('secVoiceTitle', 'secVoiceHelp');
+    const lang = i18n.language;
+    const prefs = speech.getPrefs();
+    const available = speech.voicesFor(i18n.speechLocale);
+
+    const savePrefs = async (next) => {
+      speech.setPrefs(next);
+      await storage.set('voice', speech.getPrefs());
+    };
+
+    // Elenco delle voci della lingua corrente
+    const field = document.createElement('label');
+    field.className = 'settings-field';
+    const caption = document.createElement('span');
+    caption.textContent = t('voiceLabel');
+    const select = document.createElement('select');
+    const auto = new Option(t('voiceAuto'), '');
+    select.append(auto);
+    available.forEach((voice) => {
+      const suffix = voice.localService ? '' : ` (${t('voiceOnline')})`;
+      select.append(new Option(`${voice.name}${suffix}`, voice.name));
+    });
+    select.value = prefs.voiceByLang[lang] || '';
+    select.addEventListener('change', () => {
+      const voiceByLang = { ...speech.getPrefs().voiceByLang, [lang]: select.value || undefined };
+      if (!select.value) delete voiceByLang[lang];
+      savePrefs({ voiceByLang });
+    });
+    field.append(caption, select);
+    wrap.append(field);
+    if (!available.length) wrap.append(list(t('voiceNone')));
+
+    // Cursori per velocità e tono
+    [['rate', 'rateLabel', 0.5, 1.5], ['pitch', 'pitchLabel', 0.5, 1.5]].forEach(([key, labelKey, min, max]) => {
+      const row = document.createElement('label');
+      row.className = 'settings-field';
+      const text = document.createElement('span');
+      const value = document.createElement('output');
+      text.textContent = t(labelKey);
+      const range = document.createElement('input');
+      range.type = 'range';
+      range.min = String(min);
+      range.max = String(max);
+      range.step = '0.05';
+      range.value = String(prefs[key]);
+      value.textContent = `${Number(prefs[key]).toFixed(2)}×`;
+      range.addEventListener('input', () => {
+        value.textContent = `${Number(range.value).toFixed(2)}×`;
+      });
+      range.addEventListener('change', () => savePrefs({ [key]: Number(range.value) }));
+      text.append(' ', value);
+      row.append(text, range);
+      wrap.append(row);
+    });
+
+    wrap.append(button(t('voiceTest'), () => speech.speak(t('voiceSample'), i18n.speechLocale), true));
+
+    const guide = document.createElement('h4');
+    guide.textContent = t('voiceGuideTitle');
+    wrap.append(guide, list(t('voiceGuide')));
+  }
+
   function renderSecuritySection() {
     const wrap = section('secSecurityTitle', 'secSecurityHelp');
     wrap.append(button(t('changePin'), changePinFlow, false));
@@ -410,6 +473,7 @@
     renderInstallSection();
     renderGuidedSection();
     renderLanguageSection();
+    renderVoiceSection();
     renderSecuritySection();
     renderComingSection();
   }
@@ -441,6 +505,10 @@
     install.onChange(() => {
       if (!el.settings.hidden) renderSettings();
     });
+    // Le voci possono arrivare dopo l'apertura delle impostazioni (Chrome)
+    speech.onVoicesChanged(() => {
+      if (!el.settings.hidden && !el.settings.contains(document.activeElement)) renderSettings();
+    });
   }
 
   // Lingua salvata dall'adulto (quella nell'indirizzo, se presente, ha la precedenza)
@@ -453,6 +521,12 @@
     }
   }
 
+  // Preferenze di voce salvate dall'adulto
+  async function restoreVoice() {
+    speech.setPrefs(await storage.get('voice'));
+  }
+
   bindEvents();
   restoreLanguage();
+  restoreVoice();
 })();
