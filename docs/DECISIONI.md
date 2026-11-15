@@ -277,4 +277,24 @@ Formato: data – decisione – motivo.
 - **Ripristino alle impostazioni iniziali** (richiesta di Marcello, Tappa 5): nella pagina Backup e ripristino un comando
   cancella tutti i dati personalizzati, PIN compreso; al successivo accesso alle impostazioni si crea un nuovo PIN.
   Protezioni: PIN richiesto, proposta di un backup prima di procedere, doppia conferma.
-
+- **Tappa 3 – ricerca dei simboli (15/11/2026).** Pulsante "Cerca simbolo" nella modifica tessera; i risultati si
+  mostrano per fonte: "Già sul dispositivo" (subito, anche offline), ARASAAC (online), Mulberry e OpenMoji (pacchetti).
+  Motivo: le fonti restano intercambiabili (`js/symbols.js`) e l'adulto vede da dove viene ogni simbolo.
+- **Pacchetti Mulberry e OpenMoji: sottoinsieme del vocabolario CAA con parole italiane.** Mulberry 626 simboli (3,8 MB),
+  OpenMoji 600 (3,0 MB), WebP 256 px su fondo trasparente, pubblicati in `symbols/packs/<id>/` con `index.json`
+  (formato `picspeak-pack` versione 1) e licenza originale. Si scaricano nella Cache Storage (`picspeak-pack-<id>`) solo
+  quando l'adulto attiva la fonte, rispettando l'interruttore "Ricerca online"; spegnendo la fonte il pacchetto si toglie
+  (i simboli già usati restano nelle tessere). Gli aggiornamenti dell'app non cancellano queste cache.
+  Motivo: tool leggero per chi non li usa, offline per chi li usa. Script di generazione in `dev/pacchetti-simboli/`.
+- **Dizionario italiano → inglese locale** (`symbols/it-en.json`, ~870 parole CAA, 21 KB, in cache offline): traduce la
+  ricerca per i pacchetti e dà le parole italiane ai loro simboli. Se manca una parola: ponte ARASAAC (stesso pittogramma
+  in inglese), poi MyMemory. Varianti singolare/plurale semplici (mela/mele, cane/cani).
+- **Ogni simbolo scelto si salva una volta** nell'archivio `images` con id stabile (`img_ar_<id>`, `img_mb_<nome>`,
+  `img_om_<codice>`): se è già presente si riusa. Ridisegnato su canvas a 256 px (WebP, o PNG dove il browser non scrive
+  WebP), con fonte, autore, licenza e parole chiave. Nessuna modifica al formato dei dati (campi già previsti).
+- **Content-Security-Policy:** tolti i domini di Global Symbols (fonte esclusa); aggiunto `https://static.arasaac.org` a
+  `connect-src`, perché l'immagine scelta va scaricata come dati per ridurla e salvarla (prima era solo in `img-src`).
+- **Crediti automatici:** la pagina Crediti elenca ARASAAC (sempre, set incluso) e Mulberry/OpenMoji solo se scaricati o
+  usati, con la nota sulla modifica delle immagini (obbligo CC BY-SA), le foto personali e la nota sulla privacy della ricerca.
+- **"Solo Wi-Fi" dove il browser non dice il tipo di rete** (iPad, iPhone, PC): la ricerca mostra subito i simboli sul
+  dispositivo e un avviso con il pulsante "Cerca anche su internet"; la conferma vale fino alla chiusura della pagina.

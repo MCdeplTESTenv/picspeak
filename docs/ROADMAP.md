@@ -43,14 +43,16 @@
 - [x] Pittogrammi ARASAAC inclusi per i simboli di prova (anticipato)
 - [x] Pagina Crediti (anticipata)
 - [x] Interruttore ricerca online: attiva / solo Wi-Fi / disattivata (anticipato)
-- [ ] La ricerca rispetta l'interruttore (blocca, consente o chiede conferma)
-- [ ] Struttura a provider intercambiabili per le fonti dei simboli
-- [ ] Ricerca ARASAAC in italiano
-- [ ] Ricerca in italiano propagata in inglese per i pacchetti con parole inglesi (ponte ARASAAC, dizionario locale, MyMemory come riserva)
-- [ ] Pacchetti Mulberry e OpenMoji (sottoinsieme + indice parole), scaricati solo se attivati
-- [ ] Download unico, ridimensionamento (~256 px) e salvataggio locale dei pittogrammi (con fonte e licenza)
-- [ ] Ricerca offline: simboli già salvati + set incluso; cella solo testo come ultima riserva
-- [ ] Caricamento immagini personali con compressione automatica
+- [x] La ricerca rispetta l'interruttore (blocca, consente o chiede conferma)
+- [x] Struttura a provider intercambiabili per le fonti dei simboli
+- [x] Ricerca ARASAAC in italiano
+- [x] Ricerca in italiano propagata in inglese per i pacchetti con parole inglesi (ponte ARASAAC, dizionario locale, MyMemory come riserva)
+- [x] Pacchetti Mulberry e OpenMoji (sottoinsieme + indice parole), scaricati solo se attivati
+- [x] Download unico, ridimensionamento (~256 px) e salvataggio locale dei pittogrammi (con fonte e licenza)
+- [x] Ricerca offline: simboli già salvati + set incluso; cella solo testo come ultima riserva
+- [x] Caricamento immagini personali con compressione automatica
+- [x] Crediti automatici in base alle fonti presenti sul dispositivo
+- [ ] Prova della ricerca ARASAAC reale su iPad/iPhone (in sviluppo l'API è stata simulata: il server di prova non la raggiunge)
 
 ## Tappa 4 – Template di base e tutorial iniziale
 - [ ] Definire il template di base (vocabolario core + categorie personali) e rivederlo con la logopedista

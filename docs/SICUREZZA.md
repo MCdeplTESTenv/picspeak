@@ -20,7 +20,7 @@ un attacco informatico mirato. Il file di backup non è cifrato (cifratura facol
 |---|---|---|
 | Inserimento nel DOM (XSS) | OK | Tutto il testo passa da `textContent`. Unico `innerHTML`: icone SVG costanti nel menu impostazioni. |
 | Esecuzione di codice | OK | Nessun `eval`, `new Function`, gestori in stringa, URL `javascript:`. |
-| Content Security Policy | Aggiunta | Meta CSP in `index.html`: solo script/stili del sito, rete solo verso ARASAAC, Global Symbols, MyMemory. |
+| Content Security Policy | Aggiunta | Meta CSP in `index.html`: solo script/stili del sito, rete solo verso ARASAAC (`api`, `static`) e MyMemory. |
 | Iframe / clickjacking | Mitigato | GitHub Pages non permette l'intestazione `frame-ancestors`: se PicSpeak è dentro un iframe le impostazioni non si aprono. |
 | PIN | OK | Mai salvato in chiaro: impronta PBKDF2-SHA256, 150.000 iterazioni, sale casuale; attesa crescente dopo 3 errori; codice di recupero salvato solo come impronta. |
 | Limiti del PIN | Noto | L'attesa si basa sull'orologio del dispositivo e sui dati del browser: cambiando ora o cancellando i dati si azzera (ma si cancella anche tutto il resto). |
@@ -43,8 +43,15 @@ un attacco informatico mirato. Il file di backup non è cifrato (cifratura facol
 9. Link esterni con `noopener noreferrer`.
 10. Nuove librerie: discusse prima, versione fissa e controllo di integrità (SRI).
 
+## Tappa 3 – ricerca dei simboli (15/11/2026)
+- Verso l'esterno va solo la parola cercata (ARASAAC; MyMemory solo se serve la traduzione per i pacchetti), con
+  `credentials: 'omit'` e senza referrer; mai se l'interruttore "Ricerca online" lo vieta.
+- La parola va su internet solo quando l'adulto preme «Cerca» (non all'apertura né mentre scrive: protegge nomi propri
+  e parole a metà); i pacchetti in «Solo Wi-Fi» senza tipo di rete noto chiedono conferma.
+- Immagini scaricate: firma reale PNG/JPEG/WebP controllata, massimo 3 MB, tempo massimo 15 s, ridisegnate su canvas a 256 px (nessun SVG, nessun metadato).
+- Pacchetti: indice validato (formato, id, nomi dei file con soli caratteri sicuri), file dallo stesso sito, cache separata.
+- Risultati e crediti costruiti solo con `textContent`/`createElement`; nessun `innerHTML` nuovo.
+
 ## Da fare nelle prossime tappe
-- Tappa 3: controllare il tipo e la dimensione delle immagini scaricate e caricate; ridimensionarle su canvas
-  (rimuove eventuali dati nascosti, compresi i metadati GPS delle foto).
 - Tappa 5: validazione rigorosa del backup; cifratura facoltativa con password (AES-GCM, Web Crypto).
 - Valutare un PIN più lungo facoltativo per gli adulti che lo desiderano.
