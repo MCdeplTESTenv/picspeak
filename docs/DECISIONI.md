@@ -107,4 +107,10 @@ Formato: data – decisione – motivo.
   manifest, icone e service worker. Strategia "prima la rete": online arriva sempre l'ultima versione, offline si usa la copia.
   Su Safari l'installazione non si può avviare da un pulsante: mostriamo le istruzioni.
 - **Icone generate da uno script senza librerie** (fumetto bianco con tre carte colorate su blu).
+- **Voce: solo voci del dispositivo (Web Speech API), scelta automatica della migliore + scelta manuale dell'adulto.**
+  Motivo: la voce "metallica" dipende dalle voci di base installate, non dal tool. Senza appesantire nulla:
+  punteggio che preferisce voci Migliorate/Premium/Natural/Google/Siri e, offline, solo voci locali;
+  nelle impostazioni selettore voce, velocità, tono, pulsante di prova e guida per installare gratis voci
+  migliori su iPad, Mac, Android e Windows. Voci sintetiche esterne (servizi cloud o modelli da scaricare)
+  scartate: costi, privacy o peso di decine di MB.
 

@@ -157,6 +157,8 @@ semplice file.
 - Caricamento di immagini personali (foto di oggetti, persone, luoghi),
   ridimensionate e compresse automaticamente (~256–300 px, WebP/JPEG).
 - Registrazione opzionale della voce di un adulto per ogni simbolo.
+- Scelta della voce di sintesi (fra quelle del dispositivo), velocità e tono, con prova d'ascolto
+  e istruzioni per installare gratis voci più naturali.
 - Configurazione griglia: numero di righe/colonne, dimensione celle.
 - Temi e stile regolabili (aspetto non infantile disponibile per l'età adulta).
 - Colori per categoria (chiave di Fitzgerald), opzionali.

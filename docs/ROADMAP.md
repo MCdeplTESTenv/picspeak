@@ -19,7 +19,8 @@
 - [ ] Salvataggio in IndexedDB
 - [x] Modalità adulto protetta: lucchetto da tenere premuto 3 s + PIN (impronta PBKDF2), attesa crescente
       dopo errori, codice di recupero, uscita manuale e automatica dopo 5 minuti
-- [x] Pagina impostazioni: Installa come app, Accesso guidato (istruzioni), Lingua, Cambia PIN
+- [x] Pagina impostazioni: Installa come app, Accesso guidato (istruzioni), Lingua, Voce, Cambia PIN
+- [x] Voce: scelta automatica della migliore, selettore, velocità, tono, prova e guida alle voci migliorate
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Contesti (Casa, Scuola, Mare, personalizzati): creazione, attivazione/disattivazione rapida, archivio intatto
