@@ -125,7 +125,7 @@ semplice file.
     partono con un peso maggiore), così i suggerimenti hanno senso fin dal primo giorno.
   - Tutte le risposte restano sul dispositivo e fanno parte del backup.
 
-### Accesso alla modalità adulto (proposta da confermare, Tappa 2)
+### Accesso alla modalità adulto (confermato; prima versione realizzata)
 - In modalità bambino nulla modifica i dati: anche toccare un simbolo nella striscia frase
   lo ripete soltanto (la cancellazione dal simbolo è possibile solo in modalità adulto;
   i pulsanti ⌫ e ✕ della frase restano disponibili al bambino).
@@ -133,15 +133,17 @@ semplice file.
   poi richiesta del PIN (4–6 cifre) creato al primo avvio.
 - Uscita: pulsante "Torna alla comunicazione" e ritorno automatico dopo alcuni minuti di inattività.
 - Permessi: un PIN "amministratore" (genitore: tutto, compresi backup, PIN, eliminazioni) e,
-  facoltativi, PIN "collaboratore" (terapista/insegnante: modifica schede e simboli, niente
+  facoltativi (non ancora realizzati), PIN "collaboratore" (terapista/insegnante: modifica schede e simboli, niente
   impostazioni di sicurezza o cancellazione del profilo).
 - PIN salvato solo come impronta cifrata (hash con sale, Web Crypto), mai in chiaro; pausa crescente
   dopo tentativi sbagliati; codice di recupero da stampare alla creazione.
 - Limite onesto: senza server la protezione ferma il bambino e l'adulto non autorizzato, non un
   esperto informatico con il dispositivo in mano. Per il file di backup si potrà aggiungere una
   password facoltativa (cifratura AES con Web Crypto).
-- Suggerito all'adulto: "Accesso guidato" di iPad / "Blocco app" di Android per tenere il bambino
-  dentro PicSpeak.
+- Nelle impostazioni: istruzioni passo passo per "Accesso guidato" di iPad/iPhone e "Blocco app"
+  di Android, che tengono il bambino dentro PicSpeak (il tool non può attivarli da solo).
+- Nelle impostazioni: "Installa PicSpeak come app" – pulsante con un clic su Chrome/Edge (PC e Android),
+  istruzioni brevi su Safari (iPad/iPhone: Condividi → Aggiungi alla schermata Home; Mac: File → Aggiungi al Dock).
 - Impostazioni raggruppate in: Modifica schede, Profilo, Aspetto e griglia, Voce, Lingua,
   Fonti dei simboli, T9 e regole, Backup, Sicurezza e PIN, Avanzate.
 

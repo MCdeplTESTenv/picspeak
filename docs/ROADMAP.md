@@ -17,7 +17,10 @@
 ## Tappa 2 – Dati e modalità adulto
 - [ ] Modello dati (profili, pagine, celle, contesti) documentato in docs/FORMATO-DATI.md
 - [ ] Salvataggio in IndexedDB
-- [ ] Modalità adulto protetta (PIN / pressione prolungata)
+- [x] Modalità adulto protetta: lucchetto da tenere premuto 3 s + PIN (impronta PBKDF2), attesa crescente
+      dopo errori, codice di recupero, uscita manuale e automatica dopo 5 minuti
+- [x] Pagina impostazioni: Installa come app, Accesso guidato (istruzioni), Lingua, Cambia PIN
+- [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Contesti (Casa, Scuola, Mare, personalizzati): creazione, attivazione/disattivazione rapida, archivio intatto
 - [ ] Registrazione locale delle abitudini d'uso (simboli, orari, sequenze) attiva fin da subito
@@ -51,9 +54,9 @@
 - [ ] Indicatore "Ultimo backup: X giorni fa" e ripristino guidato
 
 ## Tappa 6 – PWA e offline
-- [ ] manifest.json e icone
-- [ ] Service worker per uso offline
-- [ ] Istruzioni "Aggiungi a Home" per iOS e Android
+- [x] manifest e icone (anticipato per il pulsante "Installa")
+- [x] Service worker "prima la rete" per uso offline (anticipato; da verificare offline su iPad)
+- [x] Istruzioni "Aggiungi a Home" per iOS e Android (nelle impostazioni)
 
 ## Tappa 7 – Interfaccia adattiva
 - [ ] Confermare il modello del T9 (vedi proposta in DECISIONI.md)
@@ -71,7 +74,7 @@
 - [ ] Profili multipli
 - [ ] Impostazioni griglia e accessibilità
 - [ ] Temi e stile non infantile per l'età adulta
-- [ ] Selettore lingua nelle impostazioni (italiano/inglese) e traduzione completa
+- [x] Selettore lingua nelle impostazioni (italiano/inglese)
 - [ ] Eventuale percorso a fasi di scambio guidato (ispirato al metodo PECS, senza usarne il nome)
 
 ## Idee future (non pianificate)

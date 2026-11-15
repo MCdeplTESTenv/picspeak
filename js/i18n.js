@@ -2,6 +2,7 @@
  * Dizionari dei testi dell'interfaccia, uno per lingua.
  * Nessun testo dell'interfaccia va scritto direttamente nel codice:
  * aggiungere una lingua significa aggiungere un dizionario qui.
+ * Un valore può essere una stringa o un elenco di stringhe (passaggi numerati).
  */
 (function () {
   'use strict';
@@ -16,6 +17,98 @@
       sentenceEmpty: 'Frase vuota',
       openPage: 'Apri la pagina',
       removeFromSentence: 'Togli dalla frase',
+
+      // Modalità adulto
+      lockHint: 'Modalità adulto: tieni premuto 3 secondi',
+      adultMode: 'Modalità adulto',
+      settings: 'Impostazioni',
+      backToCommunication: 'Torna alla comunicazione',
+      pinEnterTitle: 'Inserisci il PIN',
+      pinCreateTitle: 'Crea il PIN dell’adulto',
+      pinCreateHelp: 'Da 4 a 6 cifre. Servirà per entrare nella modalità adulto.',
+      pinLabel: 'PIN',
+      pinNewLabel: 'Nuovo PIN',
+      pinConfirmLabel: 'Ripeti il PIN',
+      currentPinLabel: 'PIN attuale',
+      pinMismatch: 'I due PIN non coincidono.',
+      pinInvalid: 'Il PIN deve avere da 4 a 6 cifre.',
+      pinWrong: 'PIN errato.',
+      pinLocked: 'Troppi tentativi. Riprova tra {s} secondi.',
+      pinForgot: 'PIN dimenticato?',
+      pinChanged: 'PIN aggiornato.',
+      changePinTitle: 'Cambia PIN',
+      recoveryTitle: 'Codice di recupero',
+      recoveryHelp: 'Annota o stampa questo codice e conservalo in un posto sicuro: serve se dimentichi il PIN. Non verrà mostrato di nuovo.',
+      recoveryDone: 'Ho annotato il codice',
+      recoveryEnterTitle: 'Recupero del PIN',
+      recoveryEnterHelp: 'Inserisci il codice di recupero ricevuto quando hai creato il PIN.',
+      recoveryLabel: 'Codice di recupero',
+      recoveryWrong: 'Codice di recupero errato.',
+      cancel: 'Annulla',
+      confirm: 'Conferma',
+      close: 'Chiudi',
+      back: 'Indietro',
+      cryptoUnavailable: 'Da qui il PIN non può essere protetto. Apri PicSpeak dal suo indirizzo web (https://…) per usare la modalità adulto.',
+
+      // Impostazioni
+      settingsTitle: 'Impostazioni',
+      secInstallTitle: 'Installa PicSpeak come app',
+      secInstallHelp: 'Aggiunge l’icona di PicSpeak alla schermata Home o alla scrivania: si apre a schermo intero, come un’app, e funziona anche senza connessione.',
+      installButton: 'Installa PicSpeak',
+      installDone: 'PicSpeak è già aperto come app su questo dispositivo.',
+      installFromFile: 'Per installarlo apri PicSpeak dal suo indirizzo web: https://mcdepltestenv.github.io/picspeak/',
+      installIos: [
+        'Apri questa pagina in Safari e tocca il pulsante Condividi (il quadrato con la freccia verso l’alto).',
+        'Scorri e scegli «Aggiungi alla schermata Home».',
+        'Tocca «Aggiungi».',
+      ],
+      installAndroid: [
+        'Apri il menu ⋮ di Chrome in alto a destra.',
+        'Scegli «Installa app» o «Aggiungi a schermata Home».',
+      ],
+      installMacSafari: [
+        'Nel menu File di Safari scegli «Aggiungi al Dock».',
+      ],
+      installFirefox: [
+        'Firefox non permette di installare le app web: apri questo indirizzo con Chrome, Edge o Safari, oppure aggiungilo ai preferiti.',
+      ],
+      installChromium: [
+        'Se il pulsante non compare, apri il menu del browser (⋮ o …) e scegli «Installa PicSpeak» oppure «Salva e condividi → Installa pagina come app».',
+      ],
+      secGuidedTitle: 'Accesso guidato: tenere il bambino dentro PicSpeak',
+      secGuidedHelp: 'È una funzione del tablet o del telefono che impedisce di uscire dall’app senza un codice. PicSpeak non può attivarla da solo: va impostata una volta nelle impostazioni del dispositivo.',
+      guidedIosTitle: 'iPad e iPhone – Accesso guidato',
+      guidedIos: [
+        'Apri Impostazioni → Accessibilità → Accesso guidato e attivalo.',
+        'In «Impostazioni codice» scegli un codice (può essere diverso dal PIN di PicSpeak).',
+        'Apri PicSpeak e premi tre volte il tasto laterale (o il tasto Home).',
+        'Tocca «Avvia». Per uscire premi di nuovo tre volte e inserisci il codice.',
+      ],
+      guidedAndroidTitle: 'Android – Blocco app',
+      guidedAndroid: [
+        'Apri Impostazioni → Sicurezza (o «Sicurezza e privacy») → Altre impostazioni → «Blocco app» / «Fissa app» e attivalo.',
+        'Apri PicSpeak, poi la schermata delle app recenti.',
+        'Tocca l’icona di PicSpeak in alto e scegli «Fissa» o «Blocca».',
+        'I nomi dei menu cambiano un po’ tra le diverse marche.',
+      ],
+      secLanguageTitle: 'Lingua',
+      secLanguageHelp: 'Lingua dell’interfaccia e della voce.',
+      secSecurityTitle: 'Sicurezza e PIN',
+      secSecurityHelp: 'Dopo 5 minuti senza tocchi PicSpeak torna da solo alla modalità di comunicazione.',
+      changePin: 'Cambia PIN',
+      secComingTitle: 'In arrivo',
+      secComingHelp: 'Queste impostazioni arriveranno nelle prossime tappe:',
+      comingList: [
+        'Modifica schede e simboli',
+        'Contesti (Casa, Scuola, Mare…)',
+        'Profilo e tutorial iniziale',
+        'Aspetto e griglia',
+        'Voce',
+        'Fonti dei simboli',
+        'T9 e regole',
+        'Backup',
+        'Collaboratori (logopedista, insegnanti) con PIN propri',
+      ],
     },
     en: {
       appName: 'PicSpeak',
@@ -26,8 +119,101 @@
       sentenceEmpty: 'Empty sentence',
       openPage: 'Open page',
       removeFromSentence: 'Remove from sentence',
+
+      lockHint: 'Adult mode: press and hold for 3 seconds',
+      adultMode: 'Adult mode',
+      settings: 'Settings',
+      backToCommunication: 'Back to communication',
+      pinEnterTitle: 'Enter the PIN',
+      pinCreateTitle: 'Create the adult PIN',
+      pinCreateHelp: '4 to 6 digits. You will need it to enter adult mode.',
+      pinLabel: 'PIN',
+      pinNewLabel: 'New PIN',
+      pinConfirmLabel: 'Repeat the PIN',
+      currentPinLabel: 'Current PIN',
+      pinMismatch: 'The two PINs do not match.',
+      pinInvalid: 'The PIN must have 4 to 6 digits.',
+      pinWrong: 'Wrong PIN.',
+      pinLocked: 'Too many attempts. Try again in {s} seconds.',
+      pinForgot: 'Forgot your PIN?',
+      pinChanged: 'PIN updated.',
+      changePinTitle: 'Change PIN',
+      recoveryTitle: 'Recovery code',
+      recoveryHelp: 'Write down or print this code and keep it somewhere safe: you need it if you forget the PIN. It will not be shown again.',
+      recoveryDone: 'I wrote the code down',
+      recoveryEnterTitle: 'PIN recovery',
+      recoveryEnterHelp: 'Enter the recovery code you received when you created the PIN.',
+      recoveryLabel: 'Recovery code',
+      recoveryWrong: 'Wrong recovery code.',
+      cancel: 'Cancel',
+      confirm: 'Confirm',
+      close: 'Close',
+      back: 'Back',
+      cryptoUnavailable: 'The PIN cannot be protected here. Open PicSpeak from its web address (https://…) to use adult mode.',
+
+      settingsTitle: 'Settings',
+      secInstallTitle: 'Install PicSpeak as an app',
+      secInstallHelp: 'Adds the PicSpeak icon to the Home screen or desktop: it opens full screen, like an app, and also works offline.',
+      installButton: 'Install PicSpeak',
+      installDone: 'PicSpeak is already open as an app on this device.',
+      installFromFile: 'To install it, open PicSpeak from its web address: https://mcdepltestenv.github.io/picspeak/',
+      installIos: [
+        'Open this page in Safari and tap the Share button (the square with the up arrow).',
+        'Scroll down and choose “Add to Home Screen”.',
+        'Tap “Add”.',
+      ],
+      installAndroid: [
+        'Open the Chrome ⋮ menu at the top right.',
+        'Choose “Install app” or “Add to Home screen”.',
+      ],
+      installMacSafari: [
+        'In the Safari File menu choose “Add to Dock”.',
+      ],
+      installFirefox: [
+        'Firefox cannot install web apps: open this address with Chrome, Edge or Safari, or bookmark it.',
+      ],
+      installChromium: [
+        'If the button does not appear, open the browser menu (⋮ or …) and choose “Install PicSpeak” or “Save and share → Install page as app”.',
+      ],
+      secGuidedTitle: 'Guided Access: keep the child inside PicSpeak',
+      secGuidedHelp: 'A tablet or phone feature that prevents leaving the app without a code. PicSpeak cannot turn it on by itself: set it up once in the device settings.',
+      guidedIosTitle: 'iPad and iPhone – Guided Access',
+      guidedIos: [
+        'Open Settings → Accessibility → Guided Access and turn it on.',
+        'In “Passcode Settings” choose a passcode (it can differ from the PicSpeak PIN).',
+        'Open PicSpeak and triple-click the side button (or the Home button).',
+        'Tap “Start”. To exit, triple-click again and enter the passcode.',
+      ],
+      guidedAndroidTitle: 'Android – App pinning',
+      guidedAndroid: [
+        'Open Settings → Security (or “Security & privacy”) → More settings → “App pinning” and turn it on.',
+        'Open PicSpeak, then the recent apps screen.',
+        'Tap the PicSpeak icon at the top and choose “Pin”.',
+        'Menu names vary slightly between brands.',
+      ],
+      secLanguageTitle: 'Language',
+      secLanguageHelp: 'Language of the interface and of the voice.',
+      secSecurityTitle: 'Security and PIN',
+      secSecurityHelp: 'After 5 minutes without touches PicSpeak goes back to communication mode by itself.',
+      changePin: 'Change PIN',
+      secComingTitle: 'Coming soon',
+      secComingHelp: 'These settings will arrive in the next stages:',
+      comingList: [
+        'Edit boards and symbols',
+        'Contexts (Home, School, Seaside…)',
+        'Profile and first-time tutorial',
+        'Look and grid',
+        'Voice',
+        'Symbol sources',
+        'Word prediction and rules',
+        'Backup',
+        'Collaborators (therapist, teachers) with their own PIN',
+      ],
     },
   };
+
+  // Nome di ogni lingua scritto nella lingua stessa
+  const languageNames = { it: 'Italiano', en: 'English' };
 
   // Codici BCP 47 usati per la sintesi vocale
   const speechLocales = { it: 'it-IT', en: 'en-US' };
@@ -35,12 +221,11 @@
   const supported = Object.keys(dictionaries);
   let current = 'it';
 
-  // Lingua iniziale: italiano di default; in futuro arriverà dalle impostazioni adulto
-  function detectInitialLanguage() {
-    const fromUrl = new URLSearchParams(location.search).get('lang');
-    if (fromUrl && supported.includes(fromUrl)) return fromUrl;
-    return 'it';
-  }
+  // La lingua indicata nell'indirizzo (?lang=en) ha la precedenza su quella salvata
+  const urlLanguage = (() => {
+    const lang = new URLSearchParams(location.search).get('lang');
+    return lang && supported.includes(lang) ? lang : null;
+  })();
 
   function t(key) {
     const dict = dictionaries[current] || dictionaries.it;
@@ -53,12 +238,27 @@
     document.documentElement.lang = lang;
   }
 
-  setLanguage(detectInitialLanguage());
+  // Applica i testi agli elementi con data-i18n (testo) e data-i18n-label (etichetta accessibile)
+  function applyTo(root) {
+    (root || document).querySelectorAll('[data-i18n]').forEach((node) => {
+      node.textContent = t(node.dataset.i18n);
+    });
+    (root || document).querySelectorAll('[data-i18n-label]').forEach((node) => {
+      const text = t(node.dataset.i18nLabel);
+      node.setAttribute('aria-label', text);
+      node.title = text;
+    });
+  }
+
+  setLanguage(urlLanguage || 'it');
 
   window.PicSpeak = window.PicSpeak || {};
   window.PicSpeak.i18n = {
     t,
     setLanguage,
+    applyTo,
+    urlLanguage,
+    languageNames,
     get language() { return current; },
     get speechLocale() { return speechLocales[current]; },
     supported,

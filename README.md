@@ -6,7 +6,7 @@ installazione, anche offline.
 
 **Provalo:** https://mcdepltestenv.github.io/picspeak/ (in inglese: aggiungi `?lang=en`).
 
-Stato: Tappa 1, prototipo con simboli di prova. Vedi `docs/IDEA.md` e `docs/ROADMAP.md`.
+Stato: Tappa 1 completata, prima versione della modalità adulto (tieni premuto il lucchetto 🔒 in alto a destra per 3 secondi). Vedi `docs/IDEA.md` e `docs/ROADMAP.md`.
 
 Per provarlo in locale basta aprire `index.html` con doppio clic.
 

@@ -94,4 +94,17 @@ Formato: data – decisione – motivo.
   Motivo: richiesta di Marcello. L'adulto/terapista li attiva e disattiva velocemente; ognuno conserva schede e
   statistiche T9 e si riattiva intatto (es. ogni estate il Mare). Nel modello dati dalla Tappa 2, statistiche per
   contesto nella Tappa 7.
+- **Modalità adulto confermata e realizzata (prima versione).** Lucchetto poco visibile da tenere premuto 3 secondi,
+  poi PIN di 4–6 cifre; il PIN è salvato solo come impronta PBKDF2-SHA256 (150.000 iterazioni, sale casuale);
+  dopo 3 errori attesa crescente da 30 s a 15 min (vale anche per il codice di recupero); codice di recupero
+  di 12 caratteri mostrato una sola volta; uscita automatica dopo 5 minuti senza tocchi.
+  Motivo: richiesta di Marcello, il bambino e gli adulti non autorizzati non devono accedere alle impostazioni.
+  Limite dichiarato: senza server non protegge da chi ha competenze tecniche e il dispositivo in mano.
+- **Impostazioni salvate in IndexedDB (database `picspeak`, archivio `settings`, versione 1).**
+  Motivo: base minima per PIN e lingua; il modello dati completo (Tappa 2) aggiungerà altri archivi con una nuova versione.
+- **Installazione come app e service worker anticipati dalla Tappa 6.**
+  Motivo: richiesta di Marcello di un pulsante per installare il tool; Chrome mostra il pulsante solo se ci sono
+  manifest, icone e service worker. Strategia "prima la rete": online arriva sempre l'ultima versione, offline si usa la copia.
+  Su Safari l'installazione non si può avviare da un pulsante: mostriamo le istruzioni.
+- **Icone generate da uno script senza librerie** (fumetto bianco con tre carte colorate su blu).
 
