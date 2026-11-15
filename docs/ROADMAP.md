@@ -26,6 +26,9 @@
 - [x] Colore di sfondo della pagina selezionabile (colori pronti o a scelta)
 - [x] Modalità "Scheda" predefinita (stile tabelle stampate) e scrittura delle parole MAIUSCOLO/minuscolo
 - [x] Modalità "Fogli" (cartelle come fogli con l'angolo piegato) e sfondo "Automatico"
+- [x] Personalizzazioni grafiche: colore simboli, immagine/parola, posizione parola, testo, carattere, spaziatura,
+      bordi, angoli, posizione frase e pulsanti, nome pagina, evidenziazione al tocco
+- [x] Impostazioni ridisegnate con righe e controlli a segmenti
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"
@@ -81,6 +84,12 @@
 - [ ] Profili multipli
 - [ ] Impostazioni griglia e accessibilità
 - [ ] Temi e stile non infantile per l'età adulta
+- [ ] Altre personalizzazioni previste: numero di righe/colonne e celle fisse, dimensione minima delle celle,
+      contorno spesso intorno all'immagine (ipovisione), cornice o sfondo dietro l'immagine, cella nascosta
+      temporaneamente senza cancellarla, cella "vuota" per mantenere la posizione, ritardo/tempo di pressione
+      per evitare tocchi accidentali (tremori), ignorare i tocchi ripetuti, scansione a sensore/switch,
+      selezione per sosta (dwell) con puntatore o sguardo, ingrandimento della cella toccata, suono al tocco,
+      zoom della striscia frase, schermo intero e blocco rotazione, tema scuro per uso serale
 - [x] Selettore lingua nelle impostazioni (italiano/inglese)
 - [ ] Eventuale percorso a fasi di scambio guidato (ispirato al metodo PECS, senza usarne il nome)
 

@@ -139,4 +139,15 @@ Formato: data – decisione – motivo.
   il principio (cartella = foglio con più pagine), non la grafica.
 - **Colore di sfondo "Automatico"** (predefinito): usa lo sfondo previsto dalla modalità colori scelta
   (bianco per Scheda, sfumato per Fogli…); gli altri colori lo sostituiscono.
+- **Personalizzazioni grafiche nelle impostazioni (Aspetto)**, ognuna salvata sul dispositivo (`appearance`):
+  colore dei simboli (a colori, bianco e nero, più contrasto), contenuto della cella (immagine e parola, solo immagine,
+  solo parola), posizione della parola (sotto/sopra), scrittura (MAIUSCOLO/minuscolo/come scritte), dimensione del testo,
+  carattere (standard, alta leggibilità, arrotondato), spazio tra le celle, spessore del bordo, angoli, striscia frase
+  in alto/in basso, pulsanti della frase a destra/sinistra (mancini), nome della pagina visibile/nascosto,
+  evidenziazione al tocco (normale, marcata, nessuna).
+  Motivo: richiesta di Marcello; dettagli che sembrano banali ma contano molto per l'accessibilità e per adattare
+  il tool alla persona nel tempo.
+- **Impostazioni con aspetto più "professionale":** carattere di sistema, schede con intestazione grigia in maiuscoletto,
+  righe "etichetta a sinistra, controllo a destra", controlli a segmenti, angoli e spaziature ridotti.
+  Motivo: Marcello trovava la pagina ancora "molle".
 

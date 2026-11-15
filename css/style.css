@@ -213,8 +213,8 @@ button:focus-visible {
 }
 
 /* --cell-size è calcolato da app.js: immagine ed etichetta crescono con la cella */
-.symbol-image.size-cell { font-size: clamp(32px, calc(var(--cell-size, 110px) * 0.48), 128px); }
-.symbol-cell .symbol-label { font-size: clamp(14px, calc(var(--cell-size, 110px) * 0.11), 28px); }
+.symbol-image.size-cell { font-size: clamp(32px, calc(var(--cell-size, 110px) * 0.48 * var(--image-scale, 1)), 160px); }
+.symbol-cell .symbol-label { font-size: clamp(12px, calc(var(--cell-size, 110px) * 0.11 * var(--label-scale, 1)), 48px); }
 .symbol-image.size-chip { font-size: clamp(30px, 5.5vw, 52px); }
 
 .symbol-label {
@@ -780,3 +780,168 @@ body { background: var(--page-bg, var(--bg)); }
 .mode-preview.is-sheet span { background: rgba(255, 255, 255, 0.25); border: 2px solid rgba(255, 255, 255, 0.9); }
 .mode-preview.is-sheet span.type-folder { background: #fff; border: 2px solid #a9c4e6; box-shadow: 3px 3px 0 -1px #fff, 3px 3px 0 0 #7d93ad; }
 .bg-swatch .swatch-auto { display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-muted); background: repeating-linear-gradient(45deg, #ffffff 0 6px, #eef0f3 6px 12px); }
+
+
+/* =====================================================================
+ * Personalizzazioni grafiche (Impostazioni → Aspetto), attributi su <html>
+ * ===================================================================== */
+
+/* Simboli: a colori, bianco e nero, alto contrasto */
+[data-symbol-color="gray"] .symbol-image { filter: grayscale(1); }
+[data-symbol-color="contrast"] .symbol-image { filter: contrast(1.35) saturate(1.4); }
+
+/* Contenuto della cella */
+[data-cell-content="image"] .symbol-cell .symbol-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+[data-cell-content="image"] { --image-scale: 1.3; }
+[data-cell-content="text"] .symbol-cell .symbol-image { display: none; }
+[data-cell-content="text"] { --label-scale: 1.45; }
+[data-cell-content="text"] .symbol-cell .symbol-label { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+[data-cell-content="text"] .symbol-cell { justify-content: center; }
+
+/* Parola sopra o sotto l'immagine */
+[data-label-position="above"] .symbol-cell,
+[data-label-position="above"] .sentence-chip { flex-direction: column-reverse; }
+
+/* Dimensione del testo */
+[data-text-size="s"] { --label-scale: 0.85; }
+[data-text-size="l"] { --label-scale: 1.25; }
+[data-text-size="xl"] { --label-scale: 1.5; }
+[data-cell-content="text"][data-text-size="s"] { --label-scale: 1.4; }
+[data-cell-content="text"][data-text-size="l"] { --label-scale: 2; }
+[data-cell-content="text"][data-text-size="xl"] { --label-scale: 2.3; }
+
+/* Carattere: alta leggibilità (forme delle lettere ben distinte) o arrotondato */
+[data-font="readable"] body { font-family: Verdana, Tahoma, "DejaVu Sans", sans-serif !important; }
+[data-font="readable"] .symbol-label { letter-spacing: 0.03em; }
+[data-font="rounded"] body { font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Arial Rounded MT Bold", sans-serif !important; }
+
+/* Spaziatura tra le celle */
+[data-cell-gap="tight"] .symbol-grid { gap: 4px !important; padding: 6px !important; }
+[data-cell-gap="wide"] .symbol-grid { gap: clamp(16px, 3vw, 30px) !important; padding: clamp(16px, 3vw, 30px) !important; }
+
+/* Spessore del bordo delle celle */
+[data-border="thin"] .symbol-cell { border-width: 2px !important; }
+[data-border="thick"] .symbol-cell { border-width: clamp(6px, 1.2vw, 10px) !important; }
+
+/* Angoli */
+[data-corners="square"] .symbol-cell,
+[data-corners="square"] .sentence-chip,
+[data-corners="square"] .sentence-strip,
+[data-corners="square"] .action-btn,
+[data-corners="square"] .nav-btn { border-radius: 3px !important; }
+
+/* Posizione della striscia frase */
+body > .sentence-bar { order: 1; }
+body > .page-nav { order: 2; }
+body > .symbol-grid { order: 3; }
+body > .adult-bar { order: 0; }
+[data-sentence-position="bottom"] body > .sentence-bar { order: 4; border-bottom: 0; border-top: 2px solid var(--border); }
+
+/* Pulsanti della frase a sinistra (utile per chi usa la mano sinistra) */
+[data-controls-side="left"] .sentence-bar { flex-direction: row-reverse; }
+
+/* Titolo della pagina */
+[data-page-title="hidden"] .page-title { visibility: hidden; }
+
+/* Evidenziazione al tocco */
+[data-touch-feedback="off"] .symbol-cell.is-pressed,
+[data-touch-feedback="off"] .sentence-chip.is-pressed { background: inherit !important; box-shadow: inherit; }
+[data-touch-feedback="strong"] .symbol-cell.is-pressed { outline: 5px solid var(--focus); outline-offset: -5px; }
+
+/* =====================================================================
+ * Impostazioni: aspetto più compatto e professionale
+ * ===================================================================== */
+.settings-screen {
+  background: #f2f3f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  color: #1d1d1f;
+}
+.settings-header { background: #ffffff; color: #1d1d1f; border-bottom: 1px solid #dcdfe4; padding: 10px 16px; }
+.settings-header h2 { font-size: 19px; font-weight: 700; }
+.settings-header .adult-btn { min-height: 40px; border: 1px solid #c9cdd3; border-radius: 8px; padding: 0 12px; font-weight: 600; }
+.settings-layout { gap: 24px; padding: 20px 24px; }
+.settings-nav { background: transparent; border: 0; padding: 0; gap: 2px; top: 76px; }
+.settings-nav-btn { min-height: 44px; font-size: 15px; border-radius: 8px; padding: 0 10px; }
+.settings-nav-btn .nav-icon { width: 28px; height: 28px; font-size: 16px; border-radius: 7px; background: #ffffff; border: 1px solid #e1e4e8; }
+.settings-nav-btn[aria-current="true"] { background: #e2e8f3; color: #1d1d1f; }
+.settings-panel { gap: 18px; }
+.settings-panel-title { font-size: 24px; font-weight: 700; margin: 0; }
+.settings-panel-intro { margin: -12px 0 0; font-size: 14px; }
+.settings-section {
+  gap: 0;
+  padding: 0;
+  background: #ffffff;
+  border: 1px solid #dcdfe4;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.settings-section > h3 {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5b616b;
+  background: #f7f8fa;
+  border-bottom: 1px solid #e6e8ec;
+  width: 100%;
+}
+.settings-section > :not(h3) { margin-left: 16px; margin-right: 16px; }
+.settings-section > :nth-child(2) { margin-top: 14px; }
+.settings-section > :last-child { margin-bottom: 16px; }
+.settings-section > * + * { margin-top: 12px; }
+.settings-section h4 { font-size: 14px; }
+.settings-help { font-size: 14px; }
+.settings-list { font-size: 14px; }
+
+/* Riga di impostazione: etichetta a sinistra, controllo a destra */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: calc(100% - 32px);
+  padding: 12px 0;
+  border-top: 1px solid #eef0f3;
+}
+.settings-section > .setting-row:nth-child(2) { border-top: 0; margin-top: 4px; }
+.settings-section > .setting-row + .setting-row { margin-top: 0; }
+.setting-row:last-child { margin-bottom: 4px; }
+.setting-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.setting-text strong { font-size: 15px; font-weight: 600; }
+.setting-text small { font-size: 13px; color: #6b717b; line-height: 1.35; }
+
+/* Controllo a segmenti */
+.segmented { display: inline-flex; flex: none; padding: 2px; background: #eceef1; border-radius: 8px; }
+.segmented button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3a3f47;
+  white-space: nowrap;
+}
+.segmented button[aria-pressed="true"] { background: #ffffff; color: #111; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); }
+
+@media (max-width: 720px) {
+  .setting-row { flex-direction: column; align-items: flex-start; }
+  .segmented { flex-wrap: wrap; }
+}
+
+.settings-screen .dlg-btn { min-height: 40px; border-radius: 8px; border-width: 1px; font-size: 14px; }
+.settings-screen .dlg-btn-primary { border-color: #1f6feb; }
+.mode-option { border-radius: 10px; border-width: 1px; padding: 10px; }
+.mode-option[aria-pressed="true"] { border-width: 2px; padding: 9px; }
+.mode-option strong { font-size: 15px; }
+.mode-preview { border-radius: 8px; }
+.settings-field select { min-height: 40px; border-radius: 8px; border-width: 1px; }
+.bg-swatch .swatch, .bg-swatch input[type="color"] { width: 44px; height: 44px; border-radius: 10px; border-width: 1px; }
+.choice-group { gap: 8px; }
+.settings-section > .mode-options,
+.settings-section > .settings-field,
+.settings-section > .bg-options { width: calc(100% - 32px); }
+.settings-panel-title { display: flex; align-items: center; gap: 10px; }
