@@ -3,7 +3,7 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v11';
+const CACHE_VERSION = 'picspeak-v14';
 
 const APP_FILES = [
   './',
@@ -15,9 +15,11 @@ const APP_FILES = [
   'js/security.js',
   'js/install.js',
   'js/sample-data.js',
+  'js/data.js',
   'js/speech.js',
   'js/app.js',
   'js/adult.js',
+  'js/editor.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
