@@ -150,4 +150,9 @@ Formato: data – decisione – motivo.
 - **Impostazioni con aspetto più "professionale":** carattere di sistema, schede con intestazione grigia in maiuscoletto,
   righe "etichetta a sinistra, controllo a destra", controlli a segmenti, angoli e spaziature ridotti.
   Motivo: Marcello trovava la pagina ancora "molle".
+- **Dieci stili pronti come punto di partenza** (Impostazioni → Aspetto → Stili pronti): Scheda (predefinito),
+  Scheda grande, Fogli, Colore pieno, Pulito, Essenziale, Alto contrasto, Bianco e nero, Notte, Solo parole.
+  Ogni stile imposta modalità colori, sfondo e personalizzazioni; dopo si può cambiare ogni dettaglio e si ottiene
+  uno stile "personalizzato" (ibrido). Aggiunte le opzioni "riquadro dietro l'immagine" e "trasparenza delle celle".
+  Motivo: richiesta di Marcello; il turchese di "Fogli" era solo un esempio e resta uno degli stili, non il predefinito.
 

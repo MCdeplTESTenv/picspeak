@@ -29,6 +29,7 @@
 - [x] Personalizzazioni grafiche: colore simboli, immagine/parola, posizione parola, testo, carattere, spaziatura,
       bordi, angoli, posizione frase e pulsanti, nome pagina, evidenziazione al tocco
 - [x] Impostazioni ridisegnate con righe e controlli a segmenti
+- [x] Dieci stili pronti da cui partire, poi personalizzabili (riquadro immagine, trasparenza celle)
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"

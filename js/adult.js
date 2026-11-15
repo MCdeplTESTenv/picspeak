@@ -566,6 +566,8 @@
         values: [['both', 'valBoth'], ['image', 'valImageOnly'], ['text', 'valTextOnly']] },
       { key: 'labelPosition', labelKey: 'optLabelPosition',
         values: [['below', 'valBelow'], ['above', 'valAbove']] },
+      { key: 'imageFrame', labelKey: 'optImageFrame', helpKey: 'optImageFrameHelp',
+        values: [['none', 'valNo'], ['frame', 'valYes']] },
     ] },
     { titleKey: 'grpText', options: [
       { key: 'labelCase', labelKey: 'secCaseTitle', helpKey: 'secCaseHelp',
@@ -582,6 +584,8 @@
         values: [['normal', 'valNormal'], ['thin', 'valThin'], ['thick', 'valThick']] },
       { key: 'corners', labelKey: 'optCorners',
         values: [['rounded', 'valRoundedCorners'], ['square', 'valSquare']] },
+      { key: 'cellOpacity', labelKey: 'optCellOpacity', helpKey: 'optCellOpacityHelp',
+        values: [['solid', 'valSolid'], ['translucent', 'valTranslucent']] },
     ] },
     { titleKey: 'grpLayout', options: [
       { key: 'sentencePosition', labelKey: 'optSentencePosition',
@@ -603,6 +607,99 @@
       document.documentElement.dataset[opt.key] = value;
     });
     app.layoutGrid();
+  }
+
+  // Stili pronti: punto di partenza da cui poi personalizzare ogni dettaglio
+  const PRESETS = [
+    { id: 'card', nameKey: 'presetCard', descKey: 'presetCardDesc', colorMode: 'card', background: '',
+      appearance: {} },
+    { id: 'card-big', nameKey: 'presetCardBig', descKey: 'presetCardBigDesc', colorMode: 'card', background: '',
+      appearance: { textSize: 'l', font: 'readable', border: 'thick', touchFeedback: 'strong' } },
+    { id: 'sheet', nameKey: 'presetSheet', descKey: 'presetSheetDesc', colorMode: 'sheet', background: '',
+      appearance: { labelCase: 'as-is' } },
+    { id: 'full', nameKey: 'presetFull', descKey: 'presetFullDesc', colorMode: 'full', background: '',
+      appearance: { imageFrame: 'frame' } },
+    { id: 'clean', nameKey: 'presetClean', descKey: 'presetCleanDesc', colorMode: 'border', background: '#ffffff',
+      appearance: { labelCase: 'lower', border: 'thin' } },
+    { id: 'minimal', nameKey: 'presetMinimal', descKey: 'presetMinimalDesc', colorMode: 'none', background: '#eceef2',
+      appearance: { labelCase: 'as-is', corners: 'square', border: 'thin', cellGap: 'tight' } },
+    { id: 'contrast', nameKey: 'presetContrast', descKey: 'presetContrastDesc', colorMode: 'card', background: '#ffffff',
+      appearance: { symbolColor: 'contrast', border: 'thick', textSize: 'l', touchFeedback: 'strong', corners: 'square' } },
+    { id: 'bw', nameKey: 'presetBw', descKey: 'presetBwDesc', colorMode: 'none', background: '#ffffff',
+      appearance: { symbolColor: 'gray', border: 'thick' } },
+    { id: 'night', nameKey: 'presetNight', descKey: 'presetNightDesc', colorMode: 'card', background: '#1f2430',
+      appearance: {} },
+    { id: 'words', nameKey: 'presetWords', descKey: 'presetWordsDesc', colorMode: 'border', background: '#ffffff',
+      appearance: { cellContent: 'text', labelCase: 'as-is', font: 'readable' } },
+  ];
+
+  function currentBackground() {
+    return (document.documentElement.style.getPropertyValue('--page-bg') || '').trim().toLowerCase();
+  }
+
+  // Uno stile è "attivo" se tutte le scelte coincidono con le sue
+  function presetMatches(preset) {
+    if ((document.documentElement.dataset.colorMode || DEFAULT_COLOR_MODE) !== preset.colorMode) return false;
+    if (currentBackground() !== (preset.background || '').toLowerCase()) return false;
+    return APPEARANCE_OPTIONS.every((opt) => {
+      const def = opt.values[0][0];
+      return (appearance[opt.key] || def) === (preset.appearance[opt.key] || def);
+    });
+  }
+
+  async function applyPreset(preset) {
+    applyColorMode(preset.colorMode);
+    applyPageBackground(preset.background);
+    appearance = { ...preset.appearance };
+    applyAppearance();
+    await storage.set('colorMode', preset.colorMode);
+    await storage.set('pageBackground', preset.background);
+    await storage.set('appearance', appearance);
+    await storage.set('preset', preset.id);
+  }
+
+  function renderPresetSection() {
+    const wrap = section('secPresetsTitle', 'secPresetsHelp');
+    const grid = document.createElement('div');
+    grid.className = 'preset-grid';
+    PRESETS.forEach((preset) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'preset-card';
+      card.setAttribute('aria-pressed', String(presetMatches(preset)));
+      const preview = document.createElement('span');
+      const look = preset.appearance;
+      preview.className = [
+        'preset-preview', `is-${preset.colorMode}`,
+        look.symbolColor === 'gray' ? 'is-gray' : '',
+        look.corners === 'square' ? 'is-square' : '',
+        look.border === 'thick' ? 'is-thick' : '',
+      ].join(' ');
+      preview.style.background = preset.background
+        || (preset.colorMode === 'sheet' ? 'linear-gradient(180deg, #d5f4f0, #4fc6ba)' : '#ffffff');
+      ['pronoun', 'verb', 'noun', 'adjective', 'social', 'folder'].forEach((type) => {
+        const swatch = document.createElement('span');
+        swatch.className = `type-${type}`;
+        preview.append(swatch);
+      });
+      const name = document.createElement('strong');
+      name.textContent = t(preset.nameKey);
+      const desc = document.createElement('small');
+      desc.textContent = t(preset.descKey);
+      card.append(preview, name, desc);
+      card.addEventListener('click', async () => {
+        await applyPreset(preset);
+        renderSettings();
+      });
+      grid.append(card);
+    });
+    wrap.append(grid);
+    if (!PRESETS.some(presetMatches)) {
+      const note = document.createElement('p');
+      note.className = 'preset-custom-note';
+      note.textContent = t('presetCustomNote');
+      wrap.append(note);
+    }
   }
 
   function settingRow(labelKey, helpKey, control) {
@@ -708,7 +805,7 @@
     { id: 'general', icon: '⚙️', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
       render: [renderLanguageSection, renderInstallSection] },
     { id: 'appearance', icon: '🎨', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
-      render: [renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
+      render: [renderPresetSection, renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
     { id: 'voice', icon: '🔊', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
     { id: 'security', icon: '🔒', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
