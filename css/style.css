@@ -197,6 +197,7 @@ button:focus-visible {
 }
 
 .symbol-cell.is-pressed,
+.sentence-chip.is-pressed,
 .action-btn.is-pressed { background: var(--pressed); }
 
 .symbol-image {
