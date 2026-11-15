@@ -1,1 +1,7 @@
 .DS_Store
+
+# File di progetto che restano solo sul Mac (non servono al funzionamento del tool)
+docs/
+dev/
+CLAUDE.md
+.claude/
