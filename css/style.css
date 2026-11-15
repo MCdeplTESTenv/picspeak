@@ -635,3 +635,33 @@ button:focus-visible {
 }
 /* Il contenitore delle impostazioni lascia spazio al layout a categorie */
 .settings-body { display: block; max-width: none; padding: 0; }
+
+/* Colore di sfondo della pagina scelto dall'adulto (Impostazioni → Aspetto).
+ * --page-bg e --page-text sono impostati da adult.js; le impostazioni mantengono il loro sfondo. */
+body { background: var(--page-bg, var(--bg)); }
+.page-title { color: var(--page-text, var(--text)) !important; }
+.lock-icon { filter: var(--page-icon-filter, none); }
+
+.bg-options { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.bg-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 72px;
+  padding: 6px;
+  background: transparent;
+  border: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+.bg-swatch .swatch {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+}
+.bg-swatch[aria-pressed="true"] .swatch { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 30%, transparent); }
+.bg-swatch input[type="color"] { width: 52px; height: 52px; padding: 0; border: 2px solid var(--border); border-radius: 14px; background: none; }
+/* Su sfondo scuro le cartelle (scure) ricevono un contorno chiaro per restare distinguibili */
+[data-page-dark="true"] .symbol-cell.type-folder { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35); }

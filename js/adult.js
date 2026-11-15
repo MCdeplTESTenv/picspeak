@@ -19,6 +19,39 @@
     { id: 'none', nameKey: 'colorModeNone', descKey: 'colorModeNoneDesc' },
   ];
 
+  // Colori di sfondo della pagina proposti (il primo è quello predefinito)
+  const PAGE_BACKGROUNDS = [
+    { id: 'vanilla', color: '#fbfaf7', nameKey: 'bgVanilla' },
+    { id: 'white', color: '#ffffff', nameKey: 'bgWhite' },
+    { id: 'grey', color: '#eceef2', nameKey: 'bgGrey' },
+    { id: 'sky', color: '#e6f0fb', nameKey: 'bgSky' },
+    { id: 'sage', color: '#e9f2ea', nameKey: 'bgSage' },
+    { id: 'sand', color: '#f3ebdd', nameKey: 'bgSand' },
+    { id: 'night', color: '#1f2430', nameKey: 'bgNight' },
+  ];
+
+  // Testo chiaro sugli sfondi scuri, scuro sugli sfondi chiari
+  function isDark(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
+  }
+
+  function applyPageBackground(color) {
+    const root = document.documentElement.style;
+    if (!color || !/^#[0-9a-f]{6}$/i.test(color)) {
+      root.removeProperty('--page-bg');
+      root.removeProperty('--page-text');
+      root.removeProperty('--page-icon-filter');
+      delete document.documentElement.dataset.pageDark;
+      return;
+    }
+    root.setProperty('--page-bg', color);
+    root.setProperty('--page-text', isDark(color) ? '#f4f5f7' : '#1a1d24');
+    root.setProperty('--page-icon-filter', isDark(color) ? 'invert(1)' : 'none');
+    document.documentElement.dataset.pageDark = String(isDark(color));
+  }
+
   function applyColorMode(mode) {
     document.documentElement.dataset.colorMode = mode;
     app.layoutGrid();
@@ -520,12 +553,58 @@
     wrap.append(options);
   }
 
+  // Colore di sfondo della pagina: colori pronti + colore a piacere
+  function renderBackgroundSection() {
+    const wrap = section('secBackgroundTitle', 'secBackgroundHelp');
+    const options = document.createElement('div');
+    options.className = 'bg-options';
+    const current = (document.documentElement.style.getPropertyValue('--page-bg') || '').trim().toLowerCase()
+      || PAGE_BACKGROUNDS[0].color;
+
+    const choose = async (color) => {
+      applyPageBackground(color);
+      await storage.set('pageBackground', color);
+      renderSettings();
+    };
+
+    PAGE_BACKGROUNDS.forEach((bg) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bg-swatch';
+      btn.setAttribute('aria-pressed', String(current === bg.color));
+      const swatch = document.createElement('span');
+      swatch.className = 'swatch';
+      swatch.style.background = bg.color;
+      const name = document.createElement('span');
+      name.textContent = t(bg.nameKey);
+      btn.append(swatch, name);
+      btn.addEventListener('click', () => choose(bg.color));
+      options.append(btn);
+    });
+
+    // Colore a piacere
+    const custom = document.createElement('label');
+    custom.className = 'bg-swatch';
+    const isCustom = !PAGE_BACKGROUNDS.some((bg) => bg.color === current);
+    custom.setAttribute('aria-pressed', String(isCustom));
+    const picker = document.createElement('input');
+    picker.type = 'color';
+    picker.value = current;
+    picker.addEventListener('change', () => choose(picker.value.toLowerCase()));
+    const name = document.createElement('span');
+    name.textContent = t('bgCustom');
+    custom.append(picker, name);
+    options.append(custom);
+
+    wrap.append(options);
+  }
+
   // Categorie delle impostazioni: icona, titolo, sezioni contenute
   const CATEGORIES = [
     { id: 'general', icon: '⚙️', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
       render: [renderLanguageSection, renderInstallSection] },
     { id: 'appearance', icon: '🎨', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
-      render: [renderColorModeSection] },
+      render: [renderColorModeSection, renderBackgroundSection] },
     { id: 'voice', icon: '🔊', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
     { id: 'security', icon: '🔒', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
@@ -650,7 +729,14 @@
     if (saved && COLOR_MODES.some((mode) => mode.id === saved)) applyColorMode(saved);
   }
 
+  // Colore di sfondo salvato (predefinito: vaniglia)
+  async function restorePageBackground() {
+    const saved = await storage.get('pageBackground');
+    if (saved) applyPageBackground(saved);
+  }
+
   bindEvents();
+  restorePageBackground();
   restoreLanguage();
   restoreVoice();
   restoreColorMode();
