@@ -164,4 +164,10 @@ Formato: data – decisione – motivo.
   Motivo: evitare consumo di dati non voluto. Il tool funziona sempre offline con i simboli salvati. "Solo Wi-Fi" usa la
   Network Information API, disponibile solo su Chrome Android; dove il browser non indica il tipo di rete (Safari, Firefox,
   PC) la ricerca chiederà conferma prima di usare internet. Funzione `PicSpeak.network.onlineSearchStatus()` pronta per la Tappa 3.
+- **Risoluzione crescente delle schede: livelli di griglia da 2×2 fino a circa 12×10, con core fisso (requisito).**
+  Motivo: richiesta di Marcello; con l'avanzare delle abilità o in età adulta servono schede dense come i vocabolari
+  robusti (riga di categorie, core Fitzgerald in posizione fissa, tastiera e affissi), senza perdere la pulizia delle
+  tessere che deve rendere PicSpeak riconoscibile. Collocazione: modello dati (righe/colonne, posizione fissa delle
+  celle) nella Tappa 2; template core denso nella Tappa 4; densità di stile e livelli nella Tappa 8; tastiera e affissi
+  tra le idee future pianificate.
 

@@ -33,6 +33,7 @@
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"
+- [ ] Modello dati con griglia esplicita (righe × colonne) e posizione fissa di ogni cella, per poter crescere fino a ~12×10
 - [ ] Contesti (Casa, Scuola, Mare, personalizzati): creazione, attivazione/disattivazione rapida, archivio intatto
 - [ ] Registrazione locale delle abitudini d'uso (simboli, orari, sequenze) attiva fin da subito
 
@@ -53,6 +54,7 @@
 ## Tappa 4 – Template di base e tutorial iniziale
 - [ ] Definire il template di base (vocabolario core + categorie personali) e rivederlo con la logopedista
 - [ ] Versione italiana e inglese del template
+- [ ] Template denso per utenti esperti/adulti: riga di categorie, core fisso Fitzgerald, accesso a tastiera
 - [ ] Tutorial iniziale per l'adulto: domande saltabili, interrompibile e riprendibile
 - [ ] Personalizzazione automatica delle schede dalle risposte (nomi, foto, preferenze, numero di celle)
 - [ ] Conoscenza iniziale del T9 a partire dalle risposte
@@ -88,6 +90,8 @@
 - [ ] Profili multipli
 - [ ] Impostazioni griglia e accessibilità
 - [ ] Temi e stile non infantile per l'età adulta
+- [ ] Livelli di griglia (2×2 … 12×10) con passaggio che mantiene la posizione delle tessere esistenti
+- [ ] Stile ad alta densità: testo piccolo ma netto, bordi e spazi proporzionati, stesse tessere riconoscibili
 - [ ] Altre personalizzazioni previste: numero di righe/colonne e celle fisse, dimensione minima delle celle,
       contorno spesso intorno all'immagine (ipovisione), cornice o sfondo dietro l'immagine, cella nascosta
       temporaneamente senza cancellarla, cella "vuota" per mantenere la posizione, ritardo/tempo di pressione
@@ -101,4 +105,5 @@
 - Salvataggio automatico su cloud personale (es. Google Drive) e su file (Chrome/Edge)
 - Sincronizzazione casa–scuola
 - Suggeritore IA opzionale con chiave dell'utente
+- Tastiera con predizione di parole e affissi/morfologia (plurali, tempi verbali) per chi scrive
 - Altre lingue oltre a italiano e inglese

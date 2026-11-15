@@ -90,6 +90,21 @@ semplice file.
   ed eventuale attivazione programmata per date (es. dal 1 al 15 agosto: Mare).
 - I contesti fanno parte del modello dati fin dalla Tappa 2 e sono inclusi nel backup.
 
+### Risoluzione crescente delle schede (requisito)
+- Le schede devono poter crescere con le abilità della persona: da pochissime tessere grandi
+  (2×2, 3×3) fino a griglie dense da vocabolario robusto per l'adulto (circa 12×10 e oltre).
+- Livelli di griglia proposti: 2×2 → 3×3 → 4×4 → 5×6 → 6×8 → 8×10 → 12×10, scelti dall'adulto
+  (in futuro suggeriti dalle statistiche d'uso), senza dover rifare le schede.
+- Schede ad alta densità con struttura stabile:
+  - riga di categorie in alto (accesso rapido alle cartelle);
+  - vocabolario **core** in posizione fissa, colorato Fitzgerald (pianificazione motoria:
+    la stessa parola resta sempre nello stesso punto anche quando la griglia cresce);
+  - accesso a tastiera, lettere e affissi/morfologia (plurale, tempi verbali) per chi scrive.
+- Lo stile "tessera" di PicSpeak resta riconoscibile anche ad alta densità: tessere pulite,
+  testo piccolo ma netto, bordi più sottili, spazi ridotti in proporzione, immagini sempre nitide.
+- Passando a una griglia più grande le tessere esistenti mantengono la loro posizione relativa
+  (le nuove si aggiungono intorno), per non disorientare la persona.
+
 ### Template di base e tutorial iniziale
 - **Template di base** proposto da PicSpeak alla prima apertura, ispirato alle pratiche
   diffuse in logopedia per la CAA:
