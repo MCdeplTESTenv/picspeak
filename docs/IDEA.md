@@ -148,12 +148,38 @@ semplice file.
   esistenti continuano a funzionare.
 - La pagina Crediti elenca le fonti e le licenze effettivamente usate.
 
-### Dati e backup
-- Salvataggio locale in IndexedDB.
-- Simboli scaricati e conservati localmente quando aggiunti (funzionano offline).
-- Esportazione/importazione manuale in un unico file `nomeutente.caa.json`
-  con immagini incorporate (base64), statistiche, regole e numero di versione del formato.
-- Promemoria di backup ("Ultimo backup: X giorni fa").
+### Immagini offline
+- Ogni simbolo viene scaricato **una sola volta**, quando l'adulto lo aggiunge a una scheda:
+  ridimensionato (~256 px) e compresso (circa 10–25 KB), poi salvato in IndexedDB insieme a
+  fonte e licenza. Durante l'uso il tool legge solo dal dispositivo: nessuna ricerca, nessuna rete.
+- La ricerca online serve solo per aggiungere simboli nuovi. Se manca la connessione, la ricerca
+  mostra i simboli già salvati e il set incluso nel tool, e propone foto dalla fotocamera o cella solo testo.
+- Se un'immagine mancasse (es. dati corrotti), la cella mostra comunque l'etichetta e continua a parlare:
+  ordine di riserva = simbolo salvato → foto personale → set incluso nel tool → solo testo.
+- L'applicazione stessa (HTML, CSS, JS, set incluso) è tenuta in cache dal service worker.
+- Ordine di grandezza: 500 simboli ≈ 5–12 MB, molto sotto i limiti del browser.
+
+### Dati e backup (punto di forza del progetto)
+- Obiettivo: non perdere mai immagini, schede, regole e statistiche del T9, anche se la memoria
+  del browser viene cancellata, e senza che l'adulto debba ricordarsi di fare il backup.
+- **Livello 1 – memoria del browser (IndexedDB)**, con richiesta di memoria persistente
+  (`navigator.storage.persist()`) per ridurre il rischio che il browser la svuoti da solo.
+- **Livello 2 – cartella di backup automatica** (Chrome ed Edge su PC/Mac):
+  - l'adulto sceglie una volta una cartella dalle impostazioni (anche dentro iCloud Drive,
+    Dropbox o OneDrive, così il backup va anche nel cloud senza servizi nostri);
+  - PicSpeak ci scrive da solo: le immagini come file separati, scritti una volta sola,
+    e un piccolo file dati (schede, regole, statistiche) aggiornato pochi secondi dopo ogni modifica;
+  - più copie del file dati a rotazione (es. ultimi 7 giorni) per poter tornare indietro;
+  - alla riapertura il browser può chiedere di riconfermare l'accesso alla cartella con un tocco
+    (Chrome permette di scegliere "consenti sempre").
+- **Livello 3 – iPad, iPhone, Firefox, Android** (il browser non permette di scrivere in una cartella):
+  promemoria automatico periodico (es. ogni 7 giorni o dopo N modifiche) che prepara il file e apre
+  il pannello di condivisione per salvarlo in File/iCloud con due tocchi.
+- **File unico portabile `nomeutente.caa.json`** (esportazione/importazione) con immagini incorporate,
+  schede, statistiche, regole e numero di versione del formato: serve per cambiare dispositivo e per lo
+  scambio casa–scuola.
+- Indicatore sempre visibile nelle impostazioni adulto: "Ultimo backup: X giorni fa" e dove si trova.
+- Leggerezza: il salvataggio avviene in background, solo dopo una modifica, e scrive solo ciò che è cambiato.
 
 ## Sviluppi futuri annotati
 - **Salvataggio automatico sul cloud personale** dell'utente (es. Google Drive, cartella

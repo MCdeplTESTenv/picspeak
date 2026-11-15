@@ -27,7 +27,8 @@
 - [ ] Ricerca in italiano propagata in inglese (ponte ARASAAC, dizionario locale, MyMemory come riserva)
 - [ ] Provider Global Symbols
 - [ ] Set di base incluso con licenza libera (es. Mulberry, OpenMoji)
-- [ ] Download e salvataggio locale dei pittogrammi (con fonte e licenza)
+- [ ] Download unico, ridimensionamento (~256 px) e salvataggio locale dei pittogrammi (con fonte e licenza)
+- [ ] Ricerca offline: simboli già salvati + set incluso; cella solo testo come ultima riserva
 - [ ] Caricamento immagini personali con compressione automatica
 - [ ] Pagina Crediti
 
@@ -39,9 +40,14 @@
 - [ ] Conoscenza iniziale del T9 a partire dalle risposte
 
 ## Tappa 5 – Backup
-- [ ] Esportazione `.caa.json` (incluse statistiche e regole adattive)
+- [ ] Richiesta di memoria persistente (`navigator.storage.persist()`)
+- [ ] Esportazione `.caa.json` (immagini, schede, statistiche e regole adattive)
 - [ ] Importazione con validazione e migrazione versioni
-- [ ] Promemoria backup
+- [ ] Impostazione adulto "Cartella di backup" (Chrome/Edge): salvataggio automatico dopo ogni modifica,
+      immagini come file separati, copie a rotazione del file dati
+- [ ] Riconferma dell'accesso alla cartella alla riapertura
+- [ ] iPad/iPhone/Firefox/Android: promemoria periodico con salvataggio tramite pannello di condivisione
+- [ ] Indicatore "Ultimo backup: X giorni fa" e ripristino guidato
 
 ## Tappa 6 – PWA e offline
 - [ ] manifest.json e icone

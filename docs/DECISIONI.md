@@ -80,4 +80,14 @@ Formato: data – decisione – motivo.
   Motivo: nessun file né licenza esterna finché non arrivano i fornitori di simboli (Tappa 3); l'aspetto varia un po' tra Apple, Android e Windows.
 - **Griglia che si adatta da sola: sceglie il numero di colonne che rende le celle più grandi possibile.**
   Motivo: con poche immagini le celle diventano grandi (indicazione della logopedista); su telefono si scorre se le celle scenderebbero sotto ~88 px.
+- **Immagini: scaricate una sola volta all'aggiunta, ridimensionate (~256 px, 10–25 KB) e salvate in IndexedDB.**
+  Motivo: uso quotidiano interamente offline e veloce. Riserva se un'immagine manca: simbolo salvato → foto →
+  set incluso → solo testo. App e set incluso in cache tramite service worker.
+- **Backup a tre livelli: IndexedDB persistente + cartella automatica (Chrome/Edge) + promemoria con condivisione (Safari e altri).**
+  Motivo: richiesta di Marcello, il backup deve essere costante e non dipendere dalla memoria dell'adulto né da quella del browser.
+  Vincoli tecnici verificati: la scelta di una cartella (File System Access API) esiste solo su Chrome/Edge desktop;
+  Safari (iPad/iPhone/Mac), Firefox e Chrome Android non la consentono, quindi lì serve il salvataggio guidato tramite
+  pannello di condivisione verso File/iCloud. Alla riapertura il browser può chiedere di riconfermare l'accesso alla cartella.
+  Nella cartella le immagini sono file separati scritti una volta e il file dati è piccolo e aggiornato poco dopo ogni
+  modifica, così il tool resta leggero. L'unico backup davvero automatico anche su iPad resta il cloud personale (sviluppo futuro).
 
