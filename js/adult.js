@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  const { i18n, storage, security, install, app, speech } = window.PicSpeak;
+  const { i18n, storage, security, install, app, speech, data, symbols } = window.PicSpeak;
   const t = i18n.t;
 
   const HOLD_MS = 3000;
@@ -556,49 +556,168 @@
     })));
   }
 
-  // Fonti dei simboli: ognuna con stile e "quando sceglierla"; attivazione salvata in 'symbolSources'
-  // (la ricerca e i pacchetti arrivano con la Tappa 3: per ora si sceglie quali useremo)
+  // Fonti dei simboli: ognuna con stile e "quando sceglierla"; attivazione salvata in 'symbolSources'.
+  // Mulberry e OpenMoji sono pacchetti: si scaricano una sola volta quando vengono attivati.
   const SYMBOL_SOURCES = [
-    { id: 'arasaac', nameKey: 'srcArasaac', descKey: 'srcArasaacDesc', def: true },
-    { id: 'mulberry', nameKey: 'srcMulberry', descKey: 'srcMulberryDesc', def: false },
-    { id: 'openmoji', nameKey: 'srcOpenmoji', descKey: 'srcOpenmojiDesc', def: false },
-    { id: 'photo', nameKey: 'srcPhoto', descKey: 'srcPhotoDesc', def: true },
+    { id: 'arasaac', nameKey: 'srcArasaac', descKey: 'srcArasaacDesc' },
+    { id: 'mulberry', nameKey: 'srcMulberry', descKey: 'srcMulberryDesc', pack: true, approxMb: '3,8' },
+    { id: 'openmoji', nameKey: 'srcOpenmoji', descKey: 'srcOpenmojiDesc', pack: true, approxMb: '3,1' },
+    { id: 'photo', nameKey: 'srcPhoto', descKey: 'srcPhotoDesc' },
   ];
+
+  // Scaricamenti in corso: id → { done, total }; errori dell'ultimo tentativo: id → messaggio
+  const packJobs = new Map();
+  const packErrors = new Map();
+  const packStatusNodes = new Map(); // id → elemento da aggiornare durante lo scaricamento
+
+  function formatMb(bytes) {
+    return (bytes / 1048576).toLocaleString(i18n.language, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  }
+
+  // Lo scaricamento rispetta l'interruttore "Ricerca online"
+  function packNetworkProblem() {
+    if (!navigator.onLine) return t('packErrOffline');
+    if (onlineSearch === 'off') return t('packErrOnlineOff');
+    if (onlineSearchStatus() === 'blocked') return t('packErrWifi');
+    return null;
+  }
+
+  async function startPackDownload(id) {
+    if (packJobs.has(id)) return;
+    const problem = packNetworkProblem();
+    if (problem) {
+      packErrors.set(id, problem);
+      renderSettings();
+      return;
+    }
+    // "Solo Wi-Fi" dove il browser non dice il tipo di rete: si chiede conferma
+    // eslint-disable-next-line no-alert
+    if (onlineSearchStatus() === 'ask' && !window.confirm(t('packAskWifi'))) {
+      packErrors.set(id, t('packMissing'));
+      renderSettings();
+      return;
+    }
+    packErrors.delete(id);
+    packJobs.set(id, { done: 0, total: 0 });
+    renderSettings();
+    try {
+      await symbols.downloadPack(id, (done, total) => {
+        packJobs.set(id, { done, total });
+        const node = packStatusNodes.get(id);
+        if (node && node.isConnected) updatePackProgress(node, done, total);
+      });
+    } catch (error) {
+      packErrors.set(id, t('packErrDownload'));
+    }
+    packJobs.delete(id);
+    if (!el.settings.hidden) renderSettings();
+  }
+
+  function updatePackProgress(node, done, total) {
+    const text = node.querySelector('.pack-progress-text');
+    const fill = node.querySelector('.pack-progress-fill');
+    if (text) text.textContent = total ? t('packDownloading').replace('{done}', done).replace('{total}', total) : t('packPreparing');
+    if (fill) fill.style.width = total ? `${Math.round((done / total) * 100)}%` : '0%';
+  }
+
+  function packStatusLine(src, status) {
+    const box = document.createElement('div');
+    box.className = 'pack-status';
+    const job = packJobs.get(src.id);
+    if (job) {
+      box.classList.add('is-loading');
+      const text = document.createElement('p');
+      text.className = 'pack-progress-text';
+      const bar = document.createElement('div');
+      bar.className = 'pack-progress';
+      const fill = document.createElement('div');
+      fill.className = 'pack-progress-fill';
+      bar.append(fill);
+      box.append(text, bar);
+      updatePackProgress(box, job.done, job.total);
+      packStatusNodes.set(src.id, box);
+      return box;
+    }
+    const info = status[src.id];
+    if (info) {
+      box.classList.add('is-ready');
+      const text = document.createElement('p');
+      text.textContent = t('packReady').replace('{count}', info.count).replace('{mb}', formatMb(info.bytes || 0));
+      box.append(text);
+      return box;
+    }
+    const text = document.createElement('p');
+    text.textContent = packErrors.get(src.id) || t('packMissing');
+    if (packErrors.has(src.id)) box.classList.add('is-error');
+    box.append(text, button(t('packDownload').replace('{mb}', src.approxMb), () => startPackDownload(src.id), true));
+    return box;
+  }
 
   async function renderSourcesSection() {
     const wrap = section('secSourcesTitle', 'secSourcesHelp');
-    const saved = (await storage.get('symbolSources')) || {};
+    const [saved, status] = await Promise.all([symbols.activeSources(), symbols.packStatus()]);
     SYMBOL_SOURCES.forEach((src) => {
-      const active = saved[src.id] ?? src.def;
-      wrap.append(settingRow(src.nameKey, src.descKey, segmented([['on', 'valOn2'], ['off', 'valOff2']], active ? 'on' : 'off',
+      const active = saved[src.id];
+      const helpKey = src.pack && !status[src.id] ? null : src.descKey;
+      const row = settingRow(src.nameKey, helpKey, segmented([['on', 'valOn2'], ['off', 'valOff2']], active ? 'on' : 'off',
         async (value) => {
           const next = { ...((await storage.get('symbolSources')) || {}), [src.id]: value === 'on' };
           await storage.set('symbolSources', next);
+          if (src.pack && value === 'on' && !(await symbols.packStatus())[src.id]) {
+            startPackDownload(src.id);
+            return;
+          }
+          if (src.pack && value === 'off') {
+            packErrors.delete(src.id);
+            await symbols.removePack(src.id);
+          }
           renderSettings();
-        })));
+        }));
+      if (src.pack && !status[src.id]) {
+        // Descrizione con il peso del pacchetto, finché non è scaricato
+        const help = document.createElement('small');
+        help.textContent = `${t(src.descKey)} ${t('packSize').replace('{mb}', src.approxMb)}`;
+        row.querySelector('.setting-text').append(help);
+      }
+      wrap.append(row);
+      if (src.pack && active) wrap.append(packStatusLine(src, status));
     });
   }
 
-  // Crediti: attribuzione obbligatoria per i pittogrammi ARASAAC (CC BY-NC-SA 4.0)
-  function renderCreditsSection() {
+  // Crediti automatici: si elencano le fonti presenti sul dispositivo (ARASAAC c'è sempre: set incluso)
+  function creditLink(href, label) {
+    const link = document.createElement('a');
+    link.href = href;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent = label;
+    return link;
+  }
+
+  async function renderCreditsSection() {
     const wrap = section('secCreditsTitle', 'secCreditsHelp');
-    const items = [
-      [t('creditsArasaac'), 'https://arasaac.org', 'arasaac.org'],
-      [t('creditsArasaacLicense'), 'https://creativecommons.org/licenses/by-nc-sa/4.0/deed.it', 'CC BY-NC-SA 4.0'],
-      [t('creditsCode'), 'https://github.com/MCdeplTESTenv/picspeak', 'github.com/MCdeplTESTenv/picspeak'],
-    ];
+    const status = await symbols.packStatus();
+    const used = new Set(data.allImages().map((image) => image.source));
     const ul = document.createElement('ul');
-    ul.className = 'settings-list';
-    items.forEach(([text, href, label]) => {
+    ul.className = 'settings-list credits-list';
+    const add = (...parts) => {
       const li = document.createElement('li');
-      const link = document.createElement('a');
-      link.href = href;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = label;
-      li.append(`${text} `, link);
+      li.append(...parts);
       ul.append(li);
-    });
+    };
+    add(`${t('creditsArasaac')} `, creditLink('https://arasaac.org', 'arasaac.org'));
+    add(`${t('creditsArasaacLicense')} `, creditLink('https://creativecommons.org/licenses/by-nc-sa/4.0/deed.it', 'CC BY-NC-SA 4.0'));
+    if (used.has('mulberry') || status.mulberry) {
+      add(`${t('creditsMulberry')} `, creditLink('https://mulberrysymbols.org', 'mulberrysymbols.org'), ` – ${t('creditsLicense')} `,
+        creditLink('https://creativecommons.org/licenses/by-sa/4.0/deed.it', 'CC BY-SA 4.0'), `. ${t('creditsChanged')}`);
+    }
+    if (used.has('openmoji') || status.openmoji) {
+      add(`${t('creditsOpenmoji')} `, creditLink('https://openmoji.org', 'openmoji.org'), ` – ${t('creditsLicense')} `,
+        creditLink('https://creativecommons.org/licenses/by-sa/4.0/deed.it', 'CC BY-SA 4.0'), `. ${t('creditsChanged')}`);
+    }
+    if (used.has('photo')) add(t('creditsPhotos'));
+    add(t('creditsPrivacy'));
+    add(`${t('creditsCode')} `, creditLink('https://github.com/MCdeplTESTenv/picspeak', 'github.com/MCdeplTESTenv/picspeak'));
     wrap.append(ul);
   }
 
@@ -1151,7 +1270,7 @@
     if (ONLINE_SEARCH_VALUES.some(([value]) => value === saved)) onlineSearch = saved;
   }
 
-  window.PicSpeak.network = { onlineSearchStatus };
+  window.PicSpeak.network = { onlineSearchStatus, onlineSearchMode: () => onlineSearch };
 
   bindEvents();
   restoreOnlineSearch();

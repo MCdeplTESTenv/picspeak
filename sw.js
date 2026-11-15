@@ -3,7 +3,9 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v14';
+const CACHE_VERSION = 'picspeak-v15';
+// Pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji): cache separate, mai cancellate dagli aggiornamenti
+const PACK_CACHE_PREFIX = 'picspeak-pack-';
 
 const APP_FILES = [
   './',
@@ -16,10 +18,14 @@ const APP_FILES = [
   'js/install.js',
   'js/sample-data.js',
   'js/data.js',
+  'js/symbols.js',
   'js/speech.js',
   'js/app.js',
   'js/adult.js',
+  'js/symbol-search.js',
   'js/editor.js',
+  // Dizionario italiano → inglese per la ricerca dei simboli (funziona anche offline)
+  'symbols/it-en.json',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
@@ -76,7 +82,9 @@ self.addEventListener('activate', (event) => {
   // Elimina le copie delle versioni precedenti
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys
+        .filter((k) => k !== CACHE_VERSION && !k.startsWith(PACK_CACHE_PREFIX))
+        .map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -85,6 +93,19 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   // Solo file dell'app: le richieste ad altri siti (es. ricerca simboli) passano senza cache
   if (request.method !== 'GET' || new URL(request.url).origin !== self.location.origin) return;
+
+  // Pacchetti di simboli: prima la copia scaricata (offline), altrimenti la rete senza salvarla qui
+  // (lo scaricamento completo lo gestisce js/symbols.js nella cache del pacchetto)
+  const path = new URL(request.url).pathname;
+  if (path.includes('/symbols/packs/')) {
+    // L'indice si chiede prima alla rete (così un nuovo scaricamento prende la versione aggiornata)
+    if (path.endsWith('/index.json')) {
+      event.respondWith(fetch(request).catch(() => caches.match(request).then((c) => c || Response.error())));
+    } else {
+      event.respondWith(caches.match(request).then((cached) => cached || fetch(request)));
+    }
+    return;
+  }
 
   event.respondWith(
     fetch(request)
