@@ -15,6 +15,7 @@
   const DEFAULT_COLOR_MODE = 'card';
   const COLOR_MODES = [
     { id: 'card', nameKey: 'colorModeCard', descKey: 'colorModeCardDesc' },
+    { id: 'sheet', nameKey: 'colorModeSheet', descKey: 'colorModeSheetDesc' },
     { id: 'full', nameKey: 'colorModeFull', descKey: 'colorModeFullDesc' },
     { id: 'border', nameKey: 'colorModeBorder', descKey: 'colorModeBorderDesc' },
     { id: 'none', nameKey: 'colorModeNone', descKey: 'colorModeNoneDesc' },
@@ -22,6 +23,7 @@
 
   // Colori di sfondo della pagina proposti (il primo è quello predefinito)
   const PAGE_BACKGROUNDS = [
+    { id: 'auto', color: '', nameKey: 'bgAuto' },
     { id: 'white', color: '#ffffff', nameKey: 'bgWhite' },
     { id: 'vanilla', color: '#fbfaf7', nameKey: 'bgVanilla' },
     { id: 'grey', color: '#eceef2', nameKey: 'bgGrey' },
@@ -587,8 +589,8 @@
     const wrap = section('secBackgroundTitle', 'secBackgroundHelp');
     const options = document.createElement('div');
     options.className = 'bg-options';
-    const current = (document.documentElement.style.getPropertyValue('--page-bg') || '').trim().toLowerCase()
-      || PAGE_BACKGROUNDS[0].color;
+    // '' = sfondo automatico, quello previsto dalla modalità colori scelta
+    const current = (document.documentElement.style.getPropertyValue('--page-bg') || '').trim().toLowerCase();
 
     const choose = async (color) => {
       applyPageBackground(color);
@@ -603,7 +605,12 @@
       btn.setAttribute('aria-pressed', String(current === bg.color));
       const swatch = document.createElement('span');
       swatch.className = 'swatch';
-      swatch.style.background = bg.color;
+      if (bg.color) {
+        swatch.style.background = bg.color;
+      } else {
+        swatch.classList.add('swatch-auto');
+        swatch.textContent = 'A';
+      }
       const name = document.createElement('span');
       name.textContent = t(bg.nameKey);
       btn.append(swatch, name);
@@ -618,7 +625,7 @@
     custom.setAttribute('aria-pressed', String(isCustom));
     const picker = document.createElement('input');
     picker.type = 'color';
-    picker.value = current;
+    picker.value = current || '#ffffff';
     picker.addEventListener('change', () => choose(picker.value.toLowerCase()));
     const name = document.createElement('span');
     name.textContent = t('bgCustom');
