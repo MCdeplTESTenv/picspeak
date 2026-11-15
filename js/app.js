@@ -27,6 +27,7 @@
     clear: document.getElementById('btn-clear'),
     home: document.getElementById('btn-home'),
     crumbs: document.getElementById('crumbs'),
+    homeBig: document.getElementById('btn-home-big'),
   };
 
   // Restituisce l'etichetta nella lingua corrente (con l'italiano come riserva)
@@ -70,6 +71,7 @@
     // Nella Home il percorso mostra solo "HOME"; nelle altre pagine "HOME › pagina"
     const isHome = state.pageId === sampleData.homePage;
     el.crumbs.classList.toggle('is-home', isHome);
+    el.homeBig.hidden = isHome;
     if (isHome) el.home.setAttribute('aria-current', 'page');
     else el.home.removeAttribute('aria-current');
 
@@ -257,6 +259,35 @@
     renderSentence();
   }
 
+  // "Scuoti per tornare alla Home" (opzione in Impostazioni → Aspetto → Disposizione e tocco).
+  // Servono due scosse decise entro un secondo: un movimento normale del tablet non basta.
+  function bindShakeToHome() {
+    if (!('DeviceMotionEvent' in window)) return;
+    const THRESHOLD = 22; // variazione di accelerazione (m/s²) considerata una scossa
+    let last = null;
+    let peaks = [];
+    let cooldownUntil = 0;
+    window.addEventListener('devicemotion', (event) => {
+      if (document.documentElement.dataset.shakeHome !== 'on' || state.mode !== 'child') return;
+      const a = event.accelerationIncludingGravity;
+      if (!a || a.x == null) return;
+      const now = Date.now();
+      if (last) {
+        const delta = Math.abs(a.x - last.x) + Math.abs(a.y - last.y) + Math.abs(a.z - last.z);
+        if (delta > THRESHOLD && now > cooldownUntil) {
+          peaks = peaks.filter((t) => now - t < 1000);
+          peaks.push(now);
+          if (peaks.length >= 2) {
+            peaks = [];
+            cooldownUntil = now + 1500;
+            if (state.pageId !== sampleData.homePage) goToPage(sampleData.homePage);
+          }
+        }
+      }
+      last = { x: a.x, y: a.y, z: a.z };
+    });
+  }
+
   function bindEvents() {
     el.grid.addEventListener('click', onCellTap);
     el.strip.addEventListener('click', onChipTap);
@@ -273,6 +304,8 @@
       renderSentence();
     });
     el.home.addEventListener('click', () => goToPage(sampleData.homePage));
+    el.homeBig.addEventListener('click', () => goToPage(sampleData.homePage));
+    bindShakeToHome();
     // Ricalcola la griglia quando cambia la dimensione o l'orientamento dello schermo
     let resizeTimer = null;
     window.addEventListener('resize', () => {

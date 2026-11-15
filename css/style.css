@@ -1166,3 +1166,25 @@ body > .adult-bar { order: 0; }
 .settings-nav-btn .nav-icon { color: #4a505a; }
 .settings-nav-btn[aria-current="true"] .nav-icon { color: #1f6feb; }
 [data-page-title="hidden"] .crumbs { visibility: hidden; }
+
+/* Pulsante Home grande (sotto-pagine): una tessera grigia come le cartelle, icona a linea */
+.page-nav { gap: 10px; }
+.home-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  color: #2b2f36;
+  background: #eef0f3;
+  border: 3px solid #c9cdd3;
+  border-radius: 14px;
+}
+.home-btn:active { background: #ffffff; }
+[data-page-dark="true"] .home-btn { color: #f4f5f7; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.35); }
+[data-corners="square"] .home-btn { border-radius: 3px; }
+/* Riga impostazioni: il testo ha sempre spazio sufficiente; se i pulsanti non entrano vanno sotto */
+.setting-row { flex-wrap: wrap; row-gap: 8px; }
+.setting-text { flex: 1 1 220px; }

@@ -646,6 +646,8 @@
         values: [['shown', 'valShown'], ['hidden', 'valHidden']] },
       { key: 'touchFeedback', labelKey: 'optTouchFeedback', helpKey: 'optTouchFeedbackHelp',
         values: [['on', 'valOn'], ['strong', 'valStrong'], ['off', 'valOff']] },
+      { key: 'shakeHome', labelKey: 'optShakeHome', helpKey: 'optShakeHomeHelp',
+        values: [['off', 'valNo'], ['on', 'valYes']] },
     ] },
   ];
   const APPEARANCE_OPTIONS = APPEARANCE_GROUPS.flatMap((group) => group.options);
@@ -790,6 +792,15 @@
       group.options.forEach((opt) => {
         const current = appearance[opt.key] || opt.values[0][0];
         wrap.append(settingRow(opt.labelKey, opt.helpKey, segmented(opt.values, current, async (value) => {
+          // iPad/iPhone chiedono il permesso per i sensori di movimento: va chiesto subito, dentro il tocco
+          if (opt.key === 'shakeHome' && value === 'on' && window.DeviceMotionEvent
+            && typeof DeviceMotionEvent.requestPermission === 'function') {
+            try {
+              if ((await DeviceMotionEvent.requestPermission()) !== 'granted') return;
+            } catch (error) {
+              return;
+            }
+          }
           appearance = { ...appearance, [opt.key]: value };
           applyAppearance();
           await storage.set('appearance', appearance);
