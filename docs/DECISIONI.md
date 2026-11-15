@@ -113,4 +113,14 @@ Formato: data – decisione – motivo.
   nelle impostazioni selettore voce, velocità, tono, pulsante di prova e guida per installare gratis voci
   migliori su iPad, Mac, Android e Windows. Voci sintetiche esterne (servizi cloud o modelli da scaricare)
   scartate: costi, privacy o peso di decine di MB.
+- **Grafica: "Colore pieno" come aspetto predefinito; modalità colori scelta dall'adulto (Colore pieno, Bordo colorato, Neutro).**
+  Motivo: Marcello ha scartato le proposte "Morbido" e "Scuro" e scelto "Colore pieno" (celle tinte col colore Fitzgerald,
+  immagine su riquadro bianco, frase su barra scura, cartelle scure). Le altre modalità restano selezionabili in
+  Impostazioni → Aspetto; scelta salvata sul dispositivo (`colorMode`).
+- **Impostazioni divise in categorie (Generale, Aspetto, Voce, Sicurezza, In arrivo).**
+  Motivo: la pagina unica era difficile da leggere. Menu laterale su tablet/PC, elenco con frecce su telefono
+  (il pulsante Indietro torna all'elenco prima di chiudere).
+- **Colore di sfondo di ogni simbolo modificabile, con ripristino al colore Fitzgerald (Tappa 2).**
+  Motivo: richiesta di Marcello. Nel modello dati ogni cella avrà un campo colore facoltativo: vuoto = colore
+  automatico dalla categoria grammaticale; "Ripristina" lo svuota.
 

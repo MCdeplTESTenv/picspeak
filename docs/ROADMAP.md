@@ -21,8 +21,11 @@
       dopo errori, codice di recupero, uscita manuale e automatica dopo 5 minuti
 - [x] Pagina impostazioni: Installa come app, Accesso guidato (istruzioni), Lingua, Voce, Cambia PIN
 - [x] Voce: scelta automatica della migliore, selettore, velocità, tono, prova e guida alle voci migliorate
+- [x] Grafica "Colore pieno" predefinita e scelta della modalità colori (Colore pieno, Bordo colorato, Neutro)
+- [x] Impostazioni divise in categorie (menu laterale su tablet/PC, elenco su telefono)
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
+- [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"
 - [ ] Contesti (Casa, Scuola, Mare, personalizzati): creazione, attivazione/disattivazione rapida, archivio intatto
 - [ ] Registrazione locale delle abitudini d'uso (simboli, orari, sequenze) attiva fin da subito
 
