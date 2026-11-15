@@ -11,6 +11,19 @@
   const HOLD_MS = 3000;
   const INACTIVITY_MS = 5 * 60 * 1000;
 
+  // Modalità colori disponibili (vedi css/style.css, attributo data-color-mode su <html>)
+  const DEFAULT_COLOR_MODE = 'full';
+  const COLOR_MODES = [
+    { id: 'full', nameKey: 'colorModeFull', descKey: 'colorModeFullDesc' },
+    { id: 'border', nameKey: 'colorModeBorder', descKey: 'colorModeBorderDesc' },
+    { id: 'none', nameKey: 'colorModeNone', descKey: 'colorModeNoneDesc' },
+  ];
+
+  function applyColorMode(mode) {
+    document.documentElement.dataset.colorMode = mode;
+    app.layoutGrid();
+  }
+
   const el = {
     lock: document.getElementById('btn-lock'),
     adultBar: document.getElementById('adult-bar'),
@@ -316,9 +329,15 @@
       help.textContent = t(helpKey);
       wrap.append(help);
     }
-    el.settingsBody.append(wrap);
+    currentPanel.append(wrap);
     return wrap;
   }
+
+  // Pannello della categoria in costruzione (vedi renderSettings)
+  let currentPanel = null;
+  let currentCategory = 'general';
+  // Su telefono: true = si vede il contenuto della categoria, false = l'elenco delle categorie
+  let showPanelOnPhone = false;
 
   function list(items, ordered) {
     const node = document.createElement(ordered ? 'ol' : 'ul');
@@ -468,17 +487,108 @@
     wrap.append(list(t('comingList')));
   }
 
+  // Modalità colori: anteprima in miniatura + nome + descrizione
+  function renderColorModeSection() {
+    const wrap = section('secColorsTitle', 'secColorsHelp');
+    const options = document.createElement('div');
+    options.className = 'mode-options';
+    const current = document.documentElement.dataset.colorMode || DEFAULT_COLOR_MODE;
+    COLOR_MODES.forEach((mode) => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'mode-option';
+      option.setAttribute('aria-pressed', String(current === mode.id));
+      const preview = document.createElement('span');
+      preview.className = `mode-preview is-${mode.id}`;
+      ['pronoun', 'verb', 'noun', 'adjective', 'social', 'folder'].forEach((type) => {
+        const swatch = document.createElement('span');
+        swatch.className = `type-${type}`;
+        preview.append(swatch);
+      });
+      const name = document.createElement('strong');
+      name.textContent = t(mode.nameKey);
+      const desc = document.createElement('small');
+      desc.textContent = t(mode.descKey);
+      option.append(preview, name, desc);
+      option.addEventListener('click', async () => {
+        applyColorMode(mode.id);
+        await storage.set('colorMode', mode.id);
+        renderSettings();
+      });
+      options.append(option);
+    });
+    wrap.append(options);
+  }
+
+  // Categorie delle impostazioni: icona, titolo, sezioni contenute
+  const CATEGORIES = [
+    { id: 'general', icon: '⚙️', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
+      render: [renderLanguageSection, renderInstallSection] },
+    { id: 'appearance', icon: '🎨', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
+      render: [renderColorModeSection] },
+    { id: 'voice', icon: '🔊', titleKey: 'catVoice', introKey: 'catVoiceIntro',
+      render: [renderVoiceSection] },
+    { id: 'security', icon: '🔒', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
+      render: [renderSecuritySection, renderGuidedSection] },
+    { id: 'coming', icon: '🧩', titleKey: 'catComing', introKey: 'catComingIntro',
+      render: [renderComingSection] },
+  ];
+
   function renderSettings() {
-    el.settingsBody.replaceChildren();
-    renderInstallSection();
-    renderGuidedSection();
-    renderLanguageSection();
-    renderVoiceSection();
-    renderSecuritySection();
-    renderComingSection();
+    const layout = document.createElement('div');
+    layout.className = 'settings-layout';
+    layout.classList.toggle('show-panel', showPanelOnPhone);
+
+    // Menu delle categorie
+    const nav = document.createElement('ul');
+    nav.className = 'settings-nav';
+    CATEGORIES.forEach((cat) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'settings-nav-btn';
+      btn.setAttribute('aria-current', String(cat.id === currentCategory));
+      const icon = document.createElement('span');
+      icon.className = 'nav-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = cat.icon;
+      const label = document.createElement('span');
+      label.textContent = t(cat.titleKey);
+      const chevron = document.createElement('span');
+      chevron.className = 'nav-chevron';
+      chevron.setAttribute('aria-hidden', 'true');
+      chevron.textContent = '›';
+      btn.append(icon, label, chevron);
+      btn.addEventListener('click', () => {
+        currentCategory = cat.id;
+        showPanelOnPhone = true;
+        renderSettings();
+        el.settings.scrollTop = 0;
+      });
+      li.append(btn);
+      nav.append(li);
+    });
+
+    // Contenuto della categoria scelta
+    const category = CATEGORIES.find((cat) => cat.id === currentCategory) || CATEGORIES[0];
+    const panel = document.createElement('div');
+    panel.className = 'settings-panel';
+    const title = document.createElement('h3');
+    title.className = 'settings-panel-title';
+    title.textContent = `${category.icon} ${t(category.titleKey)}`;
+    const intro = document.createElement('p');
+    intro.className = 'settings-panel-intro';
+    intro.textContent = t(category.introKey);
+    panel.append(title, intro);
+    currentPanel = panel;
+    category.render.forEach((fn) => fn());
+
+    layout.append(nav, panel);
+    el.settingsBody.replaceChildren(layout);
   }
 
   function openSettings() {
+    showPanelOnPhone = false;
     renderSettings();
     el.settings.hidden = false;
     document.body.classList.add('settings-open');
@@ -497,7 +607,15 @@
     bindLock();
     el.openSettings.addEventListener('click', openSettings);
     el.exitAdult.addEventListener('click', exitAdult);
-    el.settingsBack.addEventListener('click', closeSettings);
+    // "Indietro": su telefono, dal contenuto di una categoria torna all'elenco; altrimenti chiude
+    el.settingsBack.addEventListener('click', () => {
+      if (showPanelOnPhone && window.matchMedia('(max-width: 720px)').matches) {
+        showPanelOnPhone = false;
+        renderSettings();
+        return;
+      }
+      closeSettings();
+    });
     // Ogni tocco o tasto in modalità adulto rimanda l'uscita automatica
     ['pointerdown', 'keydown'].forEach((name) => {
       document.addEventListener(name, resetInactivity, true);
@@ -526,7 +644,14 @@
     speech.setPrefs(await storage.get('voice'));
   }
 
+  // Modalità colori salvata (predefinita: colore pieno)
+  async function restoreColorMode() {
+    const saved = await storage.get('colorMode');
+    if (saved && COLOR_MODES.some((mode) => mode.id === saved)) applyColorMode(saved);
+  }
+
   bindEvents();
   restoreLanguage();
   restoreVoice();
+  restoreColorMode();
 })();

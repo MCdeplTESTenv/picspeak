@@ -497,3 +497,141 @@ button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .lock-btn.is-holding .lock-progress { transition: transform 3s linear !important; }
 }
+
+/* =====================================================================
+ * Modalità colori (scelta dall'adulto in Impostazioni → Aspetto)
+ *   full   = "Colore pieno" (predefinita): cella tinta col colore della categoria
+ *   border = "Bordo colorato": cella bianca con bordo superiore colorato
+ *   none   = "Neutro": nessun colore di categoria
+ * ===================================================================== */
+
+/* Tinte chiare per lo sfondo delle celle (testo scuro sempre ben leggibile) */
+.type-pronoun   { --cat: #e0ac00; --tint: #fff3c4; }
+.type-verb      { --cat: #2e9a47; --tint: #daf2df; }
+.type-noun      { --cat: #e57a12; --tint: #ffe4cc; }
+.type-adjective { --cat: #2a6fd6; --tint: #dbe8fc; }
+.type-social    { --cat: #d0468f; --tint: #fbdcec; }
+.type-negation  { --cat: #cf3439; --tint: #fbd9da; }
+.type-folder    { --cat: #3b4252; --tint: #e7e9ef; }
+
+/* ---------- Colore pieno ---------- */
+[data-color-mode="full"] {
+  --bg: #fbfaf7;
+  --radius: 24px;
+}
+[data-color-mode="full"] .sentence-bar { background: #1f2430; border: 0; padding: 12px; }
+[data-color-mode="full"] .sentence-strip { border: 0; background: rgba(255, 255, 255, 0.08); border-radius: 20px; }
+[data-color-mode="full"] .sentence-chip { background: var(--tint); border: 0; border-radius: 14px; color: #1a1d24; }
+[data-color-mode="full"] .action-btn { background: rgba(255, 255, 255, 0.1); border: 0; border-radius: 18px; color: #fff; }
+[data-color-mode="full"] .action-speak { background: #f5c518; }
+[data-color-mode="full"] .page-title { color: var(--text); font-weight: 800; font-size: clamp(22px, 3.2vw, 30px); }
+[data-color-mode="full"] .nav-btn { border: 0; background: #1f2430; border-radius: 16px; }
+[data-color-mode="full"] .symbol-grid { gap: 12px; padding: 12px; }
+[data-color-mode="full"] .symbol-cell {
+  background: var(--tint);
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cat) 35%, transparent);
+  color: #1a1d24;
+}
+[data-color-mode="full"] .symbol-cell.is-pressed { background: #ffffff; box-shadow: inset 0 0 0 4px var(--cat); }
+[data-color-mode="full"] .symbol-cell .symbol-image { background: rgba(255, 255, 255, 0.75); border-radius: 22%; padding: 0.12em; }
+[data-color-mode="full"] .symbol-cell .symbol-label { font-weight: 800; }
+[data-color-mode="full"] .symbol-cell.type-folder { background: #3b4252; box-shadow: none; color: #ffffff; }
+[data-color-mode="full"] .symbol-cell.type-folder .symbol-image { background: rgba(255, 255, 255, 0.12); }
+[data-color-mode="full"] .lock-btn { opacity: 0.4; }
+
+/* ---------- Neutro ---------- */
+[data-color-mode="none"] .symbol-cell,
+[data-color-mode="none"] .sentence-chip { border-top-color: var(--border); }
+[data-color-mode="none"] .symbol-cell { border-top-width: 2px; }
+[data-color-mode="none"] .symbol-cell.type-folder { border-top-width: 2px; }
+
+/* ---------- Anteprime nella scelta della modalità colori ---------- */
+.mode-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; width: 100%; }
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  text-align: left;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 16px;
+}
+.mode-option[aria-pressed="true"] { border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 25%, transparent); }
+.mode-option strong { font-size: 17px; }
+.mode-option small { color: var(--text-muted); line-height: 1.35; }
+.mode-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px; border-radius: 12px; background: #f3f1ec; }
+.mode-preview span { height: 34px; border-radius: 8px; background: #fff; border: 1px solid #d8d4ca; }
+.mode-preview.is-full span { border: 0; background: var(--tint); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--cat) 35%, transparent); }
+.mode-preview.is-full span.type-folder { background: #3b4252; box-shadow: none; }
+.mode-preview.is-border span { border-top: 6px solid var(--cat); }
+
+/* =====================================================================
+ * Impostazioni a categorie: menu laterale su tablet/PC, elenco su telefono
+ * ===================================================================== */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+  align-items: start;
+}
+.settings-nav {
+  position: sticky;
+  top: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  margin: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+.settings-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 14px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 17px;
+}
+.settings-nav-btn .nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg);
+  font-size: 19px;
+}
+.settings-nav-btn .nav-chevron { margin-left: auto; color: var(--text-muted); display: none; }
+.settings-nav-btn[aria-current="true"] { background: color-mix(in srgb, var(--focus) 12%, transparent); color: var(--focus); }
+.settings-panel { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.settings-panel-title { margin: 4px 0 0; font-size: 26px; }
+.settings-panel-intro { margin: -8px 0 0; color: var(--text-muted); }
+.settings-section { border-width: 1px; border-radius: 18px; }
+.settings-section h3 { font-size: 18px; }
+
+@media (max-width: 720px) {
+  .settings-layout { display: block; padding: 12px; }
+  .settings-nav { position: static; }
+  .settings-nav-btn .nav-chevron { display: inline; }
+  .settings-nav-btn[aria-current="true"] { background: transparent; color: inherit; }
+  .settings-layout.show-panel .settings-nav { display: none; }
+  .settings-layout:not(.show-panel) .settings-panel { display: none; }
+}
+/* Il contenitore delle impostazioni lascia spazio al layout a categorie */
+.settings-body { display: block; max-width: none; padding: 0; }
