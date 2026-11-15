@@ -231,17 +231,20 @@ semplice file.
 - **Livello 3 – iPad, iPhone, Firefox, Android** (il browser non permette di scrivere in una cartella):
   promemoria automatico periodico (es. ogni 7 giorni o dopo N modifiche) che prepara il file e apre
   il pannello di condivisione per salvarlo in File/iCloud con due tocchi.
-- **File unico portabile `nomeutente.caa.json`** (esportazione/importazione) con immagini incorporate,
-  schede, statistiche, regole e numero di versione del formato: serve per cambiare dispositivo e per lo
-  scambio casa–scuola.
+- **Livello 3 – cloud personale automatico** (Google Drive, Dropbox o OneDrive, scelto dai genitori): l'unico
+  backup automatico su iPad, iPhone e Android. Accesso solo alla cartella privata dell'app, con OAuth PKCE dal
+  browser, nessun server nostro, cifratura facoltativa con password.
+- **File unico `nome.picspeak`** (un solo archivio, sempre lo stesso formato) per backup, spostamento tra
+  dispositivi, scambio casa–scuola e modelli del terapista.
+- **Importazione selettiva:** si sceglie cosa importare (schede, T9, impostazioni grafiche, altre impostazioni);
+  le impostazioni sostituiscono quelle presenti, per le schede si sceglie sostituisci/aggiungi, per il T9
+  unisci/sostituisci.
+- **Modelli del terapista:** insiemi di schede creati e salvati in autonomia, da importare per altri bambini,
+  sempre in aggiunta al risultato del tutorial.
 - Indicatore sempre visibile nelle impostazioni adulto: "Ultimo backup: X giorni fa" e dove si trova.
 - Leggerezza: il salvataggio avviene in background, solo dopo una modifica, e scrive solo ciò che è cambiato.
 
 ## Sviluppi futuri annotati
-- **Salvataggio automatico sul cloud personale** dell'utente (es. Google Drive, cartella
-  nascosta dell'app, con accesso Google direttamente dal browser, senza server nostri);
-  su Chrome/Edge desktop anche salvataggio automatico su un file scelto dall'utente
-  (es. in una cartella iCloud/Dropbox). Servirebbe anche per lo scambio casa–scuola.
 - **Suggeritore IA opzionale**: spento di default, attivabile dall'adulto con una
   propria chiave gratuita (es. Gemini). Da valutare: privacy dei dati di un minore
   inviati a un servizio esterno e termini d'uso che cambiano nel tempo.

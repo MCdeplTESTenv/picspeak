@@ -1236,3 +1236,87 @@ body > .adult-bar { order: 0; }
   .page-nav { padding-top: 4px; padding-bottom: 0; }
   .crumbs { min-height: 36px; }
 }
+
+/* Barra delle impostazioni sbloccate: sempre su una sola riga, anche su telefono */
+.adult-bar { flex-wrap: nowrap; gap: 8px; padding: 8px 10px; }
+.adult-badge { margin-right: auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.adult-btn { min-height: 44px; padding: 0 12px; white-space: nowrap; flex: none; }
+.adult-btn-text.short { display: none; }
+.zoom-control { display: inline-flex; align-items: center; flex: none; padding: 2px; background: rgba(255, 255, 255, 0.14); border-radius: 12px; }
+.zoom-btn, .zoom-value { min-height: 40px; border: 0; color: #ffffff; background: transparent; font-weight: 700; }
+.zoom-btn { width: 40px; font-size: 22px; border-radius: 10px; }
+.zoom-btn:disabled { opacity: 0.35; }
+.zoom-value { min-width: 58px; padding: 0 6px; font-size: 14px; background: rgba(255, 255, 255, 0.16); border-radius: 10px; }
+@media (max-width: 700px) {
+  .adult-badge-text, .adult-btn-text.long, #btn-open-settings .adult-btn-text { display: none; }
+  .adult-btn-text.short { display: inline; }
+  .adult-btn { padding: 0 10px; }
+}
+.setting-status { align-self: center; font-weight: 600; color: #3a3f47; }
+/* Parola che non entra nemmeno al carattere minimo: va a capo sillabando, fino a tre righe */
+.symbol-cell .symbol-label.is-hyphenated {
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+/* =====================================================================
+ * Modifica delle schede (impostazioni sbloccate)
+ * ===================================================================== */
+.mode-adult .symbol-cell:not(.add-cell)::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(31, 111, 235, 0.9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E") center / 13px no-repeat;
+  z-index: 1;
+}
+.mode-adult .symbol-cell { position: relative; }
+.symbol-cell.is-hidden-cell { opacity: 0.4; border-style: dashed !important; }
+.symbol-cell.is-locked-cell::after { box-shadow: none; }
+.symbol-cell.add-cell {
+  background: transparent !important;
+  border: 3px dashed #b0b6bf !important;
+  box-shadow: none !important;
+  color: #4a505a;
+}
+.symbol-cell.add-cell .add-plus { font-size: clamp(32px, calc(var(--cell-size, 110px) * 0.4), 72px); font-weight: 300; line-height: 1; }
+.symbol-image.is-empty { flex: 1 1 auto; }
+
+.editor-dialog { width: min(94vw, 560px); max-height: 92vh; overflow-y: auto; }
+.editor-form { gap: 16px; }
+.editor-field input { letter-spacing: normal; font-size: 18px; min-height: 48px; text-transform: none; }
+.editor-block { display: flex; flex-direction: column; gap: 8px; }
+.editor-block-title { font-weight: 600; }
+.editor-hint { color: #6b717b; font-size: 13px; }
+.editor-segmented { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); width: 100%; }
+.editor-segmented button { white-space: normal; }
+.editor-swatches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.editor-swatch, .editor-swatch-input {
+  width: 40px; height: 40px; padding: 0;
+  border: 2px solid #d0d3d8; border-radius: 10px; background: #fff;
+}
+.editor-swatch.swatch-auto { font-weight: 700; color: #4a505a; background: repeating-linear-gradient(45deg, #fff 0 6px, #eef0f3 6px 12px); }
+.editor-swatch[aria-pressed="true"] { outline: 3px solid #1f6feb; outline-offset: 2px; }
+.editor-preview {
+  display: flex; align-items: center; justify-content: center;
+  width: 120px; height: 120px; border: 2px dashed #d0d3d8; border-radius: 12px; background: #fafafa;
+}
+.editor-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.editor-preview-empty { color: #8a9099; font-size: 13px; text-align: center; padding: 8px; }
+.editor-actions-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.editor-option { display: flex; flex-direction: column; gap: 6px; }
+.dlg-btn-danger { color: #b3261e; border-color: #e3b4b1; }
+/* Campi dell'editor: testo come scritto (il maiuscolo dei campi PIN/codice non si applica qui) */
+.editor-field input[type="text"] { text-transform: none; letter-spacing: normal; font-size: 18px; }
+.editor-field input[type="text"]::placeholder { text-transform: none; color: #9aa0a8; }
+/* Barra sbloccata: testi lunghi solo su schermi larghi, altrimenti "Fine" e solo icone */
+@media (max-width: 1000px) {
+  .adult-badge-text, .adult-btn-text.long { display: none; }
+  .adult-btn-text.short { display: inline; }
+}

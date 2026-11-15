@@ -35,6 +35,12 @@ window.verificaLayout = () => {
       if (label.scrollWidth > label.clientWidth + TOLERANCE && ls.textOverflow !== 'ellipsis') {
         problems.push(`${kind} – parola "${label.textContent}" tagliata`);
       }
+      // Righe nascoste dal limite di righe: la parola non si leggerebbe tutta
+      const lineHeight = parseFloat(ls.lineHeight) || parseFloat(ls.fontSize) * 1.15;
+      const maxLines = parseInt(ls.webkitLineClamp, 10) || 0;
+      if (maxLines && label.scrollHeight > lineHeight * (maxLines + 0.5)) {
+        problems.push(`${kind} – parola "${label.textContent}" troncata in altezza`);
+      }
     }
     if (image && getComputedStyle(image).display !== 'none') inside(image, box, `${kind} – immagine`);
   });
@@ -75,6 +81,15 @@ window.verificaLayout = () => {
       problems.push(`Impostazioni – spazio vuoto sotto "${text.firstElementChild?.textContent}"`);
     }
   });
+
+  // Barra delle impostazioni sbloccate: deve restare su una sola riga
+  const adultBar = document.getElementById('adult-bar');
+  if (adultBar && !adultBar.hidden && adultBar.getBoundingClientRect().height > 70) {
+    problems.push(`Barra impostazioni su più righe (${Math.round(adultBar.getBoundingClientRect().height)} px)`);
+  }
+  if (adultBar && !adultBar.hidden) {
+    adultBar.querySelectorAll('button').forEach((btn) => inside(btn, adultBar, 'Barra impostazioni – pulsante'));
+  }
 
   // Barre: icone dentro i pulsanti, percorso dentro la sua pillola
   document.querySelectorAll('.action-btn, .lock-btn, .adult-btn, .home-btn').forEach((btn) => {

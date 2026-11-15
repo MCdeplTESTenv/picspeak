@@ -199,8 +199,11 @@ Formato: data – decisione – motivo.
   sulla striscia frase verso l'alto o il basso (o di lato se la frase non scorre) la cancella. In modalità impostazioni ogni tessera mostra anche la ✕ per toglierla.
 - **Sicurezza:** Content-Security-Policy, blocco delle impostazioni dentro un iframe, link esterni senza referrer,
   documento `docs/SICUREZZA.md` e agente `security-reviewer` da usare prima di ogni push.
-- **Zoom delle immagini nelle tessere** (Aspetto → Simboli): pulsanti − e + a passi del 10% (60–160%), tocco sulla
-  percentuale per tornare al 100% (predefinito). I controlli esistono solo nelle impostazioni.
+- **Zoom delle tessere (sostituisce lo zoom delle sole immagini):** con le impostazioni sbloccate, nella barra in alto
+  della pagina principale compaiono − 100% +: agiscono sull'intera tessera (immagine e parola) cambiando il numero di
+  colonne, e l'effetto si vede subito; toccando la percentuale si torna ad "automatico". In comunicazione i pulsanti
+  spariscono. Il numero di colonne scelto è salvato (Aspetto → Celle mostra "Automatico" o "N colonne").
+  Con − non si scende sotto ~90 px di larghezza per tessera.
 - **REQUISITO FONDAMENTALE: il backup deve essere automatico, mai un'operazione manuale.** Perdere impostazioni, schede
   o statistiche del T9 sarebbe un danno grave per la persona che usa il tool. Saranno i genitori a scegliere dove
   salvare (cartella locale o cloud personale), ma il salvataggio avviene da solo. Il promemoria manuale resta solo come
@@ -210,4 +213,68 @@ Formato: data – decisione – motivo.
 - **Griglia su schermi bassi (telefono in orizzontale):** le celle non scendono sotto ~108 px di larghezza, la griglia
   scorre invece di stringersi; barre più compatte sotto i 500 px di altezza. Il controllo grafico ora include anche il
   telefono in orizzontale, lo zoom delle immagini (60–160%) e le righe delle impostazioni.
+- **Backup a livelli, ciascuno attivabile dalle impostazioni** (confermato da Marcello):
+  1. memoria del browser persistente (sempre attiva);
+  2. cartella automatica sul computer (Chrome/Edge desktop);
+  3. **cloud personale automatico** (Google Drive, Dropbox o OneDrive) — l'unico automatico su iPad, iPhone e Android;
+  4. esportazione manuale del file, con promemoria (rete di sicurezza; resta l'unica via se il cloud non è collegato).
+- **Sicurezza del collegamento al cloud ("super seria"):** OAuth 2.0 con PKCE direttamente dal browser, nessun segreto nel
+  codice, permessi minimi (solo la cartella privata dell'app: Drive `appDataFolder`, Dropbox "App folder", OneDrive
+  `approot`), mai accesso agli altri file dell'utente; token di breve durata conservati solo sul dispositivo e mai nel
+  backup; pulsante "Scollega" che revoca l'accesso; cifratura facoltativa (consigliata) del backup con una password dei
+  genitori prima dell'invio (AES-GCM, Web Crypto). Ogni modifica a questa parte va verificata con l'agente
+  `security-reviewer`. Domini dei provider aggiunti alla CSP solo quando si implementa.
+- **Formato di export unico: un solo file `nome.picspeak`** (archivio zip, scritto dal tool senza librerie esterne) con
+  `manifest.json` (versione del formato, data, contenuto, tipo: backup completo o modello), dati in JSON e immagini.
+  Sostituisce il precedente `.caa.json`. Lo stesso formato serve per backup, spostamento tra dispositivi e modelli del
+  terapista.
+- **Importazione selettiva:** il tool mostra cosa contiene il file e chiede cosa importare: schede, T9, impostazioni
+  grafiche, altre impostazioni (e contesti).
+  - impostazioni grafiche e altre impostazioni: sostituiscono quelle presenti;
+  - schede: per ogni scheda con lo stesso nome si chiede "sostituisci" o "aggiungi come nuova";
+  - T9 (proposta): **unisci** (predefinito: somma dei conteggi, mantenendo le date per il decadimento nel tempo) oppure
+    **sostituisci**, a scelta.
+- **Modelli del terapista:** il terapista crea in autonomia impaginazioni/insiemi di schede, li salva come `.picspeak`
+  di tipo "modello" e li importa per altri bambini. Si applicano sempre in aggiunta al risultato del tutorial, che parte
+  da schede predefinite diverse per bambino e per adulto.
+- **Griglia automatica:** si preferisce la disposizione che fa stare tutte le tessere senza scorrere (es. 4×4 sul telefono
+  in verticale); sotto i 76 px di larghezza la griglia scorre invece di stringersi. Se una parola non entra nemmeno al
+  carattere minimo, va a capo sillabando con il trattino (mai fuori dal bordo).
+- **Barra delle impostazioni sbloccate sempre su una riga:** su telefono "Impostazioni" diventa solo l'icona ⚙ e
+  "Torna alla comunicazione" diventa "Fine". Il controllo grafico verifica anche questo.
+- **Formato dei dati approvato** (`docs/FORMATO-DATI.md`), con il vincolo di non appesantire peso dei file e fluidità.
+- **Fonti dei simboli verificate il 15/11/2026 (accesso diretto, nessuna chiave personale, nessun costo):**
+  | Fonte | Licenza | Accesso | Permessi da chiedere |
+  |---|---|---|---|
+  | ARASAAC | CC BY-NC-SA 4.0 | API pubblica `api.arasaac.org`, immagini con CORS aperto | nessuno (attribuzione obbligatoria) |
+  | Global Symbols (raccolta) | varia per set | API pubblica: "Public endpoints are available without an API key" (`/api/v1/swagger_doc`), CORS aperto | nessuno; consigliata una mail di cortesia al gestore |
+  | Tawasol (Mada) | CC BY-SA 4.0 | tramite Global Symbols (`symbolset=tawasol`), parole in inglese e arabo | nessuno (attribuzione a Mada) |
+  | Mulberry | CC BY-SA | tramite Global Symbols e set incluso nel tool | nessuno (attribuzione Steve Lee / Mulberry) |
+  | OpenMoji | CC BY-SA 4.0 | set incluso nel tool (e tramite Global Symbols) | nessuno ("OpenMoji – License: CC BY-SA 4.0") |
+  | Sclera | CC BY-NC | tramite Global Symbols | nessuno per uso non commerciale (attribuzione www.sclera.be) |
+  Esclusi dai set selezionabili: quelli con licenza "ND" (non modificabili: anche il ridimensionamento sarebbe a rischio) o senza
+  licenza dichiarata, e quelli a pagamento (Widgit, PCS). Le licenze Creative Commons non sono revocabili per i simboli già
+  ottenuti: ciò che è salvato nel tool resta utilizzabile. Le API invece sono servizi gratuiti che potrebbero cambiare: per
+  questo ogni simbolo viene salvato in locale e Mulberry/OpenMoji sono inclusi nel tool.
+  Le immagini SVG di Global Symbols vengono convertite in PNG sul dispositivo (mai SVG salvati così come sono).
+- **Fonti dei simboli – decisione finale: niente Global Symbols** (scelta di Marcello, per evitare ogni dubbio futuro).
+  Tutte le fonti si usano direttamente dalla fonte originale, senza chiavi né account:
+  | Fonte | Licenza (verificata alla fonte, 15/11/2026) | Come arriva in PicSpeak |
+  |---|---|---|
+  | ARASAAC | CC BY-NC-SA 4.0 | ricerca online con l'API pubblica `api.arasaac.org` + simboli già inclusi |
+  | Mulberry | Creative Commons BY-SA (repository GitHub `mulberrysymbols/mulberry-symbols`) | pacchetto incluso |
+  | OpenMoji | CC BY-SA 4.0 (repository GitHub `hfg-gmuend/openmoji`) | pacchetto incluso |
+  | Tawasol (Mada) | CC BY-NC 4.0 secondo il sito ufficiale tawasol.mada.org.qa (altrove indicato BY-SA: vale la più restrittiva, comunque compatibile con un tool gratuito) | pacchetto incluso da GitHub/"Download" ufficiale |
+  | Sclera | Creative Commons 2.0, uso gratuito non commerciale con attribuzione a www.sclera.be | pacchetto incluso dal "Download" ufficiale |
+  Per non appesantire il tool, ogni set aggiuntivo è un **pacchetto separato** (sottoinsieme del vocabolario più utile, con
+  indice delle parole) pubblicato sul nostro stesso sito: viene scaricato una sola volta solo se l'adulto attiva quella
+  fonte nelle impostazioni, poi funziona offline. Nessuna richiesta di permesso obbligatoria; attribuzione automatica nei
+  Crediti. Sostituisce la decisione precedente che usava Global Symbols.
+- **Per ora si parte senza Global Symbols e senza Tawasol** (decisione di Marcello): restano nelle idee future "in attesa"
+  con il motivo (vedi ROADMAP). Esclusa per ora anche Sclera (in attesa). Fonti attive: ARASAAC (ricerca online),
+  Mulberry e OpenMoji (pacchetti inclusi), foto personali.
+  Nelle impostazioni ogni fonte ha una breve spiegazione dello stile e di quando conviene sceglierla.
+- **Ripristino alle impostazioni iniziali** (richiesta di Marcello, Tappa 5): nella pagina Backup e ripristino un comando
+  cancella tutti i dati personalizzati, PIN compreso; al successivo accesso alle impostazioni si crea un nuovo PIN.
+  Protezioni: PIN richiesto, proposta di un backup prima di procedere, doppia conferma.
 
