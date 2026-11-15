@@ -184,15 +184,23 @@
   }
 
   function applyStaticLabels() {
-    el.speak.setAttribute('aria-label', t('speakSentence'));
-    el.speak.title = t('speakSentence');
-    el.backspace.setAttribute('aria-label', t('deleteLast'));
-    el.backspace.title = t('deleteLast');
-    el.clear.setAttribute('aria-label', t('clearSentence'));
-    el.clear.title = t('clearSentence');
-    el.home.setAttribute('aria-label', t('goHome'));
-    el.home.title = t('goHome');
+    i18n.applyTo(document);
     document.title = t('appName');
+  }
+
+  // Cambio modalità: 'child' (comunicazione) o 'adult' (modifica, impostazioni)
+  function setMode(mode) {
+    state.mode = mode === 'adult' ? 'adult' : 'child';
+    document.body.classList.toggle('mode-adult', state.mode === 'adult');
+    renderSentence();
+    layoutGrid();
+  }
+
+  // Ridisegna tutti i testi dopo un cambio di lingua
+  function refreshTexts() {
+    applyStaticLabels();
+    renderGrid();
+    renderSentence();
   }
 
   function bindEvents() {
@@ -225,4 +233,11 @@
   bindEvents();
   renderGrid();
   renderSentence();
+
+  window.PicSpeak.app = {
+    setMode,
+    refreshTexts,
+    layoutGrid,
+    get mode() { return state.mode; },
+  };
 })();

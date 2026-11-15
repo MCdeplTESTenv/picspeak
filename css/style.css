@@ -27,6 +27,10 @@
   --radius: 14px;
   --bar-height: clamp(84px, 13vh, 112px);
   --min-cell: 64px;
+
+  /* Barra della modalità adulto: colore ben distinto dalla comunicazione */
+  --adult-bg: #2b2d42;
+  --adult-text: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,6 +46,8 @@
 }
 
 * { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
 
 html, body {
   margin: 0;
@@ -246,6 +252,218 @@ button:focus-visible {
   box-shadow: inset 0 -6px 0 var(--border);
 }
 
+/* ---------- Lucchetto (accesso alla modalità adulto) ---------- */
+
+.lock-btn {
+  position: relative;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--min-cell);
+  min-height: var(--min-cell);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius);
+  opacity: 0.35;
+  overflow: hidden;
+  -webkit-touch-callout: none;
+}
+
+.lock-icon { font-size: 26px; line-height: 1; }
+
+/* Barra di avanzamento della pressione prolungata */
+.lock-progress {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 6px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--focus);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.lock-btn.is-holding { opacity: 1; background: var(--pressed); }
+.lock-btn.is-holding .lock-progress {
+  transform: scaleX(1);
+  transition: transform 3s linear;
+}
+
+/* ---------- Modalità adulto ---------- */
+
+.adult-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--gap);
+  padding: var(--gap);
+  background: var(--adult-bg);
+  color: var(--adult-text);
+}
+
+.adult-badge { font-weight: 700; margin-right: auto; font-size: 18px; }
+
+.adult-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.adult-btn-primary { border-color: var(--fz-verb); }
+
+/* In modalità adulto i simboli della frase mostrano che si possono togliere */
+.mode-adult .sentence-chip { position: relative; }
+.mode-adult .sentence-chip::after {
+  content: "✕";
+  position: absolute;
+  top: -2px;
+  right: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fz-negation);
+}
+
+/* ---------- Finestra PIN ---------- */
+
+.pin-dialog {
+  width: min(92vw, 420px);
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.pin-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.dialog-form h2 { margin: 0; font-size: 22px; }
+.dialog-help { margin: 0; color: var(--text-muted); line-height: 1.4; }
+
+.dialog-field { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+.dialog-field input {
+  min-height: 56px;
+  padding: 0 14px;
+  font-size: 26px;
+  letter-spacing: 0.3em;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+}
+.dialog-field input[type="text"] { letter-spacing: 0.08em; font-size: 22px; text-transform: uppercase; }
+
+.dialog-error { margin: 0; min-height: 1.2em; color: var(--fz-negation); font-weight: 600; }
+
+.recovery-code {
+  margin: 0;
+  padding: 14px;
+  font: 700 26px/1.2 ui-monospace, Menlo, Consolas, monospace;
+  letter-spacing: 0.08em;
+  text-align: center;
+  background: var(--bg);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+}
+
+.dialog-link {
+  align-self: flex-start;
+  padding: 4px 0;
+  background: none;
+  border: 0;
+  color: var(--focus);
+  text-decoration: underline;
+}
+
+.dialog-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+.dlg-btn {
+  min-height: 52px;
+  padding: 0 20px;
+  background: var(--surface);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.dlg-btn-primary { background: var(--focus); border-color: var(--focus); color: #fff; }
+.dlg-btn:disabled { opacity: 0.5; }
+
+/* ---------- Impostazioni ---------- */
+
+.settings-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.settings-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: var(--gap) 16px;
+  background: var(--adult-bg);
+  color: var(--adult-text);
+}
+
+.settings-header h2 { margin: 0; font-size: 22px; }
+
+.settings-body {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.settings-section h3 { margin: 0; font-size: 20px; }
+.settings-section h4 { margin: 8px 0 0; font-size: 17px; }
+.settings-help { margin: 0; color: var(--text-muted); line-height: 1.45; }
+.settings-list { margin: 0; padding-left: 22px; line-height: 1.5; }
+.settings-list li + li { margin-top: 4px; }
+
+.choice-group { display: flex; gap: 10px; flex-wrap: wrap; }
+.choice-group [aria-pressed="true"] { border-color: var(--focus); background: var(--pressed); }
+
+.settings-open { overflow: hidden; }
+
 /* ---------- Telefoni piccoli ---------- */
 
 @media (max-width: 520px) {
@@ -258,4 +476,9 @@ button:focus-visible {
 /* Rispetta chi preferisce ridurre il movimento */
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* La barra del lucchetto è un'informazione (quanto manca), non una decorazione: resta anche con movimento ridotto */
+@media (prefers-reduced-motion: reduce) {
+  .lock-btn.is-holding .lock-progress { transition: transform 3s linear !important; }
 }
