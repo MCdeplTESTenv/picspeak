@@ -267,6 +267,9 @@
   }
 
   async function requestAdultAccess() {
+    // Se PicSpeak è aperto dentro un'altra pagina (iframe), le impostazioni restano chiuse:
+    // evita che un sito esterno induca a digitare il PIN dentro una cornice ingannevole
+    if (window.top !== window.self) return;
     if (!security.supported) {
       await runDialog({ title: t('adultMode'), help: t('cryptoUnavailable'), primary: t('close') });
       return;
@@ -323,15 +326,22 @@
   // Lucchetto: serve una pressione continua di 3 secondi (un tocco veloce non fa nulla)
   function bindLock() {
     let holdTimer = null;
+    const indicator = document.getElementById('hold-indicator');
     const cancel = () => {
       clearTimeout(holdTimer);
       holdTimer = null;
       el.lock.classList.remove('is-holding');
+      indicator.hidden = true;
+      indicator.classList.remove('is-running');
     };
     const start = (event) => {
       if (event.type === 'pointerdown' && event.button !== 0) return;
       cancel();
       el.lock.classList.add('is-holding');
+      // La barra parte in cima allo schermo, dove il dito non la copre
+      indicator.hidden = false;
+      void indicator.offsetWidth;
+      indicator.classList.add('is-running');
       holdTimer = setTimeout(() => {
         cancel();
         requestAdultAccess();
@@ -560,7 +570,7 @@
       const link = document.createElement('a');
       link.href = href;
       link.target = '_blank';
-      link.rel = 'noopener';
+      link.rel = 'noopener noreferrer';
       link.textContent = label;
       li.append(`${text} `, link);
       ul.append(li);
@@ -648,6 +658,8 @@
         values: [['on', 'valOn'], ['strong', 'valStrong'], ['off', 'valOff']] },
       { key: 'shakeHome', labelKey: 'optShakeHome', helpKey: 'optShakeHomeHelp',
         values: [['off', 'valNo'], ['on', 'valYes']] },
+      { key: 'swipeClear', labelKey: 'optSwipeClear', helpKey: 'optSwipeClearHelp',
+        values: [['off', 'valNo'], ['on', 'valYes']] },
     ] },
   ];
   const APPEARANCE_OPTIONS = APPEARANCE_GROUPS.flatMap((group) => group.options);
@@ -658,6 +670,7 @@
       const value = appearance[opt.key] || opt.values[0][0];
       document.documentElement.dataset[opt.key] = value;
     });
+    applyImageZoom();
     app.layoutGrid();
   }
 
@@ -693,6 +706,7 @@
   function presetMatches(preset) {
     if ((document.documentElement.dataset.colorMode || DEFAULT_COLOR_MODE) !== preset.colorMode) return false;
     if (currentBackground() !== (preset.background || '').toLowerCase()) return false;
+    if ((appearance.imageZoom || 100) !== (preset.appearance.imageZoom || 100)) return false;
     return APPEARANCE_OPTIONS.every((opt) => {
       const def = opt.values[0][0];
       return (appearance[opt.key] || def) === (preset.appearance[opt.key] || def);
@@ -786,9 +800,54 @@
     return group;
   }
 
+  // Zoom delle immagini nelle tessere: − / + a passi del 10%, da 60% a 160%, "100%" per ripristinare
+  const IMAGE_ZOOM = { min: 60, max: 160, step: 10, def: 100 };
+
+  function applyImageZoom() {
+    const zoom = appearance.imageZoom || IMAGE_ZOOM.def;
+    document.documentElement.style.setProperty('--image-zoom', String(zoom / 100));
+  }
+
+  function imageZoomRow() {
+    const zoom = appearance.imageZoom || IMAGE_ZOOM.def;
+    const group = document.createElement('div');
+    group.className = 'stepper';
+    const set = async (value) => {
+      const next = Math.min(IMAGE_ZOOM.max, Math.max(IMAGE_ZOOM.min, value));
+      appearance = { ...appearance, imageZoom: next };
+      applyAppearance();
+      await storage.set('appearance', appearance);
+      renderSettings();
+    };
+    const minus = document.createElement('button');
+    minus.type = 'button';
+    minus.className = 'stepper-btn';
+    minus.textContent = '−';
+    minus.setAttribute('aria-label', t('zoomLess'));
+    minus.disabled = zoom <= IMAGE_ZOOM.min;
+    minus.addEventListener('click', () => set(zoom - IMAGE_ZOOM.step));
+    const reset = document.createElement('button');
+    reset.type = 'button';
+    reset.className = 'stepper-value';
+    reset.textContent = `${zoom}%`;
+    reset.title = t('zoomReset');
+    reset.setAttribute('aria-label', `${zoom}% – ${t('zoomReset')}`);
+    reset.addEventListener('click', () => set(IMAGE_ZOOM.def));
+    const plus = document.createElement('button');
+    plus.type = 'button';
+    plus.className = 'stepper-btn';
+    plus.textContent = '+';
+    plus.setAttribute('aria-label', t('zoomMore'));
+    plus.disabled = zoom >= IMAGE_ZOOM.max;
+    plus.addEventListener('click', () => set(zoom + IMAGE_ZOOM.step));
+    group.append(minus, reset, plus);
+    return settingRow('optImageZoom', 'optImageZoomHelp', group);
+  }
+
   function renderAppearanceGroups() {
     APPEARANCE_GROUPS.forEach((group) => {
       const wrap = section(group.titleKey);
+      if (group.titleKey === 'grpSymbols') wrap.append(imageZoomRow());
       group.options.forEach((opt) => {
         const current = appearance[opt.key] || opt.values[0][0];
         wrap.append(settingRow(opt.labelKey, opt.helpKey, segmented(opt.values, current, async (value) => {
@@ -892,6 +951,7 @@
       const icon = document.createElement('span');
       icon.className = 'nav-icon';
       icon.setAttribute('aria-hidden', 'true');
+      // Unico uso di innerHTML: solo icone costanti scritte nel codice, mai dati inseriti dall'utente
       icon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${cat.icon}</svg>`;
       const label = document.createElement('span');
       label.textContent = t(cat.titleKey);

@@ -186,4 +186,28 @@ Formato: data – decisione – motivo.
   un secondo riportano alla Home e cancellano la frase, solo in modalità comunicazione. Su iPad/iPhone il browser chiede il permesso per i
   sensori di movimento al momento dell'attivazione. Spenta di default per non far scattare per sbaglio chi ha movimenti
   involontari.
+- **"Modalità adulto" rinominata "Impostazioni" (protette da PIN).** La modalità adulto sarà in futuro un profilo
+  separato, per la persona che da adulta usa e gestisce il tool. Motivo: indicazione di Marcello, evitare confusione.
+  (Nel codice la modalità interna si chiama ancora `adult`.)
+- **La modalità scura del telefono non cambia i colori di PicSpeak** (`color-scheme: light`). Motivo: sul telefono di
+  un utente in modalità scura le parole della frase erano bianche su fondo chiaro, quindi invisibili. Per la sera c'è lo
+  stile "Notte". Il controllo grafico ora verifica anche il contrasto (almeno 4,5:1).
+- **Pulsante Home grande rimosso:** basta il percorso "⌂ HOME › pagina" (decisione di Marcello).
+- **Pressione sui "•••": l'avanzamento appare in cima allo schermo** (barra + "Continua a tenere premuto…"), perché sul
+  telefono il dito copriva la barra sul pulsante.
+- **"Spingi via" la frase (interruttore in Aspetto → Disposizione e tocco, spento di default):** un colpo deciso del dito
+  sulla striscia frase verso l'alto o il basso (o di lato se la frase non scorre) la cancella. In modalità impostazioni ogni tessera mostra anche la ✕ per toglierla.
+- **Sicurezza:** Content-Security-Policy, blocco delle impostazioni dentro un iframe, link esterni senza referrer,
+  documento `docs/SICUREZZA.md` e agente `security-reviewer` da usare prima di ogni push.
+- **Zoom delle immagini nelle tessere** (Aspetto → Simboli): pulsanti − e + a passi del 10% (60–160%), tocco sulla
+  percentuale per tornare al 100% (predefinito). I controlli esistono solo nelle impostazioni.
+- **REQUISITO FONDAMENTALE: il backup deve essere automatico, mai un'operazione manuale.** Perdere impostazioni, schede
+  o statistiche del T9 sarebbe un danno grave per la persona che usa il tool. Saranno i genitori a scegliere dove
+  salvare (cartella locale o cloud personale), ma il salvataggio avviene da solo. Il promemoria manuale resta solo come
+  rete di sicurezza. Proposta in valutazione (in attesa di conferma di Marcello prima di modificare la ROADMAP):
+  anticipare nella tappa Backup il salvataggio automatico sul cloud personale dei genitori (Google Drive, Dropbox o
+  OneDrive, accesso dal browser senza server nostri), così da coprire anche iPad e Android.
+- **Griglia su schermi bassi (telefono in orizzontale):** le celle non scendono sotto ~108 px di larghezza, la griglia
+  scorre invece di stringersi; barre più compatte sotto i 500 px di altezza. Il controllo grafico ora include anche il
+  telefono in orizzontale, lo zoom delle immagini (60–160%) e le righe delle impostazioni.
 

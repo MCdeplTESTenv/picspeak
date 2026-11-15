@@ -140,11 +140,14 @@ semplice file.
     partono con un peso maggiore), così i suggerimenti hanno senso fin dal primo giorno.
   - Tutte le risposte restano sul dispositivo e fanno parte del backup.
 
-### Accesso alla modalità adulto (confermato; prima versione realizzata)
+### Impostazioni protette (realizzate) e futuro profilo adulto
 - In modalità bambino nulla modifica i dati: anche toccare un simbolo nella striscia frase
   lo ripete soltanto (la cancellazione dal simbolo è possibile solo in modalità adulto;
   i pulsanti ⌫ e ✕ della frase restano disponibili al bambino).
-- Ingresso: piccolo lucchetto poco visibile in un angolo, da tenere premuto ~3 secondi,
+- Le impostazioni non sono la "modalità adulto": quella sarà un profilo separato, in futuro, per la persona
+  che da adulta userà e gestirà PicSpeak in autonomia.
+- Ingresso: tre puntini "•••" discreti in alto a destra, da tenere premuti ~3 secondi (l'avanzamento
+  compare in cima allo schermo),
   poi richiesta del PIN (4–6 cifre) creato al primo avvio.
 - Uscita: pulsante "Torna alla comunicazione" e ritorno automatico dopo alcuni minuti di inattività.
 - Permessi: un PIN "amministratore" (genitore: tutto, compresi backup, PIN, eliminazioni) e,

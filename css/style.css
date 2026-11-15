@@ -33,17 +33,9 @@
   --adult-text: #ffffff;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #17181a;
-    --surface: #232427;
-    --surface-strip: #1d1e21;
-    --text: #f2f2f2;
-    --text-muted: #b4b4b9;
-    --border: #3a3b40;
-    --pressed: #2a3a55;
-  }
-}
+/* La modalità scura del telefono NON cambia i colori di PicSpeak: le tessere sono progettate
+ * su fondo chiaro e il testo deve restare scuro. Per la sera c'è lo stile "Notte". */
+:root { color-scheme: light; }
 
 * { box-sizing: border-box; }
 
@@ -698,7 +690,8 @@ body { background: var(--page-bg, var(--bg)); }
 [data-color-mode="card"] .symbol-grid { gap: clamp(10px, 1.8vw, 18px); padding: clamp(10px, 1.8vw, 18px); }
 [data-color-mode="card"] .symbol-cell {
   justify-content: space-between;
-  padding: 8% 6% 6%;
+  /* padding legato alla misura della cella (non alla larghezza, che può essere molto maggiore) */
+  padding: calc(var(--cell-size, 110px) * 0.08) calc(var(--cell-size, 110px) * 0.06) calc(var(--cell-size, 110px) * 0.06);
   background: var(--card-fill);
   border: clamp(4px, 0.8vw, 7px) solid var(--card-line);
   border-radius: var(--radius);
@@ -741,7 +734,8 @@ body { background: var(--page-bg, var(--bg)); }
 /* Parole: riquadri piatti, bordo chiaro, fondo appena velato */
 [data-color-mode="sheet"] .symbol-cell {
   justify-content: space-between;
-  padding: 8% 6% 6%;
+  /* padding legato alla misura della cella (non alla larghezza, che può essere molto maggiore) */
+  padding: calc(var(--cell-size, 110px) * 0.08) calc(var(--cell-size, 110px) * 0.06) calc(var(--cell-size, 110px) * 0.06);
   background: rgba(255, 255, 255, 0.18);
   border: 3px solid rgba(255, 255, 255, 0.85);
   border-radius: var(--radius);
@@ -1081,7 +1075,7 @@ body > .adult-bar { order: 0; }
   justify-content: center;
 }
 .symbol-cell .symbol-image img {
-  width: calc(var(--cell-size, 110px) * 0.62 * var(--image-scale, 1));
+  width: calc(var(--cell-size, 110px) * 0.62 * var(--image-scale, 1) * var(--image-zoom, 1));
   height: auto;
   max-width: 100%;
   max-height: 100%;
@@ -1167,24 +1161,78 @@ body > .adult-bar { order: 0; }
 .settings-nav-btn[aria-current="true"] .nav-icon { color: #1f6feb; }
 [data-page-title="hidden"] .crumbs { visibility: hidden; }
 
-/* Pulsante Home grande (sotto-pagine): una tessera grigia come le cartelle, icona a linea */
-.page-nav { gap: 10px; }
-.home-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  color: #2b2f36;
-  background: #eef0f3;
-  border: 3px solid #c9cdd3;
-  border-radius: 14px;
-}
-.home-btn:active { background: #ffffff; }
-[data-page-dark="true"] .home-btn { color: #f4f5f7; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.35); }
-[data-corners="square"] .home-btn { border-radius: 3px; }
 /* Riga impostazioni: il testo ha sempre spazio sufficiente; se i pulsanti non entrano vanno sotto */
 .setting-row { flex-wrap: wrap; row-gap: 8px; }
 .setting-text { flex: 1 1 220px; }
+
+/* Testo delle tessere sempre scuro sui fondi chiari, in ogni stile e con qualunque impostazione del sistema */
+.symbol-cell, .sentence-chip { color: #1a1d24; }
+[data-color-mode="full"] .symbol-cell.type-folder { color: #ffffff; }
+
+/* Avanzamento pressione prolungata: barra in cima allo schermo + scritta, sempre visibili */
+.hold-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.hold-bar {
+  width: 100%;
+  height: 8px;
+  background: #1f6feb;
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.hold-indicator.is-running .hold-bar { transform: scaleX(1); transition: transform 3s linear !important; }
+.hold-hint {
+  margin: 0;
+  padding: 8px 16px;
+  font: 600 15px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #ffffff;
+  background: rgba(29, 32, 39, 0.88);
+  border-radius: 999px;
+}
+.lock-progress { display: none; }
+
+/* Striscia frase: i gesti verticali sono per "spingere via" la frase, lo scorrimento resta orizzontale */
+.sentence-strip { touch-action: pan-x; }
+.sentence-strip[data-clearing] .sentence-chip { transition: transform 0.16s ease-in, opacity 0.16s ease-in !important; opacity: 0; }
+.sentence-strip[data-clearing="up"] .sentence-chip { transform: translateY(-40px); }
+.sentence-strip[data-clearing="down"] .sentence-chip { transform: translateY(40px); }
+.sentence-strip[data-clearing="left"] .sentence-chip { transform: translateX(-60px); }
+.sentence-strip[data-clearing="right"] .sentence-chip { transform: translateX(60px); }
+
+/* Riga impostazioni su telefono in verticale: il testo non deve "allungarsi" (flex-basis diventa altezza in colonna) */
+@media (max-width: 720px) {
+  .setting-text { flex: none; width: 100%; }
+}
+
+/* Stepper − 100% + per lo zoom delle immagini */
+.stepper { display: inline-flex; align-items: center; flex: none; padding: 2px; background: #eceef1; border-radius: 8px; }
+.stepper-btn, .stepper-value {
+  min-height: 36px;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  color: #3a3f47;
+}
+.stepper-btn { width: 40px; font-size: 20px; border-radius: 6px; }
+.stepper-btn:disabled { opacity: 0.35; }
+.stepper-value { min-width: 64px; padding: 0 8px; font-size: 14px; background: #ffffff; border-radius: 6px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); }
+/* Su telefono le scelte a segmenti si dispongono in colonne regolari a tutta larghezza */
+@media (max-width: 720px) {
+  .segmented { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); width: 100%; }
+  .segmented button { white-space: normal; line-height: 1.15; padding: 6px 8px; }
+}
+/* Schermi bassi (telefono in orizzontale): barre più compatte, più spazio alle tessere */
+@media (max-height: 500px) {
+  :root { --bar-height: 70px; }
+  .page-nav { padding-top: 4px; padding-bottom: 0; }
+  .crumbs { min-height: 36px; }
+}

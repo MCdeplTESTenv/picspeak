@@ -1,10 +1,11 @@
 /*
  * Controllo grafico automatico (strumento di sviluppo, non caricato dall'app).
- * Da incollare nella console del browser, o eseguire in un test: restituisce l'elenco
+ * Da incollare nella console del browser, o caricare con <script src="dev/verifica-layout.js">
+ * (compatibile con la Content-Security-Policy): definisce window.verificaLayout() e restituisce l'elenco
  * degli elementi che escono dal proprio contenitore (testo o immagine fuori dal bordo,
  * testo tagliato senza puntini, celle che si sovrappongono).
  */
-(() => {
+window.verificaLayout = () => {
   const TOLERANCE = 1; // pixel
   const problems = [];
 
@@ -38,6 +39,43 @@
     if (image && getComputedStyle(image).display !== 'none') inside(image, box, `${kind} – immagine`);
   });
 
+  // Contrasto tra testo e sfondo (WCAG: almeno 4,5:1) per parole delle tessere e percorso
+  function rgb(str) {
+    const m = str.match(/rgba?\(([^)]+)\)/);
+    if (!m) return null;
+    const [r, g, b, a = 1] = m[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+    return { r, g, b, a };
+  }
+  function luminance({ r, g, b }) {
+    const f = (v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  }
+  function backgroundOf(node) {
+    for (let el = node; el; el = el.parentElement) {
+      const c = rgb(getComputedStyle(el).backgroundColor);
+      if (c && c.a > 0.5) return c;
+    }
+    return { r: 255, g: 255, b: 255, a: 1 };
+  }
+  document.querySelectorAll('.symbol-cell .symbol-label, .sentence-chip .symbol-label, .crumbs .crumb').forEach((label) => {
+    if (!label.offsetParent || !label.textContent.trim()) return;
+    const fg = rgb(getComputedStyle(label).color);
+    if (!fg) return;
+    const l1 = luminance(fg);
+    const l2 = luminance(backgroundOf(label));
+    const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    if (ratio < 4.5) problems.push(`Contrasto basso (${ratio.toFixed(1)}:1) per "${label.textContent.trim()}"`);
+  });
+
+  // Impostazioni: nessuno spazio vuoto anomalo sotto il testo di una voce
+  document.querySelectorAll('.setting-text').forEach((text) => {
+    if (!text.offsetParent) return;
+    const content = [...text.children].reduce((sum, child) => sum + child.getBoundingClientRect().height, 0);
+    if (text.getBoundingClientRect().height > content + 12) {
+      problems.push(`Impostazioni – spazio vuoto sotto "${text.firstElementChild?.textContent}"`);
+    }
+  });
+
   // Barre: icone dentro i pulsanti, percorso dentro la sua pillola
   document.querySelectorAll('.action-btn, .lock-btn, .adult-btn, .home-btn').forEach((btn) => {
     const icon = btn.querySelector('svg');
@@ -62,4 +100,5 @@
     }
   }
   return problems;
-})();
+};
+window.verificaLayout();

@@ -29,6 +29,11 @@ Leggi sempre `docs/IDEA.md`, `docs/DECISIONI.md` e `docs/ROADMAP.md` prima di la
 - Prima di modifiche strutturali (formato dati, storage), proponi e chiedi conferma.
 - Il formato del file di backup è versionato: ogni modifica richiede una migrazione dai formati precedenti.
 
+## Sicurezza e qualità grafica
+- Prima di ogni push: revisione con l'agente `security-reviewer` (`.claude/agents/security-reviewer.md`)
+  secondo `docs/SICUREZZA.md`, e controllo grafico con `dev/verifica-layout.js` su tablet, telefono e PC.
+- Mai `innerHTML` con dati non costanti; non allargare la Content-Security-Policy senza motivarlo in DECISIONI.
+
 ## Licenze
 - Pittogrammi ARASAAC: CC BY-NC-SA 4.0 (autore Sergio Palao, proprietà Governo di Aragona).
   Obbligo di attribuzione, uso non commerciale. Mantenere sempre la pagina Crediti.

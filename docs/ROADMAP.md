@@ -17,7 +17,7 @@
 ## Tappa 2 – Dati e modalità adulto
 - [ ] Modello dati (profili, pagine, celle, contesti) documentato in docs/FORMATO-DATI.md
 - [ ] Salvataggio in IndexedDB
-- [x] Modalità adulto protetta: lucchetto da tenere premuto 3 s + PIN (impronta PBKDF2), attesa crescente
+- [x] Impostazioni protette: lucchetto da tenere premuto 3 s + PIN (impronta PBKDF2), attesa crescente
       dopo errori, codice di recupero, uscita manuale e automatica dopo 5 minuti
 - [x] Pagina impostazioni: Installa come app, Accesso guidato (istruzioni), Lingua, Voce, Cambia PIN
 - [x] Voce: scelta automatica della migliore, selettore, velocità, tono, prova e guida alle voci migliorate
@@ -30,8 +30,9 @@
       bordi, angoli, posizione frase e pulsanti, nome pagina, evidenziazione al tocco
 - [x] Impostazioni ridisegnate con righe e controlli a segmenti
 - [x] Dieci stili pronti da cui partire, poi personalizzabili (riquadro immagine, trasparenza celle)
-- [x] Barra Percorso, pulsante Home grande, icone a linea, "scuoti per tornare alla Home"
+- [x] Barra Percorso (HOME › pagina), icone a linea, "scuoti per ricominciare" e "spingi via" la frase
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
+- [ ] Profilo adulto: la persona, diventata adulta, usa e gestisce il tool in autonomia (distinto dalle impostazioni protette)
 - [ ] Creazione/modifica pagine e celle
 - [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"
 - [ ] Modello dati con griglia esplicita (righe × colonne) e posizione fissa di ogni cella, per poter crescere fino a ~12×10
@@ -101,6 +102,12 @@
       zoom della striscia frase, schermo intero e blocco rotazione, tema scuro per uso serale
 - [x] Selettore lingua nelle impostazioni (italiano/inglese)
 - [ ] Eventuale percorso a fasi di scambio guidato (ispirato al metodo PECS, senza usarne il nome)
+
+## Tappa 9 – Manuale (finale)
+- [ ] Pagina di aiuto consultabile da telefono e tablet, aperta da un pulsante "?" nelle impostazioni
+- [ ] Spiegazioni brevi per argomento (comunicare, cartelle, frase, impostazioni, backup, stili, sicurezza),
+      con immagini e passi numerati; disponibile anche offline
+- [ ] Versione italiana e inglese
 
 ## Idee future (non pianificate)
 - Salvataggio automatico su cloud personale (es. Google Drive) e su file (Chrome/Edge)
