@@ -1001,3 +1001,112 @@ body > .adult-bar { order: 0; }
   -webkit-user-drag: none;
 }
 .settings-list a { color: #1f6feb; overflow-wrap: anywhere; }
+
+/* =====================================================================
+ * Striscia frase: dimensioni fisse e contenuto sempre dentro il riquadro.
+ * L'immagine occupa lo spazio che resta sopra la parola (mai sovrapposta al bordo).
+ * ===================================================================== */
+.sentence-chip {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  height: calc(var(--bar-height) - 2 * var(--gap) - 16px);
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  padding: 5px 6px 4px;
+  overflow: hidden;
+}
+.sentence-chip .symbol-image {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  line-height: 1;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.sentence-chip .symbol-image img { width: auto; height: 100%; max-width: 100%; max-height: 100%; }
+.sentence-chip .symbol-label {
+  flex: none;
+  max-width: 100%;
+  font-size: clamp(10px, 1.3vw, 13px);
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Tessera della frase a misura fissa (un po' più larga che alta); l'immagine riempie
+ * lo spazio libero sopra la parola senza mai spingere i bordi */
+.sentence-chip {
+  --chip-h: calc(var(--bar-height) - 2 * var(--gap) - 16px);
+  /* larghezza dettata dalla parola (l'immagine non spinge, è posizionata assoluta) */
+  width: auto;
+  min-width: calc(var(--chip-h) * 1.1);
+  max-width: calc(var(--chip-h) * 2.2);
+  height: var(--chip-h);
+  aspect-ratio: auto;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+.sentence-chip .symbol-image { position: relative; }
+.sentence-chip .symbol-image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+}
+
+/* =====================================================================
+ * Celle: contenuto sempre dentro il riquadro, in ogni stile e dimensione.
+ * L'immagine si adatta allo spazio che resta dopo la parola; la parola va
+ * al massimo su due righe e, se serve, app.js riduce il carattere (fitLabels).
+ * ===================================================================== */
+.symbol-cell { overflow: hidden; min-height: 0; }
+.symbol-cell .symbol-image {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.symbol-cell .symbol-image img {
+  width: calc(var(--cell-size, 110px) * 0.62 * var(--image-scale, 1));
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.symbol-cell .symbol-label {
+  flex: none;
+  max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+/* Con il riquadro bianco l'immagine resta dentro anche col suo bordo */
+[data-image-frame="frame"] .symbol-cell .symbol-image img { box-sizing: border-box; }
+[data-image-frame="frame"] .symbol-cell .symbol-image { background: none; border: 0; padding: 0; }
+[data-image-frame="frame"] .symbol-cell .symbol-image img,
+[data-color-mode="full"]:not([data-image-frame="none"]) .symbol-cell .symbol-image img {
+  background: #ffffff;
+  border: 2px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16%;
+  padding: 6%;
+}
+[data-color-mode="full"] .symbol-cell .symbol-image { background: none; padding: 0; }
