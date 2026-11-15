@@ -74,6 +74,9 @@
       dell'app, token solo sul dispositivo, "Scollega", cifratura facoltativa con password; revisione di sicurezza
 - [ ] Promemoria con pannello di condivisione come rete di sicurezza (unica via se il cloud non è collegato)
 - [ ] Ripristino guidato
+- [ ] "Ripristina PicSpeak alle impostazioni iniziali" (pagina Backup e ripristino): cancella schede, immagini, T9,
+      impostazioni e PIN; richiede il PIN, propone prima un backup e chiede una doppia conferma; al successivo accesso
+      alle impostazioni si crea un nuovo PIN
 
 ## Tappa 6 – PWA e offline
 - [x] manifest e icone (anticipato per il pulsante "Installa")

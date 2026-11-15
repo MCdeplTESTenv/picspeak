@@ -274,4 +274,7 @@ Formato: data – decisione – motivo.
   con il motivo (vedi ROADMAP). Esclusa per ora anche Sclera (in attesa). Fonti attive: ARASAAC (ricerca online),
   Mulberry e OpenMoji (pacchetti inclusi), foto personali.
   Nelle impostazioni ogni fonte ha una breve spiegazione dello stile e di quando conviene sceglierla.
+- **Ripristino alle impostazioni iniziali** (richiesta di Marcello, Tappa 5): nella pagina Backup e ripristino un comando
+  cancella tutti i dati personalizzati, PIN compreso; al successivo accesso alle impostazioni si crea un nuovo PIN.
+  Protezioni: PIN richiesto, proposta di un backup prima di procedere, doppia conferma.
 
