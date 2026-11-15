@@ -14,12 +14,13 @@
       deleteLast: 'Cancella l’ultimo simbolo',
       clearSentence: 'Cancella tutta la frase',
       goHome: 'Torna alla pagina principale',
+      homeLabel: 'Home',
       sentenceEmpty: 'Frase vuota',
       openPage: 'Apri la pagina',
       removeFromSentence: 'Togli dalla frase',
 
       // Modalità adulto
-      lockHint: 'Modalità adulto: tieni premuto 3 secondi',
+      lockHint: 'Altre opzioni (adulto): tieni premuto 3 secondi',
       adultMode: 'Modalità adulto',
       settings: 'Impostazioni',
       backToCommunication: 'Torna alla comunicazione',
@@ -231,11 +232,12 @@
       deleteLast: 'Delete the last symbol',
       clearSentence: 'Clear the whole sentence',
       goHome: 'Back to the main page',
+      homeLabel: 'Home',
       sentenceEmpty: 'Empty sentence',
       openPage: 'Open page',
       removeFromSentence: 'Remove from sentence',
 
-      lockHint: 'Adult mode: press and hold for 3 seconds',
+      lockHint: 'More options (adult): press and hold for 3 seconds',
       adultMode: 'Adult mode',
       settings: 'Settings',
       backToCommunication: 'Back to communication',
