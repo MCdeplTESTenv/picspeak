@@ -26,6 +26,7 @@
     backspace: document.getElementById('btn-backspace'),
     clear: document.getElementById('btn-clear'),
     home: document.getElementById('btn-home'),
+    crumbs: document.getElementById('crumbs'),
   };
 
   // Restituisce l'etichetta nella lingua corrente (con l'italiano come riserva)
@@ -66,7 +67,11 @@
   function renderGrid() {
     const page = sampleData.pages[state.pageId];
     el.title.textContent = page.title[i18n.language] ?? page.title.it;
-    el.home.hidden = state.pageId === sampleData.homePage;
+    // Nella Home il percorso mostra solo "HOME"; nelle altre pagine "HOME › pagina"
+    const isHome = state.pageId === sampleData.homePage;
+    el.crumbs.classList.toggle('is-home', isHome);
+    if (isHome) el.home.setAttribute('aria-current', 'page');
+    else el.home.removeAttribute('aria-current');
 
     const cells = page.cells.map((id) => {
       const item = findItem(id);

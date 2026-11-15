@@ -38,6 +38,18 @@
     if (image && getComputedStyle(image).display !== 'none') inside(image, box, `${kind} – immagine`);
   });
 
+  // Barre: icone dentro i pulsanti, percorso dentro la sua pillola
+  document.querySelectorAll('.action-btn, .lock-btn, .adult-btn').forEach((btn) => {
+    const icon = btn.querySelector('svg');
+    if (icon && btn.offsetParent) inside(icon, btn, 'Pulsante – icona');
+  });
+  const crumbs = document.querySelector('.crumbs');
+  if (crumbs && crumbs.offsetParent) {
+    crumbs.querySelectorAll('.crumb, .crumb-sep').forEach((part) => {
+      if (getComputedStyle(part).display !== 'none') inside(part, crumbs, 'Percorso');
+    });
+  }
+
   // Celle della griglia che si sovrappongono
   const cells = [...document.querySelectorAll('.symbol-cell')].map((el) => [el, el.getBoundingClientRect()]);
   for (let i = 0; i < cells.length; i += 1) {

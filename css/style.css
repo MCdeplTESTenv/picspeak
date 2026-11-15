@@ -1110,3 +1110,59 @@ body > .adult-bar { order: 0; }
   padding: 6%;
 }
 [data-color-mode="full"] .symbol-cell .symbol-image { background: none; padding: 0; }
+
+/* =====================================================================
+ * Barra di navigazione "Percorso" e icone a linea (scelta C)
+ * ===================================================================== */
+.icon { display: block; flex: none; }
+.action-icon { display: flex; align-items: center; justify-content: center; }
+.action-btn { color: #2b2f36; }
+.action-speak { color: #1e7a3c; }
+[data-color-mode="full"] .action-btn { color: #ffffff; }
+[data-color-mode="full"] .action-speak { color: #1a1d24; }
+.adult-badge, .adult-btn { display: inline-flex; align-items: center; gap: 8px; }
+
+.page-nav { padding: 10px var(--gap) 4px; min-height: 0; }
+.crumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 4px 14px 4px 6px;
+  min-height: 44px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--page-text, #2b2f36);
+  background: color-mix(in srgb, var(--page-text, #1d2027) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--page-text, #1d2027) 12%, transparent);
+  border-radius: 999px;
+  min-width: 0;
+  max-width: calc(100% - 80px);
+}
+.crumb { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; min-width: 0; }
+.crumb-home {
+  min-height: 36px;
+  padding: 0 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: color-mix(in srgb, var(--page-text, #2b2f36) 65%, transparent);
+}
+.crumb-current { overflow: hidden; text-overflow: ellipsis; }
+.crumb-sep { display: inline-flex; color: color-mix(in srgb, var(--page-text, #2b2f36) 40%, transparent); }
+.crumbs.is-home .crumb-sep,
+.crumbs.is-home .crumb-current { display: none; }
+.crumbs.is-home .crumb-home { color: var(--page-text, #2b2f36); cursor: default; }
+.page-title { all: unset; }
+.lock-btn { color: var(--page-text, #6b717b); opacity: 0.45; }
+.lock-btn.is-holding { opacity: 1; }
+.lock-icon { filter: none; }
+.settings-nav-btn .nav-icon { color: #4a505a; }
+.settings-nav-btn[aria-current="true"] .nav-icon { color: #1f6feb; }
+[data-page-title="hidden"] .crumbs { visibility: hidden; }

@@ -175,4 +175,9 @@ Formato: data – decisione – motivo.
   Motivo: su Safari Mac la parola delle tessere della frase usciva dal bordo. Correzione: tessere della frase a misura
   fissa con immagine contenuta; nelle celle l'immagine si adatta allo spazio libero, la parola va al massimo su due righe
   e il carattere si riduce da solo se una parola non entra (mai parole spezzate a metà).
+- **Barra di navigazione "Percorso" (scelta C) e icone a linea al posto delle emoji nell'interfaccia.**
+  Il nome pagina diventa una pillola "⌂ HOME › CIBO" (toccando HOME si torna alla Home); l'accesso adulto è un pulsante
+  "•••" discreto, sempre da tenere premuto 3 secondi; pulsanti della frase, barra adulto e menu impostazioni usano icone
+  a linea sottile coerenti con le tessere piatte. Motivo: Marcello trovava lucchetto e titolo "Home" poco moderni; le
+  emoji 3D stonavano con lo stile pulito.
 
