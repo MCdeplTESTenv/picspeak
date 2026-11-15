@@ -39,7 +39,7 @@
   });
 
   // Barre: icone dentro i pulsanti, percorso dentro la sua pillola
-  document.querySelectorAll('.action-btn, .lock-btn, .adult-btn').forEach((btn) => {
+  document.querySelectorAll('.action-btn, .lock-btn, .adult-btn, .home-btn').forEach((btn) => {
     const icon = btn.querySelector('svg');
     if (icon && btn.offsetParent) inside(icon, btn, 'Pulsante – icona');
   });

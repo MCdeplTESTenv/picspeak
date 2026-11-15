@@ -180,4 +180,10 @@ Formato: data – decisione – motivo.
   "•••" discreto, sempre da tenere premuto 3 secondi; pulsanti della frase, barra adulto e menu impostazioni usano icone
   a linea sottile coerenti con le tessere piatte. Motivo: Marcello trovava lucchetto e titolo "Home" poco moderni; le
   emoji 3D stonavano con lo stile pulito.
+- **Pulsante Home grande nelle sotto-pagine**, in aggiunta al percorso "HOME › pagina": tessera grigia (come le
+  cartelle) con icona casa a linea. Motivo: Marcello: la casetta serve, il percorso da solo non basta.
+- **Opzione "Scuoti per tornare alla Home"** (Aspetto → Disposizione e tocco, spenta di default): due scosse decise entro
+  un secondo riportano alla Home, solo in modalità comunicazione. Su iPad/iPhone il browser chiede il permesso per i
+  sensori di movimento al momento dell'attivazione. Spenta di default per non far scattare per sbaglio chi ha movimenti
+  involontari.
 
