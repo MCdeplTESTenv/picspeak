@@ -852,15 +852,15 @@
 
   // Categorie delle impostazioni: icona, titolo, sezioni contenute
   const CATEGORIES = [
-    { id: 'general', icon: '⚙️', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
+    { id: 'general', icon: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/>', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
       render: [renderLanguageSection, renderOnlineSection, renderInstallSection, renderCreditsSection] },
-    { id: 'appearance', icon: '🎨', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
+    { id: 'appearance', icon: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
       render: [renderPresetSection, renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
-    { id: 'voice', icon: '🔊', titleKey: 'catVoice', introKey: 'catVoiceIntro',
+    { id: 'voice', icon: '<path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
-    { id: 'security', icon: '🔒', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
+    { id: 'security', icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
       render: [renderSecuritySection, renderGuidedSection] },
-    { id: 'coming', icon: '🧩', titleKey: 'catComing', introKey: 'catComingIntro',
+    { id: 'coming', icon: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/>', titleKey: 'catComing', introKey: 'catComingIntro',
       render: [renderComingSection] },
   ];
 
@@ -881,7 +881,7 @@
       const icon = document.createElement('span');
       icon.className = 'nav-icon';
       icon.setAttribute('aria-hidden', 'true');
-      icon.textContent = cat.icon;
+      icon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${cat.icon}</svg>`;
       const label = document.createElement('span');
       label.textContent = t(cat.titleKey);
       const chevron = document.createElement('span');
@@ -905,7 +905,7 @@
     panel.className = 'settings-panel';
     const title = document.createElement('h3');
     title.className = 'settings-panel-title';
-    title.textContent = `${category.icon} ${t(category.titleKey)}`;
+    title.textContent = t(category.titleKey);
     const intro = document.createElement('p');
     intro.className = 'settings-panel-intro';
     intro.textContent = t(category.introKey);
