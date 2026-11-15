@@ -54,7 +54,7 @@
 - [ ] Profili multipli
 - [ ] Impostazioni griglia e accessibilità
 - [ ] Temi e stile non infantile per l'età adulta
-- [ ] Eventuali fasi PECS guidate
+- [ ] Eventuale percorso a fasi di scambio guidato (ispirato al metodo PECS, senza usarne il nome)
 
 ## Idee future (non pianificate)
 - Salvataggio automatico su cloud personale (es. Google Drive) e su file (Chrome/Edge)

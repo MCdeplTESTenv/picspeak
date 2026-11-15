@@ -50,3 +50,9 @@ Formato: data – decisione – motivo.
 - **Modello del T9: proposta, non ancora decisa.** Bigrammi di simboli con decadimento esponenziale
   nel tempo, pesi per fascia oraria e feriale/festivo, contesti manuali (Mare, Scuola…) con statistiche
   proprie, simboli fondamentali bloccati in posizione. Da confermare all'inizio della Tappa 6.
+- **Vincolo legale: niente marchio "PECS" nei nomi di funzioni, pulsanti o pagine del tool.**
+  Motivo: "PECS" è un marchio registrato. Si può citare come ispirazione nella documentazione,
+  ma le funzioni useranno nomi propri (es. "percorso a fasi", "striscia frase").
+- **Vincolo legale: pubblicare oggi la pagina non pone problemi di licenza** (nel repository non ci sono
+  immagini ARASAAC). Quando saranno presenti: pagina Crediti sempre visibile, uso solo non commerciale,
+  eventuali simboli modificati distribuiti con licenza CC BY-NC-SA. Privacy: dati solo sul dispositivo.

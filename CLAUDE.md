@@ -33,5 +33,6 @@ Leggi sempre `docs/IDEA.md`, `docs/DECISIONI.md` e `docs/ROADMAP.md` prima di la
 - Pittogrammi ARASAAC: CC BY-NC-SA 4.0 (autore Sergio Palao, proprietà Governo di Aragona).
   Obbligo di attribuzione, uso non commerciale. Mantenere sempre la pagina Crediti.
 - Codice: GNU GPL-3.0 (file `LICENSE`).
+- "PECS" è un marchio registrato: non usarlo nei nomi di funzioni, pulsanti o pagine del tool.
 - Più fonti di simboli (ARASAAC, Global Symbols, set di base incluso, immagini personali):
   ogni simbolo salvato conserva fonte e licenza; la pagina Crediti elenca quelle usate.
