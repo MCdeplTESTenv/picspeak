@@ -161,8 +161,8 @@ semplice file.
   e istruzioni per installare gratis voci più naturali.
 - Configurazione griglia: numero di righe/colonne, dimensione celle.
 - Temi e stile regolabili (aspetto non infantile disponibile per l'età adulta).
-- Colori per categoria (chiave di Fitzgerald): modalità "Colore pieno" (predefinita), "Bordo colorato"
-  o "Neutro", scelte in Impostazioni → Aspetto.
+- Colori per categoria (chiave di Fitzgerald): modalità "Scheda" (predefinita, stile tabelle stampate),
+  "Colore pieno", "Bordo colorato" o "Neutro", scelte in Impostazioni → Aspetto; parole in MAIUSCOLO o minuscolo.
 - Colore di sfondo di ogni singolo simbolo modificabile, con ripristino al colore Fitzgerald automatico.
 - Più profili sullo stesso dispositivo.
 - Lingua dell'interfaccia (italiano/inglese).

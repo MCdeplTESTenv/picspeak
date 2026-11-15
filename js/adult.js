@@ -12,8 +12,9 @@
   const INACTIVITY_MS = 5 * 60 * 1000;
 
   // Modalità colori disponibili (vedi css/style.css, attributo data-color-mode su <html>)
-  const DEFAULT_COLOR_MODE = 'full';
+  const DEFAULT_COLOR_MODE = 'card';
   const COLOR_MODES = [
+    { id: 'card', nameKey: 'colorModeCard', descKey: 'colorModeCardDesc' },
     { id: 'full', nameKey: 'colorModeFull', descKey: 'colorModeFullDesc' },
     { id: 'border', nameKey: 'colorModeBorder', descKey: 'colorModeBorderDesc' },
     { id: 'none', nameKey: 'colorModeNone', descKey: 'colorModeNoneDesc' },
@@ -21,8 +22,8 @@
 
   // Colori di sfondo della pagina proposti (il primo è quello predefinito)
   const PAGE_BACKGROUNDS = [
-    { id: 'vanilla', color: '#fbfaf7', nameKey: 'bgVanilla' },
     { id: 'white', color: '#ffffff', nameKey: 'bgWhite' },
+    { id: 'vanilla', color: '#fbfaf7', nameKey: 'bgVanilla' },
     { id: 'grey', color: '#eceef2', nameKey: 'bgGrey' },
     { id: 'sky', color: '#e6f0fb', nameKey: 'bgSky' },
     { id: 'sage', color: '#e9f2ea', nameKey: 'bgSage' },
@@ -553,6 +554,34 @@
     wrap.append(options);
   }
 
+  // Scrittura delle parole sotto le immagini: MAIUSCOLO, minuscolo o come scritte
+  const LABEL_CASES = [
+    { id: 'upper', nameKey: 'caseUpper' },
+    { id: 'lower', nameKey: 'caseLower' },
+    { id: 'as-is', nameKey: 'caseAsIs' },
+  ];
+
+  function applyLabelCase(value) {
+    document.documentElement.dataset.labelCase = value;
+  }
+
+  function renderLabelCaseSection() {
+    const wrap = section('secCaseTitle', 'secCaseHelp');
+    const group = document.createElement('div');
+    group.className = 'choice-group';
+    const current = document.documentElement.dataset.labelCase || 'upper';
+    LABEL_CASES.forEach((opt) => {
+      const btn = button(t(opt.nameKey), async () => {
+        applyLabelCase(opt.id);
+        await storage.set('labelCase', opt.id);
+        renderSettings();
+      }, false);
+      btn.setAttribute('aria-pressed', String(current === opt.id));
+      group.append(btn);
+    });
+    wrap.append(group);
+  }
+
   // Colore di sfondo della pagina: colori pronti + colore a piacere
   function renderBackgroundSection() {
     const wrap = section('secBackgroundTitle', 'secBackgroundHelp');
@@ -604,7 +633,7 @@
     { id: 'general', icon: '⚙️', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
       render: [renderLanguageSection, renderInstallSection] },
     { id: 'appearance', icon: '🎨', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
-      render: [renderColorModeSection, renderBackgroundSection] },
+      render: [renderColorModeSection, renderLabelCaseSection, renderBackgroundSection] },
     { id: 'voice', icon: '🔊', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
     { id: 'security', icon: '🔒', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
@@ -735,8 +764,14 @@
     if (saved) applyPageBackground(saved);
   }
 
+  async function restoreLabelCase() {
+    const saved = await storage.get('labelCase');
+    if (saved && LABEL_CASES.some((opt) => opt.id === saved)) applyLabelCase(saved);
+  }
+
   bindEvents();
   restorePageBackground();
+  restoreLabelCase();
   restoreLanguage();
   restoreVoice();
   restoreColorMode();

@@ -126,4 +126,11 @@ Formato: data – decisione – motivo.
 - **Colore di sfondo della pagina scelto dall'adulto** (Impostazioni → Aspetto): Vaniglia (predefinito), Bianco, Grigio,
   Azzurro, Salvia, Sabbia, Notte, oppure un colore a scelta. Il testo del titolo diventa chiaro su sfondi scuri.
   Motivo: richiesta di Marcello. Salvato sul dispositivo (`pageBackground`).
+- **Nuova modalità colori "Scheda" come predefinita** (sostituisce "Colore pieno" come predefinita, che resta selezionabile).
+  Motivo: Marcello indica come riferimento lo stile delle tabelle CAA stampate (es. Widgit): pagina bianca, riquadri con
+  fondo tenue e bordo spesso dello stesso colore Fitzgerald, immagine grande in alto, parola sotto. Si riprende solo lo
+  stile grafico, non i simboli Widgit (proprietari e a pagamento).
+- **Scrittura delle parole selezionabile: MAIUSCOLO (predefinito), minuscolo, come scritte.**
+  Motivo: lo stampatello è comune nelle tabelle CAA, ma alcuni logopedisti preferiscono il minuscolo per avvicinare alla
+  letto-scrittura: la scelta resta all'adulto.
 

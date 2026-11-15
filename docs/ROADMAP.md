@@ -24,6 +24,7 @@
 - [x] Grafica "Colore pieno" predefinita e scelta della modalità colori (Colore pieno, Bordo colorato, Neutro)
 - [x] Impostazioni divise in categorie (menu laterale su tablet/PC, elenco su telefono)
 - [x] Colore di sfondo della pagina selezionabile (colori pronti o a scelta)
+- [x] Modalità "Scheda" predefinita (stile tabelle stampate) e scrittura delle parole MAIUSCOLO/minuscolo
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"
