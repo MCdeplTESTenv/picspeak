@@ -1,7 +1,8 @@
 /*
  * Modifica delle schede (solo con le impostazioni sbloccate).
  * Tocco su una tessera → finestra di modifica: parola, voce, tipo di parola (colore Fitzgerald),
- * colore scelto a mano con ripristino, immagine dal dispositivo, nascosta, bloccata, posizione, elimina.
+ * colore scelto a mano con ripristino, simbolo cercato nelle fonti (Tappa 3), immagine dal dispositivo,
+ * nascosta, bloccata, posizione, elimina.
  * Tessera "+" → nuova tessera o nuova cartella.
  * Sicurezza: tutti i testi passano da textContent/value; le foto vengono ridisegnate su canvas
  * (niente SVG, niente metadati come la posizione GPS) e salvate solo sul dispositivo.
@@ -9,7 +10,7 @@
 (function () {
   'use strict';
 
-  const { i18n, data, app } = window.PicSpeak;
+  const { i18n, data, app, symbols, symbolSearch } = window.PicSpeak;
   const t = i18n.t;
 
   const MAX_LABEL = 40;
@@ -126,6 +127,7 @@
       hidden: cell ? cell.hidden : false,
       locked: cell ? cell.locked : false,
       newImageBlob: null,
+      pending: null, // simbolo scelto con "Cerca simbolo": { imageId, record, previewBlob }
     };
 
     const form = el('form', 'dialog-form editor-form');
@@ -196,11 +198,20 @@
     const imageField = el('div', 'editor-block');
     imageField.append(el('span', 'editor-block-title', t('editorImage')));
     const preview = el('div', 'editor-preview');
+    let previewUrl = null;
     const renderPreview = () => {
       preview.replaceChildren();
+      if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
       let src = null;
-      if (draft.newImageBlob) src = URL.createObjectURL(draft.newImageBlob);
-      else src = data.imageUrl(draft.imageId);
+      const blob = draft.newImageBlob || (draft.pending && draft.pending.previewBlob);
+      if (blob) {
+        previewUrl = URL.createObjectURL(blob);
+        src = previewUrl;
+      } else if (draft.pending) {
+        src = data.imageUrl(draft.pending.imageId);
+      } else {
+        src = data.imageUrl(draft.imageId);
+      }
       if (src) {
         const img = el('img');
         img.src = src;
@@ -214,28 +225,40 @@
     const imageError = el('p', 'dialog-error');
     imageError.setAttribute('role', 'alert');
     const imageActions = el('div', 'editor-actions-row');
+    // Cerca simbolo: fonti attive (dispositivo, pacchetti, ARASAAC online)
+    const searchButton = actionButton(t('editorSearchSymbol'), async () => {
+      imageError.textContent = '';
+      const picked = await symbolSearch.open(labelInput.value.trim());
+      if (!picked) return;
+      draft.pending = picked;
+      draft.newImageBlob = null;
+      if (!labelInput.value.trim() && picked.label) labelInput.value = picked.label.slice(0, MAX_LABEL);
+      renderPreview();
+    }, 'editor-search-btn');
+    const photoButton = actionButton(t('editorPickImage'), async () => {
+      imageError.textContent = '';
+      try {
+        const file = await pickFile();
+        if (!file) return;
+        draft.newImageBlob = await processPhoto(file);
+        draft.pending = null;
+        renderPreview();
+      } catch (error) {
+        imageError.textContent = error.message;
+      }
+    });
+    // Le foto personali si possono spegnere in Impostazioni → Simboli
+    symbols.activeSources().then((sources) => { photoButton.hidden = !sources.photo; });
     imageActions.append(
-      actionButton(t('editorPickImage'), async () => {
-        imageError.textContent = '';
-        try {
-          const file = await pickFile();
-          if (!file) return;
-          draft.newImageBlob = await processPhoto(file);
-          renderPreview();
-        } catch (error) {
-          imageError.textContent = error.message;
-        }
-      }),
+      searchButton,
+      photoButton,
       actionButton(t('editorRemoveImage'), () => {
         draft.imageId = null;
         draft.newImageBlob = null;
+        draft.pending = null;
         renderPreview();
       }),
     );
-    const searchSoon = actionButton(t('editorSearchSymbol'), () => {});
-    searchSoon.disabled = true;
-    searchSoon.title = t('editorSearchSoon');
-    imageActions.append(searchSoon);
     imageField.append(preview, imageActions, imageError);
     form.append(imageField);
 
@@ -299,7 +322,11 @@
       }
       save.disabled = true;
       let { imageId } = draft;
-      if (draft.newImageBlob) {
+      if (draft.pending) {
+        // Simbolo cercato: salvato una sola volta sul dispositivo con fonte, autore e licenza
+        if (draft.pending.record) await data.saveImage(draft.pending.record);
+        imageId = draft.pending.imageId;
+      } else if (draft.newImageBlob) {
         const image = await data.addImage({
           source: 'photo',
           author: '',
