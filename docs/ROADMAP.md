@@ -15,10 +15,11 @@
 - [ ] Test su Safari iPad/iPhone e Chrome (fatto su Chrome desktop e in simulazione tablet/telefono; manca la prova su iPad reale)
 
 ## Tappa 2 – Dati e modalità adulto
-- [ ] Modello dati (profili, pagine, celle) documentato in docs/FORMATO-DATI.md
+- [ ] Modello dati (profili, pagine, celle, contesti) documentato in docs/FORMATO-DATI.md
 - [ ] Salvataggio in IndexedDB
 - [ ] Modalità adulto protetta (PIN / pressione prolungata)
 - [ ] Creazione/modifica pagine e celle
+- [ ] Contesti (Casa, Scuola, Mare, personalizzati): creazione, attivazione/disattivazione rapida, archivio intatto
 - [ ] Registrazione locale delle abitudini d'uso (simboli, orari, sequenze) attiva fin da subito
 
 ## Tappa 3 – Simboli
@@ -60,7 +61,8 @@
 - [ ] Regole: simboli frequenti in evidenza, con simboli fondamentali bloccati in posizione
 - [ ] Predizione del simbolo successivo ("T9 con le immagini") con decadimento nel tempo
 - [ ] Pesi per fascia oraria e giorno feriale/festivo
-- [ ] Contesti manuali (es. Mare, Scuola, Casa) con statistiche proprie
+- [ ] Statistiche T9 separate per contesto, riprese intatte alla riattivazione
+- [ ] Attivazione programmata dei contesti per date (facoltativa)
 - [ ] Pannello adulto per vedere, correggere o azzerare le regole
 
 ## Tappa 8 – Rifiniture

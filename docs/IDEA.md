@@ -73,10 +73,22 @@ semplice file.
   - decadimento nel tempo: gli usi recenti pesano di più, quelli vecchi sbiadiscono
     senza essere cancellati, così l'abitudine del mare si spegne da sola al ritorno;
   - pesi per fascia oraria e per giorno feriale/festivo;
-  - contesti manuali attivabili dall'adulto (es. Mare, Scuola, Casa), ciascuno con le
-    proprie statistiche, che si ritrovano intatte quando il contesto torna;
+  - contesti attivabili dall'adulto (es. Mare, Scuola, Casa), ciascuno con le proprie
+    statistiche, che si ritrovano intatte quando il contesto torna (requisito, vedi "Contesti");
   - simboli fondamentali bloccati nella loro posizione, che il T9 non sposta mai
     (la posizione stabile aiuta la memoria motoria).
+
+### Contesti (requisito)
+- L'adulto o il terapista può creare e **attivare/disattivare velocemente dei contesti**:
+  Casa, Scuola, Mare, Nonni, Vacanze… più quelli personalizzati.
+- Ogni contesto conserva **le proprie schede/simboli in evidenza e le proprie statistiche T9**.
+  Disattivato, resta archiviato intatto: l'anno dopo, al ritorno al mare, si riattiva così com'era.
+- Le schede comuni (vocabolario core, Persone, ecc.) restano sempre presenti; il contesto aggiunge
+  o mette in primo piano ciò che serve in quel periodo o luogo.
+- Più contesti possono essere attivi insieme (es. Casa + Estate).
+- Cambio rapido dalla modalità adulto con una scorciatoia protetta (lo stesso accesso del PIN),
+  ed eventuale attivazione programmata per date (es. dal 1 al 15 agosto: Mare).
+- I contesti fanno parte del modello dati fin dalla Tappa 2 e sono inclusi nel backup.
 
 ### Template di base e tutorial iniziale
 - **Template di base** proposto da PicSpeak alla prima apertura, ispirato alle pratiche

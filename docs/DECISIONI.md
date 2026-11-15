@@ -90,4 +90,8 @@ Formato: data – decisione – motivo.
   pannello di condivisione verso File/iCloud. Alla riapertura il browser può chiedere di riconfermare l'accesso alla cartella.
   Nella cartella le immagini sono file separati scritti una volta e il file dati è piccolo e aggiornato poco dopo ogni
   modifica, così il tool resta leggero. L'unico backup davvero automatico anche su iPad resta il cloud personale (sviluppo futuro).
+- **Contesti (Casa, Scuola, Mare, personalizzati) come requisito, non più solo proposta.**
+  Motivo: richiesta di Marcello. L'adulto/terapista li attiva e disattiva velocemente; ognuno conserva schede e
+  statistiche T9 e si riattiva intatto (es. ogni estate il Mare). Nel modello dati dalla Tappa 2, statistiche per
+  contesto nella Tappa 7.
 
