@@ -3,7 +3,7 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v5';
+const CACHE_VERSION = 'picspeak-v6';
 
 const APP_FILES = [
   './',
