@@ -123,4 +123,7 @@ Formato: data – decisione – motivo.
 - **Colore di sfondo di ogni simbolo modificabile, con ripristino al colore Fitzgerald (Tappa 2).**
   Motivo: richiesta di Marcello. Nel modello dati ogni cella avrà un campo colore facoltativo: vuoto = colore
   automatico dalla categoria grammaticale; "Ripristina" lo svuota.
+- **Colore di sfondo della pagina scelto dall'adulto** (Impostazioni → Aspetto): Vaniglia (predefinito), Bianco, Grigio,
+  Azzurro, Salvia, Sabbia, Notte, oppure un colore a scelta. Il testo del titolo diventa chiaro su sfondi scuri.
+  Motivo: richiesta di Marcello. Salvato sul dispositivo (`pageBackground`).
 

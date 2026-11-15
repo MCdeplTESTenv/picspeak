@@ -23,6 +23,7 @@
 - [x] Voce: scelta automatica della migliore, selettore, velocità, tono, prova e guida alle voci migliorate
 - [x] Grafica "Colore pieno" predefinita e scelta della modalità colori (Colore pieno, Bordo colorato, Neutro)
 - [x] Impostazioni divise in categorie (menu laterale su tablet/PC, elenco su telefono)
+- [x] Colore di sfondo della pagina selezionabile (colori pronti o a scelta)
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"
