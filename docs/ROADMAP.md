@@ -18,6 +18,7 @@
 - [ ] Salvataggio in IndexedDB
 - [ ] Modalità adulto protetta (PIN / pressione prolungata)
 - [ ] Creazione/modifica pagine e celle
+- [ ] Registrazione locale delle abitudini d'uso (simboli, orari, sequenze) attiva fin da subito
 
 ## Tappa 3 – Simboli
 - [ ] Struttura a provider intercambiabili per le fonti dei simboli
@@ -39,9 +40,12 @@
 - [ ] Istruzioni "Aggiungi a Home" per iOS e Android
 
 ## Tappa 6 – Interfaccia adattiva
-- [ ] Registrazione locale delle statistiche d'uso (simboli, orari, sequenze)
-- [ ] Regole: simboli frequenti in evidenza
-- [ ] Predizione del simbolo successivo ("T9 con le immagini")
+- [ ] Confermare il modello del T9 (vedi proposta in DECISIONI.md)
+- [ ] Interruttore T9 attivo/disattivo (spento di default, schede fisse all'inizio)
+- [ ] Regole: simboli frequenti in evidenza, con simboli fondamentali bloccati in posizione
+- [ ] Predizione del simbolo successivo ("T9 con le immagini") con decadimento nel tempo
+- [ ] Pesi per fascia oraria e giorno feriale/festivo
+- [ ] Contesti manuali (es. Mare, Scuola, Casa) con statistiche proprie
 - [ ] Pannello adulto per vedere, correggere o azzerare le regole
 
 ## Tappa 7 – Rifiniture

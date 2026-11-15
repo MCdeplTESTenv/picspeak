@@ -43,3 +43,10 @@ Formato: data – decisione – motivo.
   Motivo: non dipendere da un solo servizio; le tabelle esistenti funzionano anche se una fonte cambia condizioni.
 - **Accesso tramite indirizzo pubblico GitHub Pages; repository GitHub `picspeak` pubblico.**
   Motivo: nessun file da distribuire, aggiornamenti automatici; Pages gratuito richiede repo pubblico.
+- **Interfaccia adattiva ("T9") attivabile/disattivabile e spenta all'inizio; raccolta delle abitudini sempre attiva.**
+  Motivo: indicazione della logopedista. Nella fase iniziale servono schede fisse predisposte dal
+  terapista o dall'adulto con poche immagini; intanto lo strumento impara, così il T9 è già allenato
+  quando viene acceso.
+- **Modello del T9: proposta, non ancora decisa.** Bigrammi di simboli con decadimento esponenziale
+  nel tempo, pesi per fascia oraria e feriale/festivo, contesti manuali (Mare, Scuola…) con statistiche
+  proprie, simboli fondamentali bloccati in posizione. Da confermare all'inizio della Tappa 6.

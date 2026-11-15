@@ -53,6 +53,20 @@ semplice file.
 - Statistiche, regole e vocabolario fanno parte del backup: cambiando dispositivo
   non si riparte da zero.
 - L'adulto (o la persona stessa) può vedere, correggere o azzerare le regole.
+- **Attivabile/disattivabile** (indicazione della logopedista): nella fase iniziale si parte
+  con schede fisse predisposte dal terapista o dall'adulto e poche immagini, con i
+  suggerimenti spenti. La raccolta delle abitudini d'uso è però attiva fin da subito,
+  così il "T9" è già allenato quando verrà acceso.
+- **Modello proposto (da confermare in Tappa 6)**, per adattarsi ai cambi di abitudini
+  (scuola e lego fino a giugno, una settimana al mare con la sabbia, poi di nuovo a casa):
+  - suggerimenti basati sulle coppie di simboli usati in sequenza (bigrammi) e sulla frequenza;
+  - decadimento nel tempo: gli usi recenti pesano di più, quelli vecchi sbiadiscono
+    senza essere cancellati, così l'abitudine del mare si spegne da sola al ritorno;
+  - pesi per fascia oraria e per giorno feriale/festivo;
+  - contesti manuali attivabili dall'adulto (es. Mare, Scuola, Casa), ciascuno con le
+    proprie statistiche, che si ritrovano intatte quando il contesto torna;
+  - simboli fondamentali bloccati nella loro posizione, che il T9 non sposta mai
+    (la posizione stabile aiuta la memoria motoria).
 
 ### Gestione (modalità adulto, protetta da PIN o pressione prolungata)
 - Pensata per un genitore senza competenze tecniche; opzioni avanzate
