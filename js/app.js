@@ -261,6 +261,7 @@
 
   // "Scuoti per tornare alla Home" (opzione in Impostazioni → Aspetto → Disposizione e tocco).
   // Servono due scosse decise entro un secondo: un movimento normale del tablet non basta.
+  // Effetto: torna alla Home e cancella la frase.
   function bindShakeToHome() {
     if (!('DeviceMotionEvent' in window)) return;
     const THRESHOLD = 22; // variazione di accelerazione (m/s²) considerata una scossa
@@ -280,6 +281,9 @@
           if (peaks.length >= 2) {
             peaks = [];
             cooldownUntil = now + 1500;
+            // Scossa = "ricomincia": torna alla Home e svuota la frase, pronta per una nuova
+            state.sentence = [];
+            renderSentence();
             if (state.pageId !== sampleData.homePage) goToPage(sampleData.homePage);
           }
         }
