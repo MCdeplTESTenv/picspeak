@@ -199,8 +199,11 @@ Formato: data – decisione – motivo.
   sulla striscia frase verso l'alto o il basso (o di lato se la frase non scorre) la cancella. In modalità impostazioni ogni tessera mostra anche la ✕ per toglierla.
 - **Sicurezza:** Content-Security-Policy, blocco delle impostazioni dentro un iframe, link esterni senza referrer,
   documento `docs/SICUREZZA.md` e agente `security-reviewer` da usare prima di ogni push.
-- **Zoom delle immagini nelle tessere** (Aspetto → Simboli): pulsanti − e + a passi del 10% (60–160%), tocco sulla
-  percentuale per tornare al 100% (predefinito). I controlli esistono solo nelle impostazioni.
+- **Zoom delle tessere (sostituisce lo zoom delle sole immagini):** con le impostazioni sbloccate, nella barra in alto
+  della pagina principale compaiono − 100% +: agiscono sull'intera tessera (immagine e parola) cambiando il numero di
+  colonne, e l'effetto si vede subito; toccando la percentuale si torna ad "automatico". In comunicazione i pulsanti
+  spariscono. Il numero di colonne scelto è salvato (Aspetto → Celle mostra "Automatico" o "N colonne").
+  Con − non si scende sotto ~90 px di larghezza per tessera.
 - **REQUISITO FONDAMENTALE: il backup deve essere automatico, mai un'operazione manuale.** Perdere impostazioni, schede
   o statistiche del T9 sarebbe un danno grave per la persona che usa il tool. Saranno i genitori a scegliere dove
   salvare (cartella locale o cloud personale), ma il salvataggio avviene da solo. Il promemoria manuale resta solo come
@@ -234,4 +237,9 @@ Formato: data – decisione – motivo.
 - **Modelli del terapista:** il terapista crea in autonomia impaginazioni/insiemi di schede, li salva come `.picspeak`
   di tipo "modello" e li importa per altri bambini. Si applicano sempre in aggiunta al risultato del tutorial, che parte
   da schede predefinite diverse per bambino e per adulto.
+- **Griglia automatica:** si preferisce la disposizione che fa stare tutte le tessere senza scorrere (es. 4×4 sul telefono
+  in verticale); sotto i 76 px di larghezza la griglia scorre invece di stringersi. Se una parola non entra nemmeno al
+  carattere minimo, va a capo sillabando con il trattino (mai fuori dal bordo).
+- **Barra delle impostazioni sbloccate sempre su una riga:** su telefono "Impostazioni" diventa solo l'icona ⚙ e
+  "Torna alla comunicazione" diventa "Fine". Il controllo grafico verifica anche questo.
 

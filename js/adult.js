@@ -301,6 +301,7 @@
 
   function enterAdult() {
     app.setMode('adult');
+    setTimeout(updateZoomLabel, 0);
     el.adultBar.hidden = false;
     el.lock.hidden = true;
     resetInactivity();
@@ -671,6 +672,8 @@
       document.documentElement.dataset[opt.key] = value;
     });
     applyImageZoom();
+    if (appearance.columns) document.documentElement.dataset.columns = String(appearance.columns);
+    else delete document.documentElement.dataset.columns;
     app.layoutGrid();
   }
 
@@ -803,9 +806,9 @@
   // Zoom delle immagini nelle tessere: − / + a passi del 10%, da 60% a 160%, "100%" per ripristinare
   const IMAGE_ZOOM = { min: 60, max: 160, step: 10, def: 100 };
 
+  // Lo zoom ora agisce sull'intera tessera (numero di colonne); l'immagine resta al 100%
   function applyImageZoom() {
-    const zoom = appearance.imageZoom || IMAGE_ZOOM.def;
-    document.documentElement.style.setProperty('--image-zoom', String(zoom / 100));
+    document.documentElement.style.setProperty('--image-zoom', '1');
   }
 
   function imageZoomRow() {
@@ -844,10 +847,56 @@
     return settingRow('optImageZoom', 'optImageZoomHelp', group);
   }
 
+  // ---------- Zoom delle tessere (numero di colonne) ----------
+  // − = tessere più piccole (una colonna in più), + = più grandi (una colonna in meno),
+  // tocco sulla percentuale = automatico. La percentuale è relativa alle colonne automatiche.
+  const zoomEl = {
+    out: document.getElementById('btn-zoom-out'),
+    reset: document.getElementById('btn-zoom-reset'),
+    in: document.getElementById('btn-zoom-in'),
+  };
+  const MAX_COLUMNS = 12;
+
+  function updateZoomLabel() {
+    const auto = app.autoColumns();
+    const cols = app.currentColumns();
+    const percent = Math.round((auto / cols) * 100);
+    zoomEl.reset.textContent = `${percent}%`;
+    zoomEl.in.disabled = cols <= 1;
+    zoomEl.out.disabled = cols >= Math.min(MAX_COLUMNS, app.maxColumns());
+  }
+
+  async function setColumns(cols) {
+    const auto = app.autoColumns();
+    if (!cols || cols === auto) {
+      const { columns, ...rest } = appearance;
+      appearance = rest;
+    } else {
+      appearance = { ...appearance, columns: cols };
+    }
+    applyAppearance();
+    updateZoomLabel();
+    await storage.set('appearance', appearance);
+  }
+
+  function columnsRow() {
+    const cols = appearance.columns;
+    const control = document.createElement('div');
+    control.className = 'choice-group';
+    const status = document.createElement('span');
+    status.className = 'setting-status';
+    status.textContent = cols ? t('columnsFixed').replace('{n}', cols) : t('columnsAuto');
+    control.append(status);
+    if (cols) {
+      control.append(button(t('columnsBackAuto'), async () => { await setColumns(null); renderSettings(); }, false));
+    }
+    return settingRow('optColumns', 'optColumnsHelp', control);
+  }
+
   function renderAppearanceGroups() {
     APPEARANCE_GROUPS.forEach((group) => {
       const wrap = section(group.titleKey);
-      if (group.titleKey === 'grpSymbols') wrap.append(imageZoomRow());
+      if (group.titleKey === 'grpCells') wrap.append(columnsRow());
       group.options.forEach((opt) => {
         const current = appearance[opt.key] || opt.values[0][0];
         wrap.append(settingRow(opt.labelKey, opt.helpKey, segmented(opt.values, current, async (value) => {
@@ -1009,6 +1058,10 @@
     el.openSettings.addEventListener('click', openSettings);
     el.exitAdult.addEventListener('click', exitAdult);
     // "Indietro": su telefono, dal contenuto di una categoria torna all'elenco; altrimenti chiude
+    zoomEl.in.addEventListener('click', () => setColumns(Math.max(1, app.currentColumns() - 1)));
+    zoomEl.out.addEventListener('click', () => setColumns(Math.min(MAX_COLUMNS, app.maxColumns(), app.currentColumns() + 1)));
+    zoomEl.reset.addEventListener('click', () => setColumns(null));
+    window.addEventListener('resize', () => { if (app.mode === 'adult') setTimeout(updateZoomLabel, 150); });
     el.settingsBack.addEventListener('click', () => {
       if (showPanelOnPhone && window.matchMedia('(max-width: 720px)').matches) {
         showPanelOnPhone = false;
@@ -1060,6 +1113,7 @@
   // Personalizzazioni grafiche salvate (con recupero della vecchia impostazione "labelCase")
   async function restoreAppearance() {
     appearance = (await storage.get('appearance')) || {};
+    delete appearance.imageZoom; // vecchia impostazione (zoom solo immagini), sostituita dallo zoom delle tessere
     if (!appearance.labelCase) {
       const legacy = await storage.get('labelCase');
       if (legacy) appearance.labelCase = legacy;
