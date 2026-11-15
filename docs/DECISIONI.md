@@ -133,4 +133,10 @@ Formato: data – decisione – motivo.
 - **Scrittura delle parole selezionabile: MAIUSCOLO (predefinito), minuscolo, come scritte.**
   Motivo: lo stampatello è comune nelle tabelle CAA, ma alcuni logopedisti preferiscono il minuscolo per avvicinare alla
   letto-scrittura: la scelta resta all'adulto.
+- **Nuova modalità colori "Fogli"** (selezionabile): fondo turchese sfumato, parole come riquadri piatti e velati,
+  cartelle come fogli bianchi impilati con l'angolo piegato.
+  Motivo: Marcello indica come riferimento un'altra app CAA in cui le cartelle si riconoscono subito; ripreso
+  il principio (cartella = foglio con più pagine), non la grafica.
+- **Colore di sfondo "Automatico"** (predefinito): usa lo sfondo previsto dalla modalità colori scelta
+  (bianco per Scheda, sfumato per Fogli…); gli altri colori lo sostituiscono.
 

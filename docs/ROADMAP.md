@@ -25,6 +25,7 @@
 - [x] Impostazioni divise in categorie (menu laterale su tablet/PC, elenco su telefono)
 - [x] Colore di sfondo della pagina selezionabile (colori pronti o a scelta)
 - [x] Modalità "Scheda" predefinita (stile tabelle stampate) e scrittura delle parole MAIUSCOLO/minuscolo
+- [x] Modalità "Fogli" (cartelle come fogli con l'angolo piegato) e sfondo "Automatico"
 - [ ] PIN collaboratore (logopedista, insegnanti) con permessi ridotti
 - [ ] Creazione/modifica pagine e celle
 - [ ] Colore di sfondo per singola cella, con pulsante "Ripristina colore Fitzgerald"
