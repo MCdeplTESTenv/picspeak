@@ -715,3 +715,68 @@ body { background: var(--page-bg, var(--bg)); }
 /* Scrittura delle parole (Impostazioni → Aspetto) */
 [data-label-case="upper"] .symbol-label { text-transform: uppercase; }
 [data-label-case="lower"] .symbol-label { text-transform: lowercase; }
+
+/* =====================================================================
+ * Modalità "Fogli": le cartelle sembrano fogli impilati con l'angolo piegato,
+ * così si distinguono subito dalle parole (che restano piatte sul fondo).
+ * ===================================================================== */
+[data-color-mode="sheet"] {
+  --bg: #e9f8f6;
+  --radius: 16px;
+  --sheet-corner: clamp(30px, 4.5vw, 44px);
+  --sheet-page: #8fdcd3; /* colore del fondo dietro l'angolo piegato */
+}
+[data-color-mode="sheet"] body {
+  background: var(--page-bg, linear-gradient(180deg, #d5f4f0 0%, #8fdcd3 55%, #4fc6ba 100%));
+  font-family: "Avenir Next", "Nunito", "Segoe UI", Roboto, -apple-system, sans-serif;
+}
+[data-color-mode="sheet"] .sentence-bar { background: transparent; border: 0; padding: 14px; }
+[data-color-mode="sheet"] .sentence-strip { background: #ffffff; border: 0; border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 60, 60, 0.15); }
+[data-color-mode="sheet"] .sentence-chip { background: transparent; border: 0; }
+[data-color-mode="sheet"] .action-btn { background: rgba(255, 255, 255, 0.85); border: 0; border-radius: 14px; box-shadow: 0 2px 6px rgba(0, 60, 60, 0.15); }
+[data-color-mode="sheet"] .nav-btn { background: #2f9e44; border: 0; border-radius: 12px; }
+[data-color-mode="sheet"] .page-title { font-weight: 700; }
+[data-color-mode="sheet"] .symbol-grid { gap: clamp(12px, 2vw, 22px); padding: clamp(12px, 2vw, 22px); }
+
+/* Parole: riquadri piatti, bordo chiaro, fondo appena velato */
+[data-color-mode="sheet"] .symbol-cell {
+  justify-content: space-between;
+  padding: 8% 6% 6%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: var(--radius);
+  box-shadow: none;
+  color: #10302d;
+}
+[data-color-mode="sheet"] .symbol-cell .symbol-image { flex: 1; display: flex; align-items: center; }
+[data-color-mode="sheet"] .symbol-cell .symbol-label { font-weight: 500; }
+[data-color-mode="sheet"] .symbol-cell.is-pressed { background: rgba(255, 255, 255, 0.6); }
+
+/* Cartelle: foglio bianco con bordo colorato, secondo foglio dietro e angolo piegato */
+[data-color-mode="sheet"] .symbol-cell.type-folder {
+  position: relative;
+  background: #ffffff;
+  border: 4px solid #a9c4e6;
+  border-radius: var(--radius);
+  box-shadow: 7px 7px 0 -2px #ffffff, 7px 7px 0 0 #7d93ad, 9px 10px 10px rgba(0, 40, 40, 0.25);
+  color: #10302d;
+}
+[data-color-mode="sheet"] .symbol-cell.type-folder::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: var(--sheet-corner);
+  height: var(--sheet-corner);
+  /* metà in alto a destra = fondo pagina (angolo "tagliato"), metà in basso a sinistra = la piega */
+  background: linear-gradient(225deg, var(--sheet-page) 50%, #bccde4 50%);
+  border-bottom-left-radius: 6px;
+  box-shadow: -2px 2px 3px rgba(0, 0, 0, 0.12);
+}
+[data-color-mode="sheet"] .symbol-cell.type-folder .symbol-label { font-weight: 600; }
+
+/* Colori di categoria anche nelle parole, se l'adulto lo preferisce, restano nella modalità "Scheda" */
+.mode-preview.is-sheet { background: linear-gradient(180deg, #d5f4f0, #4fc6ba); }
+.mode-preview.is-sheet span { background: rgba(255, 255, 255, 0.25); border: 2px solid rgba(255, 255, 255, 0.9); }
+.mode-preview.is-sheet span.type-folder { background: #fff; border: 2px solid #a9c4e6; box-shadow: 3px 3px 0 -1px #fff, 3px 3px 0 0 #7d93ad; }
+.bg-swatch .swatch-auto { display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-muted); background: repeating-linear-gradient(45deg, #ffffff 0 6px, #eef0f3 6px 12px); }
