@@ -49,10 +49,20 @@ Formato: data – decisione – motivo.
   quando viene acceso.
 - **Modello del T9: proposta, non ancora decisa.** Bigrammi di simboli con decadimento esponenziale
   nel tempo, pesi per fascia oraria e feriale/festivo, contesti manuali (Mare, Scuola…) con statistiche
-  proprie, simboli fondamentali bloccati in posizione. Da confermare all'inizio della Tappa 6.
+  proprie, simboli fondamentali bloccati in posizione. Da confermare all'inizio della Tappa 7 (Interfaccia adattiva).
 - **Vincolo legale: niente marchio "PECS" nei nomi di funzioni, pulsanti o pagine del tool.**
   Motivo: "PECS" è un marchio registrato. Si può citare come ispirazione nella documentazione,
   ma le funzioni useranno nomi propri (es. "percorso a fasi", "striscia frase").
 - **Vincolo legale: pubblicare oggi la pagina non pone problemi di licenza** (nel repository non ci sono
   immagini ARASAAC). Quando saranno presenti: pagina Crediti sempre visibile, uso solo non commerciale,
   eventuali simboli modificati distribuiti con licenza CC BY-NC-SA. Privacy: dati solo sul dispositivo.
+- **Lingue: italiano principale, inglese selezionabile dalle impostazioni adulto; predisposizione per altre lingue.**
+  Motivo: richiesta di Marcello. Tutti i testi dell'interfaccia in dizionari per lingua fin dalla Tappa 1,
+  così aggiungere una lingua non richiede di toccare il codice.
+- **Template di base consigliato + tutorial iniziale per l'adulto (interrompibile, domande saltabili).**
+  Motivo: partire da schede fisse sensate (vocabolario core in posizione stabile + vocabolario personale per
+  categorie) e personalizzarle subito; le risposte danno al T9 una conoscenza iniziale. Il contenuto del
+  template e l'elenco delle domande sono da rivedere con la logopedista.
+- **Fornitori di simboli verificati dal browser (15/11/2026): ARASAAC e Global Symbols rispondono con CORS aperto.**
+  Motivo: il tool può interrogarli direttamente da GitHub Pages, senza server intermedi.
+

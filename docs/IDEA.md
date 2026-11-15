@@ -31,6 +31,16 @@ semplice file.
   consigliato; dopo il primo caricamento il tool lavora dalla cache). Il repository deve
   essere pubblico.
 
+## Lingue
+- Lingua principale: italiano. Inglese selezionabile dalle impostazioni dell'adulto/terapista;
+  struttura predisposta per aggiungere altre lingue in futuro.
+- Tutti i testi dell'interfaccia stanno in dizionari separati per lingua (es. `it`, `en`),
+  mai scritti direttamente nel codice.
+- La lingua influisce su: interfaccia, voce di sintesi, ricerca dei simboli presso i fornitori
+  (ARASAAC e Global Symbols cercano in entrambe le lingue), template di base e tutorial.
+- Le etichette delle schede appartengono al profilo: cambiare la lingua dell'interfaccia non
+  traduce automaticamente le schede già create.
+
 ## Funzionalità previste
 
 ### Comunicazione (modalità utente)
@@ -57,7 +67,7 @@ semplice file.
   con schede fisse predisposte dal terapista o dall'adulto e poche immagini, con i
   suggerimenti spenti. La raccolta delle abitudini d'uso è però attiva fin da subito,
   così il "T9" è già allenato quando verrà acceso.
-- **Modello proposto (da confermare in Tappa 6)**, per adattarsi ai cambi di abitudini
+- **Modello proposto (da confermare in Tappa 7)**, per adattarsi ai cambi di abitudini
   (scuola e lego fino a giugno, una settimana al mare con la sabbia, poi di nuovo a casa):
   - suggerimenti basati sulle coppie di simboli usati in sequenza (bigrammi) e sulla frequenza;
   - decadimento nel tempo: gli usi recenti pesano di più, quelli vecchi sbiadiscono
@@ -67,6 +77,41 @@ semplice file.
     proprie statistiche, che si ritrovano intatte quando il contesto torna;
   - simboli fondamentali bloccati nella loro posizione, che il T9 non sposta mai
     (la posizione stabile aiuta la memoria motoria).
+
+### Template di base e tutorial iniziale
+- **Template di base** proposto da PicSpeak alla prima apertura, ispirato alle pratiche
+  diffuse in logopedia per la CAA:
+  - **vocabolario "core"** (poche decine di parole ad alta frequenza che servono in ogni
+    situazione: io, tu, voglio, non, ancora, basta, aiuto, sì, no, finito, andare, fare,
+    mangiare, bere, giocare, mi piace/non mi piace, dove, cosa, chi…) sempre nella stessa
+    posizione, per favorire la memoria motoria;
+  - **vocabolario "fringe"/personale** organizzato per categorie: Persone, Cibo e bevande,
+    Giochi e attività, Come mi sento, Corpo e "mi fa male", Luoghi, Scuola, Routine, Colori;
+  - poche celle per pagina all'inizio (in linea con l'indicazione della logopedista),
+    aumentabili dall'adulto;
+  - colori per categoria grammaticale (Fitzgerald) opzionali.
+- **Tutorial iniziale**, avviabile solo dall'adulto (dalla modalità protetta):
+  - domande in forma di scheda, ognuna **saltabile**; il tutorial si può **interrompere in
+    qualsiasi momento** e riprendere dopo; le risposte si possono modificare in seguito;
+  - domande proposte (elenco iniziale, da rivedere con la logopedista):
+    - nome, età, scuola e classe frequentata;
+    - famiglia: chi vive in casa (nomi e ruoli), nonni e parenti vicini, animali domestici;
+    - migliori amici; insegnanti, educatori, terapisti;
+    - cibi e bevande preferiti, cibi non graditi, allergie o cibi vietati;
+    - giochi e attività preferite; cartoni, personaggi, musica preferiti; colore preferito;
+    - luoghi frequentati (casa dei nonni, parco, piscina, catechismo, sport…);
+    - routine della giornata (sveglia, scuola, terapie, bagno, nanna);
+    - come esprime dolore o malessere; cosa lo calma; cosa non sopporta (rumori, ecc.);
+    - livello comunicativo attuale: quanti simboli gestisce per pagina, se riconosce
+      foto o parole scritte, se usa già frasi di due o più simboli;
+    - accesso fisico: tocco preciso o serve una cella più grande, tempo di pressione;
+    - voce preferita (maschile/femminile, velocità) e lingua;
+    - possibilità di aggiungere subito le foto di persone, oggetti e luoghi.
+  - Al termine il template viene personalizzato: nomi e foto nelle schede Persone,
+    cibi e giochi preferiti in evidenza, cibi vietati esclusi, numero di celle adeguato.
+  - Le risposte forniscono anche una **conoscenza iniziale al T9** (es. i giochi preferiti
+    partono con un peso maggiore), così i suggerimenti hanno senso fin dal primo giorno.
+  - Tutte le risposte restano sul dispositivo e fanno parte del backup.
 
 ### Gestione (modalità adulto, protetta da PIN o pressione prolungata)
 - Pensata per un genitore senza competenze tecniche; opzioni avanzate
@@ -82,6 +127,7 @@ semplice file.
 - Temi e stile regolabili (aspetto non infantile disponibile per l'età adulta).
 - Colori per categoria (chiave di Fitzgerald), opzionali.
 - Più profili sullo stesso dispositivo.
+- Lingua dell'interfaccia (italiano/inglese).
 
 ### Fonti dei simboli
 - Architettura a "provider" intercambiabili: la ricerca può interrogare più fonti
@@ -134,3 +180,5 @@ semplice file.
 4. **Dispositivo**: tablet (iPad/Android) come riferimento, ma deve aprirsi bene anche
    su smartphone e PC/Mac (lo sviluppo si testa soprattutto su PC/Mac).
 5. **Nome**: PicSpeak. **Licenza del codice**: GPL-3.0.
+6. **Lingue**: italiano principale, inglese selezionabile, predisposizione per altre lingue.
+7. **Avvio**: template di base consigliato + tutorial iniziale per l'adulto che lo personalizza.
