@@ -43,7 +43,19 @@
     const image = document.createElement('span');
     image.className = `symbol-image ${sizeClass}`;
     image.setAttribute('aria-hidden', 'true');
-    image.textContent = item.emoji;
+    const src = sampleData.imageOf(item);
+    if (src) {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = '';
+      img.draggable = false;
+      img.decoding = 'async';
+      // Se l'immagine non si carica, resta l'emoji: la cella continua a funzionare
+      img.addEventListener('error', () => { image.textContent = item.emoji; }, { once: true });
+      image.append(img);
+    } else {
+      image.textContent = item.emoji;
+    }
     const label = document.createElement('span');
     label.className = 'symbol-label';
     label.textContent = labelOf(item);

@@ -155,4 +155,13 @@ Formato: data – decisione – motivo.
   Ogni stile imposta modalità colori, sfondo e personalizzazioni; dopo si può cambiare ogni dettaglio e si ottiene
   uno stile "personalizzato" (ibrido). Aggiunte le opzioni "riquadro dietro l'immagine" e "trasparenza delle celle".
   Motivo: richiesta di Marcello; il turchese di "Fogli" era solo un esempio e resta uno degli stili, non il predefinito.
+- **Simboli di prova: pittogrammi ARASAAC inclusi nel tool al posto delle emoji** (39 immagini da 300 px, ~440 KB,
+  in `symbols/arasaac/<id>.png`, salvati anche nella cache offline). Pagina **Crediti e licenze** in Impostazioni → Generale
+  con autore, proprietario, fonte e licenza CC BY-NC-SA 4.0.
+  Motivo: le emoji hanno sfumature e stile 3D diversi su ogni sistema e rendevano la grafica "pasticciata"; i pittogrammi
+  piatti con contorno nero si avvicinano allo stile di riferimento. Approvato da Marcello.
+- **Interruttore "Ricerca online di nuovi simboli": Attiva / Solo Wi-Fi / Disattivata** (Impostazioni → Generale).
+  Motivo: evitare consumo di dati non voluto. Il tool funziona sempre offline con i simboli salvati. "Solo Wi-Fi" usa la
+  Network Information API, disponibile solo su Chrome Android; dove il browser non indica il tipo di rete (Safari, Firefox,
+  PC) la ricerca chiederà conferma prima di usare internet. Funzione `PicSpeak.network.onlineSearchStatus()` pronta per la Tappa 3.
 

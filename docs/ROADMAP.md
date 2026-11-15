@@ -37,6 +37,10 @@
 - [ ] Registrazione locale delle abitudini d'uso (simboli, orari, sequenze) attiva fin da subito
 
 ## Tappa 3 – Simboli
+- [x] Pittogrammi ARASAAC inclusi per i simboli di prova (anticipato)
+- [x] Pagina Crediti (anticipata)
+- [x] Interruttore ricerca online: attiva / solo Wi-Fi / disattivata (anticipato)
+- [ ] La ricerca rispetta l'interruttore (blocca, consente o chiede conferma)
 - [ ] Struttura a provider intercambiabili per le fonti dei simboli
 - [ ] Ricerca ARASAAC in italiano
 - [ ] Ricerca in italiano propagata in inglese (ponte ARASAAC, dizionario locale, MyMemory come riserva)
@@ -45,7 +49,6 @@
 - [ ] Download unico, ridimensionamento (~256 px) e salvataggio locale dei pittogrammi (con fonte e licenza)
 - [ ] Ricerca offline: simboli già salvati + set incluso; cella solo testo come ultima riserva
 - [ ] Caricamento immagini personali con compressione automatica
-- [ ] Pagina Crediti
 
 ## Tappa 4 – Template di base e tutorial iniziale
 - [ ] Definire il template di base (vocabolario core + categorie personali) e rivederlo con la logopedista

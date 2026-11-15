@@ -3,7 +3,7 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v6';
+const CACHE_VERSION = 'picspeak-v7';
 
 const APP_FILES = [
   './',
@@ -22,6 +22,46 @@ const APP_FILES = [
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
   'icons/apple-touch-icon.png',
+  // Pittogrammi ARASAAC inclusi (simboli di prova)
+  'symbols/arasaac/10192.png',
+  'symbols/arasaac/11476.png',
+  'symbols/arasaac/11959.png',
+  'symbols/arasaac/21820.png',
+  'symbols/arasaac/2248.png',
+  'symbols/arasaac/2367.png',
+  'symbols/arasaac/2430.png',
+  'symbols/arasaac/2432.png',
+  'symbols/arasaac/2439.png',
+  'symbols/arasaac/2445.png',
+  'symbols/arasaac/2462.png',
+  'symbols/arasaac/24795.png',
+  'symbols/arasaac/2494.png',
+  'symbols/arasaac/25191.png',
+  'symbols/arasaac/2527.png',
+  'symbols/arasaac/2530.png',
+  'symbols/arasaac/2608.png',
+  'symbols/arasaac/2617.png',
+  'symbols/arasaac/28099.png',
+  'symbols/arasaac/28429.png',
+  'symbols/arasaac/28641.png',
+  'symbols/arasaac/29716.png',
+  'symbols/arasaac/31925.png',
+  'symbols/arasaac/3241.png',
+  'symbols/arasaac/32648.png',
+  'symbols/arasaac/35571.png',
+  'symbols/arasaac/37162.png',
+  'symbols/arasaac/37758.png',
+  'symbols/arasaac/4610.png',
+  'symbols/arasaac/4935.png',
+  'symbols/arasaac/5441.png',
+  'symbols/arasaac/5525.png',
+  'symbols/arasaac/5526.png',
+  'symbols/arasaac/5584.png',
+  'symbols/arasaac/8088.png',
+  'symbols/arasaac/8289.png',
+  'symbols/arasaac/8312.png',
+  'symbols/arasaac/8652.png',
+  'symbols/arasaac/9813.png',
 ];
 
 self.addEventListener('install', (event) => {
