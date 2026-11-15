@@ -12,6 +12,8 @@
   const MAX_SENTENCE_LENGTH = 12;
 
   const state = {
+    // 'child' = modalità utente (nessuna modifica possibile); 'adult' arriverà nella Tappa 2
+    mode: 'child',
     pageId: sampleData.homePage,
     sentence: [], // elenco di identificativi di simboli
   };
@@ -111,7 +113,9 @@
       chip.type = 'button';
       chip.className = `sentence-chip type-${item.type}`;
       chip.dataset.index = String(index);
-      chip.setAttribute('aria-label', `${t('removeFromSentence')}: ${labelOf(item)}`);
+      chip.setAttribute('aria-label', state.mode === 'adult'
+        ? `${t('removeFromSentence')}: ${labelOf(item)}`
+        : labelOf(item));
       chip.append(buildFace(item, 'size-chip'));
       li.append(chip);
       return li;
@@ -164,12 +168,19 @@
     }
   }
 
-  // Toccare un simbolo nella striscia lo toglie dalla frase
+  // Striscia frase: in modalità bambino il tocco ripete solo la parola (nessuna cancellazione
+  // accidentale); in modalità adulto il tocco toglie il simbolo dalla frase
   function onChipTap(event) {
     const chip = event.target.closest('.sentence-chip');
     if (!chip) return;
-    state.sentence.splice(Number(chip.dataset.index), 1);
-    renderSentence();
+    const index = Number(chip.dataset.index);
+    flash(chip);
+    if (state.mode === 'adult') {
+      state.sentence.splice(index, 1);
+      renderSentence();
+      return;
+    }
+    say(labelOf(findItem(state.sentence[index])));
   }
 
   function applyStaticLabels() {
