@@ -556,32 +556,100 @@
     wrap.append(options);
   }
 
-  // Scrittura delle parole sotto le immagini: MAIUSCOLO, minuscolo o come scritte
-  const LABEL_CASES = [
-    { id: 'upper', nameKey: 'caseUpper' },
-    { id: 'lower', nameKey: 'caseLower' },
-    { id: 'as-is', nameKey: 'caseAsIs' },
+  // Personalizzazioni grafiche: ogni opzione diventa un attributo data-* su <html> (vedi css/style.css).
+  // Il primo valore di ogni elenco è quello predefinito.
+  const APPEARANCE_GROUPS = [
+    { titleKey: 'grpSymbols', options: [
+      { key: 'symbolColor', labelKey: 'optSymbolColor', helpKey: 'optSymbolColorHelp',
+        values: [['color', 'valColor'], ['gray', 'valGray'], ['contrast', 'valContrast']] },
+      { key: 'cellContent', labelKey: 'optCellContent', helpKey: 'optCellContentHelp',
+        values: [['both', 'valBoth'], ['image', 'valImageOnly'], ['text', 'valTextOnly']] },
+      { key: 'labelPosition', labelKey: 'optLabelPosition',
+        values: [['below', 'valBelow'], ['above', 'valAbove']] },
+    ] },
+    { titleKey: 'grpText', options: [
+      { key: 'labelCase', labelKey: 'secCaseTitle', helpKey: 'secCaseHelp',
+        values: [['upper', 'caseUpper'], ['lower', 'caseLower'], ['as-is', 'caseAsIs']] },
+      { key: 'textSize', labelKey: 'optTextSize',
+        values: [['m', 'valMedium'], ['s', 'valSmall'], ['l', 'valLarge'], ['xl', 'valXLarge']] },
+      { key: 'font', labelKey: 'optFont', helpKey: 'optFontHelp',
+        values: [['standard', 'valStandard'], ['readable', 'valReadable'], ['rounded', 'valRounded']] },
+    ] },
+    { titleKey: 'grpCells', options: [
+      { key: 'cellGap', labelKey: 'optCellGap',
+        values: [['normal', 'valNormal'], ['tight', 'valTight'], ['wide', 'valWide']] },
+      { key: 'border', labelKey: 'optBorder',
+        values: [['normal', 'valNormal'], ['thin', 'valThin'], ['thick', 'valThick']] },
+      { key: 'corners', labelKey: 'optCorners',
+        values: [['rounded', 'valRoundedCorners'], ['square', 'valSquare']] },
+    ] },
+    { titleKey: 'grpLayout', options: [
+      { key: 'sentencePosition', labelKey: 'optSentencePosition',
+        values: [['top', 'valTop'], ['bottom', 'valBottom']] },
+      { key: 'controlsSide', labelKey: 'optControlsSide', helpKey: 'optControlsSideHelp',
+        values: [['right', 'valRight'], ['left', 'valLeft']] },
+      { key: 'pageTitle', labelKey: 'optPageTitle',
+        values: [['shown', 'valShown'], ['hidden', 'valHidden']] },
+      { key: 'touchFeedback', labelKey: 'optTouchFeedback', helpKey: 'optTouchFeedbackHelp',
+        values: [['on', 'valOn'], ['strong', 'valStrong'], ['off', 'valOff']] },
+    ] },
   ];
+  const APPEARANCE_OPTIONS = APPEARANCE_GROUPS.flatMap((group) => group.options);
+  let appearance = {};
 
-  function applyLabelCase(value) {
-    document.documentElement.dataset.labelCase = value;
+  function applyAppearance() {
+    APPEARANCE_OPTIONS.forEach((opt) => {
+      const value = appearance[opt.key] || opt.values[0][0];
+      document.documentElement.dataset[opt.key] = value;
+    });
+    app.layoutGrid();
   }
 
-  function renderLabelCaseSection() {
-    const wrap = section('secCaseTitle', 'secCaseHelp');
+  function settingRow(labelKey, helpKey, control) {
+    const row = document.createElement('div');
+    row.className = 'setting-row';
+    const text = document.createElement('div');
+    text.className = 'setting-text';
+    const label = document.createElement('strong');
+    label.textContent = t(labelKey);
+    text.append(label);
+    if (helpKey) {
+      const help = document.createElement('small');
+      help.textContent = t(helpKey);
+      text.append(help);
+    }
+    row.append(text, control);
+    return row;
+  }
+
+  function segmented(values, current, onChoose) {
     const group = document.createElement('div');
-    group.className = 'choice-group';
-    const current = document.documentElement.dataset.labelCase || 'upper';
-    LABEL_CASES.forEach((opt) => {
-      const btn = button(t(opt.nameKey), async () => {
-        applyLabelCase(opt.id);
-        await storage.set('labelCase', opt.id);
-        renderSettings();
-      }, false);
-      btn.setAttribute('aria-pressed', String(current === opt.id));
+    group.className = 'segmented';
+    group.setAttribute('role', 'group');
+    values.forEach(([value, nameKey]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = t(nameKey);
+      btn.setAttribute('aria-pressed', String(current === value));
+      btn.addEventListener('click', () => onChoose(value));
       group.append(btn);
     });
-    wrap.append(group);
+    return group;
+  }
+
+  function renderAppearanceGroups() {
+    APPEARANCE_GROUPS.forEach((group) => {
+      const wrap = section(group.titleKey);
+      group.options.forEach((opt) => {
+        const current = appearance[opt.key] || opt.values[0][0];
+        wrap.append(settingRow(opt.labelKey, opt.helpKey, segmented(opt.values, current, async (value) => {
+          appearance = { ...appearance, [opt.key]: value };
+          applyAppearance();
+          await storage.set('appearance', appearance);
+          renderSettings();
+        })));
+      });
+    });
   }
 
   // Colore di sfondo della pagina: colori pronti + colore a piacere
@@ -640,7 +708,7 @@
     { id: 'general', icon: '⚙️', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
       render: [renderLanguageSection, renderInstallSection] },
     { id: 'appearance', icon: '🎨', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
-      render: [renderColorModeSection, renderLabelCaseSection, renderBackgroundSection] },
+      render: [renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
     { id: 'voice', icon: '🔊', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
     { id: 'security', icon: '🔒', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
@@ -771,14 +839,19 @@
     if (saved) applyPageBackground(saved);
   }
 
-  async function restoreLabelCase() {
-    const saved = await storage.get('labelCase');
-    if (saved && LABEL_CASES.some((opt) => opt.id === saved)) applyLabelCase(saved);
+  // Personalizzazioni grafiche salvate (con recupero della vecchia impostazione "labelCase")
+  async function restoreAppearance() {
+    appearance = (await storage.get('appearance')) || {};
+    if (!appearance.labelCase) {
+      const legacy = await storage.get('labelCase');
+      if (legacy) appearance.labelCase = legacy;
+    }
+    applyAppearance();
   }
 
   bindEvents();
   restorePageBackground();
-  restoreLabelCase();
+  restoreAppearance();
   restoreLanguage();
   restoreVoice();
   restoreColorMode();
