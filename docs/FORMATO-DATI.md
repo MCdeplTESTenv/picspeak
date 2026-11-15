@@ -1,7 +1,6 @@
-# Formato dei dati – PROPOSTA (da confermare)
+# Formato dei dati
 
-Stato: proposta del 15/11/2026, in attesa di conferma di Marcello. Nessun dato reale viene ancora
-salvato con questo schema. Ogni modifica futura richiede un nuovo `formatVersion` e una migrazione.
+Stato: approvato da Marcello il 15/11/2026 (vincolo: leggerezza dei file e fluidità). Ogni modifica futura richiede un nuovo `formatVersion` e una migrazione.
 
 ## Principi
 - Tutto resta sul dispositivo (IndexedDB, database `picspeak`). Niente server.

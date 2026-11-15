@@ -242,4 +242,19 @@ Formato: data – decisione – motivo.
   carattere minimo, va a capo sillabando con il trattino (mai fuori dal bordo).
 - **Barra delle impostazioni sbloccate sempre su una riga:** su telefono "Impostazioni" diventa solo l'icona ⚙ e
   "Torna alla comunicazione" diventa "Fine". Il controllo grafico verifica anche questo.
+- **Formato dei dati approvato** (`docs/FORMATO-DATI.md`), con il vincolo di non appesantire peso dei file e fluidità.
+- **Fonti dei simboli verificate il 15/11/2026 (accesso diretto, nessuna chiave personale, nessun costo):**
+  | Fonte | Licenza | Accesso | Permessi da chiedere |
+  |---|---|---|---|
+  | ARASAAC | CC BY-NC-SA 4.0 | API pubblica `api.arasaac.org`, immagini con CORS aperto | nessuno (attribuzione obbligatoria) |
+  | Global Symbols (raccolta) | varia per set | API pubblica: "Public endpoints are available without an API key" (`/api/v1/swagger_doc`), CORS aperto | nessuno; consigliata una mail di cortesia al gestore |
+  | Tawasol (Mada) | CC BY-SA 4.0 | tramite Global Symbols (`symbolset=tawasol`), parole in inglese e arabo | nessuno (attribuzione a Mada) |
+  | Mulberry | CC BY-SA | tramite Global Symbols e set incluso nel tool | nessuno (attribuzione Steve Lee / Mulberry) |
+  | OpenMoji | CC BY-SA 4.0 | set incluso nel tool (e tramite Global Symbols) | nessuno ("OpenMoji – License: CC BY-SA 4.0") |
+  | Sclera | CC BY-NC | tramite Global Symbols | nessuno per uso non commerciale (attribuzione www.sclera.be) |
+  Esclusi dai set selezionabili: quelli con licenza "ND" (non modificabili: anche il ridimensionamento sarebbe a rischio) o senza
+  licenza dichiarata, e quelli a pagamento (Widgit, PCS). Le licenze Creative Commons non sono revocabili per i simboli già
+  ottenuti: ciò che è salvato nel tool resta utilizzabile. Le API invece sono servizi gratuiti che potrebbero cambiare: per
+  questo ogni simbolo viene salvato in locale e Mulberry/OpenMoji sono inclusi nel tool.
+  Le immagini SVG di Global Symbols vengono convertite in PNG sul dispositivo (mai SVG salvati così come sono).
 
