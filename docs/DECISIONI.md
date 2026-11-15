@@ -210,4 +210,28 @@ Formato: data – decisione – motivo.
 - **Griglia su schermi bassi (telefono in orizzontale):** le celle non scendono sotto ~108 px di larghezza, la griglia
   scorre invece di stringersi; barre più compatte sotto i 500 px di altezza. Il controllo grafico ora include anche il
   telefono in orizzontale, lo zoom delle immagini (60–160%) e le righe delle impostazioni.
+- **Backup a livelli, ciascuno attivabile dalle impostazioni** (confermato da Marcello):
+  1. memoria del browser persistente (sempre attiva);
+  2. cartella automatica sul computer (Chrome/Edge desktop);
+  3. **cloud personale automatico** (Google Drive, Dropbox o OneDrive) — l'unico automatico su iPad, iPhone e Android;
+  4. esportazione manuale del file, con promemoria (rete di sicurezza; resta l'unica via se il cloud non è collegato).
+- **Sicurezza del collegamento al cloud ("super seria"):** OAuth 2.0 con PKCE direttamente dal browser, nessun segreto nel
+  codice, permessi minimi (solo la cartella privata dell'app: Drive `appDataFolder`, Dropbox "App folder", OneDrive
+  `approot`), mai accesso agli altri file dell'utente; token di breve durata conservati solo sul dispositivo e mai nel
+  backup; pulsante "Scollega" che revoca l'accesso; cifratura facoltativa (consigliata) del backup con una password dei
+  genitori prima dell'invio (AES-GCM, Web Crypto). Ogni modifica a questa parte va verificata con l'agente
+  `security-reviewer`. Domini dei provider aggiunti alla CSP solo quando si implementa.
+- **Formato di export unico: un solo file `nome.picspeak`** (archivio zip, scritto dal tool senza librerie esterne) con
+  `manifest.json` (versione del formato, data, contenuto, tipo: backup completo o modello), dati in JSON e immagini.
+  Sostituisce il precedente `.caa.json`. Lo stesso formato serve per backup, spostamento tra dispositivi e modelli del
+  terapista.
+- **Importazione selettiva:** il tool mostra cosa contiene il file e chiede cosa importare: schede, T9, impostazioni
+  grafiche, altre impostazioni (e contesti).
+  - impostazioni grafiche e altre impostazioni: sostituiscono quelle presenti;
+  - schede: per ogni scheda con lo stesso nome si chiede "sostituisci" o "aggiungi come nuova";
+  - T9 (proposta): **unisci** (predefinito: somma dei conteggi, mantenendo le date per il decadimento nel tempo) oppure
+    **sostituisci**, a scelta.
+- **Modelli del terapista:** il terapista crea in autonomia impaginazioni/insiemi di schede, li salva come `.picspeak`
+  di tipo "modello" e li importa per altri bambini. Si applicano sempre in aggiunta al risultato del tutorial, che parte
+  da schede predefinite diverse per bambino e per adulto.
 

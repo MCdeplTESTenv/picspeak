@@ -57,19 +57,24 @@
 - [ ] Definire il template di base (vocabolario core + categorie personali) e rivederlo con la logopedista
 - [ ] Versione italiana e inglese del template
 - [ ] Template denso per utenti esperti/adulti: riga di categorie, core fisso Fitzgerald, accesso a tastiera
+- [ ] Schede predefinite diverse per bambino e per adulto, punto di partenza del tutorial
+- [ ] Modelli del terapista: creare, salvare (`.picspeak` di tipo modello) e importare insiemi di schede, in aggiunta al tutorial
 - [ ] Tutorial iniziale per l'adulto: domande saltabili, interrompibile e riprendibile
 - [ ] Personalizzazione automatica delle schede dalle risposte (nomi, foto, preferenze, numero di celle)
 - [ ] Conoscenza iniziale del T9 a partire dalle risposte
 
-## Tappa 5 – Backup
+## Tappa 5 – Backup (automatico: requisito fondamentale)
 - [ ] Richiesta di memoria persistente (`navigator.storage.persist()`)
-- [ ] Esportazione `.caa.json` (immagini, schede, statistiche e regole adattive)
-- [ ] Importazione con validazione e migrazione versioni
-- [ ] Impostazione adulto "Cartella di backup" (Chrome/Edge): salvataggio automatico dopo ogni modifica,
-      immagini come file separati, copie a rotazione del file dati
-- [ ] Riconferma dell'accesso alla cartella alla riapertura
-- [ ] iPad/iPhone/Firefox/Android: promemoria periodico con salvataggio tramite pannello di condivisione
-- [ ] Indicatore "Ultimo backup: X giorni fa" e ripristino guidato
+- [ ] Formato unico `nome.picspeak` (zip senza librerie: manifest + JSON + immagini), versionato con migrazioni
+- [ ] Esportazione completa e importazione **selettiva** (schede, T9, impostazioni grafiche, altre impostazioni)
+      con scelte per conflitti: sostituisci/aggiungi per le schede, unisci/sostituisci per il T9
+- [ ] Validazione rigorosa dei file importati (dimensione, firma dei file, schema, versione)
+- [ ] Livelli di backup attivabili nelle impostazioni, con stato "Ultimo backup: …"
+- [ ] Cartella automatica (Chrome/Edge desktop), copie a rotazione, riconferma dell'accesso
+- [ ] Cloud personale automatico (Google Drive / Dropbox / OneDrive): OAuth PKCE dal browser, solo cartella privata
+      dell'app, token solo sul dispositivo, "Scollega", cifratura facoltativa con password; revisione di sicurezza
+- [ ] Promemoria con pannello di condivisione come rete di sicurezza (unica via se il cloud non è collegato)
+- [ ] Ripristino guidato
 
 ## Tappa 6 – PWA e offline
 - [x] manifest e icone (anticipato per il pulsante "Installa")
@@ -110,7 +115,6 @@
 - [ ] Versione italiana e inglese
 
 ## Idee future (non pianificate)
-- Salvataggio automatico su cloud personale (es. Google Drive) e su file (Chrome/Edge)
 - Sincronizzazione casa–scuola
 - Suggeritore IA opzionale con chiave dell'utente
 - Tastiera con predizione di parole e affissi/morfologia (plurali, tempi verbali) per chi scrive
