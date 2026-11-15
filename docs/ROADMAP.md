@@ -8,11 +8,11 @@
 - [x] Attivare GitHub Pages (https://mcdepltestenv.github.io/picspeak/)
 
 ## Tappa 1 – Prototipo comunicazione (MVP)
-- [ ] Pagina unica con griglia di simboli di esempio
-- [ ] Tocco → sintesi vocale in italiano
-- [ ] Striscia frase con lettura e cancellazione
-- [ ] Testi dell'interfaccia in dizionari per lingua (`it`, `en`) fin dall'inizio
-- [ ] Test su Safari iPad/iPhone e Chrome
+- [x] Pagina unica con griglia di simboli di esempio (emoji di prova, pagine Cibo/Giochi/Come mi sento)
+- [x] Tocco → sintesi vocale in italiano
+- [x] Striscia frase con lettura e cancellazione
+- [x] Testi dell'interfaccia in dizionari per lingua (`it`, `en`) fin dall'inizio
+- [ ] Test su Safari iPad/iPhone e Chrome (fatto su Chrome desktop e in simulazione tablet/telefono; manca la prova su iPad reale)
 
 ## Tappa 2 – Dati e modalità adulto
 - [ ] Modello dati (profili, pagine, celle) documentato in docs/FORMATO-DATI.md
@@ -24,6 +24,7 @@
 ## Tappa 3 – Simboli
 - [ ] Struttura a provider intercambiabili per le fonti dei simboli
 - [ ] Ricerca ARASAAC in italiano
+- [ ] Ricerca in italiano propagata in inglese (ponte ARASAAC, dizionario locale, MyMemory come riserva)
 - [ ] Provider Global Symbols
 - [ ] Set di base incluso con licenza libera (es. Mulberry, OpenMoji)
 - [ ] Download e salvataggio locale dei pittogrammi (con fonte e licenza)

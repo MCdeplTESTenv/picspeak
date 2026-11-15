@@ -1,0 +1,260 @@
+/*
+ * PicSpeak – stile di base.
+ * Tablet come riferimento, adattabile a smartphone e PC.
+ * Target di tocco ≥ 64px, buon contrasto, nessuna animazione invasiva.
+ */
+
+:root {
+  --bg: #f6f4ef;
+  --surface: #ffffff;
+  --surface-strip: #fffdf8;
+  --text: #1d1d1f;
+  --text-muted: #5b5b60;
+  --border: #d8d4ca;
+  --focus: #1f6feb;
+  --pressed: #e8f0fe;
+
+  /* Chiave di Fitzgerald (colori opzionali per categoria) */
+  --fz-pronoun: #f5c518;
+  --fz-verb: #3fa34d;
+  --fz-noun: #f08a24;
+  --fz-adjective: #2f80ed;
+  --fz-social: #e05fa3;
+  --fz-negation: #d64045;
+  --fz-folder: #8a8f98;
+
+  --gap: clamp(6px, 1.2vw, 12px);
+  --radius: 14px;
+  --bar-height: clamp(84px, 13vh, 112px);
+  --min-cell: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17181a;
+    --surface: #232427;
+    --surface-strip: #1d1e21;
+    --text: #f2f2f2;
+    --text-muted: #b4b4b9;
+    --border: #3a3b40;
+    --pressed: #2a3a55;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  /* Evita selezioni e menu contestuali durante i tocchi */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Striscia frase ---------- */
+
+.sentence-bar {
+  display: flex;
+  align-items: stretch;
+  gap: var(--gap);
+  padding: var(--gap);
+  background: var(--surface-strip);
+  border-bottom: 2px solid var(--border);
+  min-height: var(--bar-height);
+}
+
+.sentence-strip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+.sentence-strip li { flex: none; }
+
+.sentence-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--min-cell);
+  min-height: var(--min-cell);
+  height: calc(var(--bar-height) - 2 * var(--gap) - 16px);
+  padding: 4px 8px;
+  background: var(--surface);
+  border: 3px solid var(--border);
+  border-radius: 10px;
+}
+
+.sentence-actions {
+  display: flex;
+  gap: var(--gap);
+}
+
+.action-btn,
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--min-cell);
+  min-height: var(--min-cell);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.action-btn { width: clamp(64px, 9vw, 96px); }
+
+.action-speak {
+  border-color: var(--fz-verb);
+  border-width: 3px;
+}
+
+.action-btn:disabled { opacity: 0.35; cursor: default; }
+
+.action-icon { font-size: clamp(26px, 4vw, 38px); line-height: 1; }
+
+/* ---------- Navigazione ---------- */
+
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  padding: var(--gap) var(--gap) 0;
+  min-height: calc(var(--min-cell) + var(--gap));
+}
+
+.nav-btn { padding: 0 16px; }
+.nav-btn[hidden] { display: none; }
+
+.page-title {
+  margin: 0;
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ---------- Griglia simboli ---------- */
+
+.symbol-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  /* Colonne e altezza delle righe calcolate da app.js (layoutGrid); questo è il valore di riserva */
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-auto-rows: 110px;
+  gap: var(--gap);
+  padding: var(--gap);
+  overflow-y: auto;
+  align-content: start;
+}
+
+.symbol-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: var(--min-cell);
+  min-height: var(--min-cell);
+  padding: 8px 4px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-top-width: 10px;
+  border-radius: var(--radius);
+  transition: background-color 120ms linear;
+}
+
+.symbol-cell.is-pressed,
+.action-btn.is-pressed { background: var(--pressed); }
+
+.symbol-image {
+  line-height: 1;
+  /* Le emoji di prova: verranno sostituite da immagini <img> */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+/* --cell-size è calcolato da app.js: immagine ed etichetta crescono con la cella */
+.symbol-image.size-cell { font-size: clamp(32px, calc(var(--cell-size, 110px) * 0.48), 128px); }
+.symbol-cell .symbol-label { font-size: clamp(14px, calc(var(--cell-size, 110px) * 0.11), 28px); }
+.symbol-image.size-chip { font-size: clamp(30px, 5.5vw, 52px); }
+
+.symbol-label {
+  font-size: clamp(15px, 2vw, 22px);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.sentence-chip .symbol-label { font-size: clamp(12px, 1.5vw, 16px); }
+
+/* Colori per categoria (Fitzgerald) sul bordo superiore */
+.type-pronoun   { border-top-color: var(--fz-pronoun); }
+.type-verb      { border-top-color: var(--fz-verb); }
+.type-noun      { border-top-color: var(--fz-noun); }
+.type-adjective { border-top-color: var(--fz-adjective); }
+.type-social    { border-top-color: var(--fz-social); }
+.type-negation  { border-top-color: var(--fz-negation); }
+.type-folder    { border-top-color: var(--fz-folder); }
+
+.sentence-chip.type-pronoun,
+.sentence-chip.type-verb,
+.sentence-chip.type-noun,
+.sentence-chip.type-adjective,
+.sentence-chip.type-social,
+.sentence-chip.type-negation { border-top-width: 6px; }
+
+/* Le cartelle hanno un aspetto "a scheda" per distinguerle dai simboli */
+.symbol-cell.type-folder {
+  background: linear-gradient(var(--surface), var(--surface)) padding-box;
+  border-style: solid;
+  border-width: 2px 2px 2px 2px;
+  border-top-width: 10px;
+  box-shadow: inset 0 -6px 0 var(--border);
+}
+
+/* ---------- Telefoni piccoli ---------- */
+
+@media (max-width: 520px) {
+  .sentence-bar { flex-wrap: wrap; }
+  .sentence-strip { flex-basis: 100%; min-height: 76px; }
+  .sentence-actions { flex: 1; justify-content: flex-end; }
+  .action-btn { width: 64px; }
+}
+
+/* Rispetta chi preferisce ridurre il movimento */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

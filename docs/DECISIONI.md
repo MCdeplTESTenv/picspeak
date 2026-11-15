@@ -65,4 +65,19 @@ Formato: data – decisione – motivo.
   template e l'elenco delle domande sono da rivedere con la logopedista.
 - **Fornitori di simboli verificati dal browser (15/11/2026): ARASAAC e Global Symbols rispondono con CORS aperto.**
   Motivo: il tool può interrogarli direttamente da GitHub Pages, senza server intermedi.
+- **Ricerca simboli: un termine italiano viene propagato subito anche in inglese, e i risultati si uniscono.**
+  Motivo: richiesta di Marcello; molti archivi (Global Symbols, Mulberry, OpenMoji) hanno etichette solo in inglese,
+  e così la ricerca non resta mai vuota. Traduzione senza chiavi né costi, in quest'ordine:
+  1. ponte ARASAAC: la ricerca italiana restituisce il pittogramma, che ha anche le parole chiave inglesi
+     (e un codice WordNet/synset utile per abbinare altri archivi);
+  2. piccolo dizionario locale it→en del vocabolario CAA più comune (funziona offline);
+  3. MyMemory (servizio di traduzione gratuito senza registrazione, CORS aperto) come riserva.
+  Il termine cercato viene inviato a questi servizi: è accettabile perché sono parole generiche, ma in Crediti/Privacy
+  va spiegato. Verificato dal browser il 15/11/2026.
+- **Tappa 1: script JavaScript classici (non moduli ES).**
+  Motivo: il tool si apre anche con doppio clic sul file, senza server locale, comodo per le prove su PC/Mac.
+- **Tappa 1: immagini di prova con emoji di sistema.**
+  Motivo: nessun file né licenza esterna finché non arrivano i fornitori di simboli (Tappa 3); l'aspetto varia un po' tra Apple, Android e Windows.
+- **Griglia che si adatta da sola: sceglie il numero di colonne che rende le celle più grandi possibile.**
+  Motivo: con poche immagini le celle diventano grandi (indicazione della logopedista); su telefono si scorre se le celle scenderebbero sotto ~88 px.
 

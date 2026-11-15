@@ -140,6 +140,9 @@ semplice file.
   - **Immagini personali** caricate dall'utente.
 - Escluse per ora: OpenSymbols (API su richiesta di una chiave), Sclera come set
   incluso (licenza non commerciale con condizioni proprie, usabile via Global Symbols).
+- **Ricerca bilingue**: un termine cercato in italiano viene tradotto subito anche in inglese
+  (ponte ARASAAC, dizionario locale, servizio gratuito MyMemory come riserva) e i risultati
+  di tutte le fonti vengono uniti, così la ricerca restituisce sempre il massimo dei risultati.
 - Ogni simbolo aggiunto viene salvato localmente con la sua fonte e licenza:
   anche se un servizio esterno cambiasse condizioni o chiudesse, le tabelle
   esistenti continuano a funzionare.
