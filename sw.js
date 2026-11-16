@@ -3,7 +3,7 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v15';
+const CACHE_VERSION = 'picspeak-v16';
 // Pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji): cache separate, mai cancellate dagli aggiornamenti
 const PACK_CACHE_PREFIX = 'picspeak-pack-';
 
@@ -12,6 +12,9 @@ const APP_FILES = [
   'index.html',
   'manifest.webmanifest',
   'css/style.css',
+  // Guida all'uso per gli adulti (aperta dal menu dei tre puntini)
+  'guida.html',
+  'css/guida.css',
   'js/i18n.js',
   'js/storage.js',
   'js/security.js',
