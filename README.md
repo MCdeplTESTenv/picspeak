@@ -1,8 +1,8 @@
 # PicSpeak
 
-Strumento gratuito di Comunicazione Aumentativa Alternativa che accompagna
-la persona dall'infanzia all'età adulta. Funziona nel browser senza
-installazione, anche offline.
+Strumento di Comunicazione Aumentativa Alternativa (CAA) gratuito e open source,
+che funziona nel browser. Cresce con la persona: pensato per i bambini, resta
+utile anche da adulti. Non richiede installazione e funziona anche offline.
 
 **Provalo:** https://mcdepltestenv.github.io/picspeak/ (in inglese: aggiungi `?lang=en`).
 
