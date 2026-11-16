@@ -250,7 +250,7 @@
   // Icone costanti (mai dati dell'utente)
   const MENU_ITEMS = [
     { id: 'settings', labelKey: 'menuSettings', descKey: 'menuSettingsDesc',
-      icon: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/>' },
+      icon: '<path d="M19.4 10.1 L21.9 10.3 L21.9 13.7 L19.4 13.9 L18.5 15.9 L20.2 17.8 L17.8 20.2 L15.9 18.5 L13.9 19.4 L13.7 21.9 L10.3 21.9 L10.1 19.4 L8.1 18.5 L6.2 20.2 L3.8 17.8 L5.5 15.9 L4.6 13.9 L2.1 13.7 L2.1 10.3 L4.6 10.1 L5.5 8.1 L3.8 6.2 L6.2 3.8 L8.1 5.5 L10.1 4.6 L10.3 2.1 L13.7 2.1 L13.9 4.6 L15.9 5.5 L17.8 3.8 L20.2 6.2 L18.5 8.1Z"/><circle cx="12" cy="12" r="3"/>' },
     { id: 'credits', labelKey: 'menuCredits', descKey: 'menuCreditsDesc',
       icon: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5a3.5 3.5 0 1 0 0 5"/>' },
     { id: 'guide', labelKey: 'menuGuide', descKey: 'menuGuideDesc',
@@ -1249,7 +1249,7 @@
 
   // Categorie delle impostazioni: icona, titolo, sezioni contenute
   const CATEGORIES = [
-    { id: 'general', icon: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/>', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
+    { id: 'general', icon: '<path d="M19.4 10.1 L21.9 10.3 L21.9 13.7 L19.4 13.9 L18.5 15.9 L20.2 17.8 L17.8 20.2 L15.9 18.5 L13.9 19.4 L13.7 21.9 L10.3 21.9 L10.1 19.4 L8.1 18.5 L6.2 20.2 L3.8 17.8 L5.5 15.9 L4.6 13.9 L2.1 13.7 L2.1 10.3 L4.6 10.1 L5.5 8.1 L3.8 6.2 L6.2 3.8 L8.1 5.5 L10.1 4.6 L10.3 2.1 L13.7 2.1 L13.9 4.6 L15.9 5.5 L17.8 3.8 L20.2 6.2 L18.5 8.1Z"/><circle cx="12" cy="12" r="3"/>', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
       render: [renderLanguageSection, renderOnlineSection, renderInstallSection, renderGuideSection, renderCreditsSection] },
     { id: 'appearance', icon: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
       render: [renderPresetSection, renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
