@@ -950,8 +950,8 @@
       document.documentElement.dataset[opt.key] = value;
     });
     applyImageZoom();
-    if (appearance.columns) document.documentElement.dataset.columns = String(appearance.columns);
-    else delete document.documentElement.dataset.columns;
+    if (appearance.tileZoom) document.documentElement.dataset.tileZoom = String(appearance.tileZoom);
+    else delete document.documentElement.dataset.tileZoom;
     app.layoutGrid();
   }
 
@@ -997,7 +997,8 @@
   async function applyPreset(preset) {
     applyColorMode(preset.colorMode);
     applyPageBackground(preset.background);
-    appearance = { ...preset.appearance };
+    // Lo zoom delle tessere dipende dallo schermo, non dallo stile: si conserva
+    appearance = appearance.tileZoom ? { ...preset.appearance, tileZoom: appearance.tileZoom } : { ...preset.appearance };
     applyAppearance();
     await storage.set('colorMode', preset.colorMode);
     await storage.set('pageBackground', preset.background);
@@ -1125,56 +1126,93 @@
     return settingRow('optImageZoom', 'optImageZoomHelp', group);
   }
 
-  // ---------- Zoom delle tessere (numero di colonne) ----------
-  // − = tessere più piccole (una colonna in più), + = più grandi (una colonna in meno),
-  // tocco sulla percentuale = automatico. La percentuale è relativa alle colonne automatiche.
+  // ---------- Zoom delle tessere ----------
+  // − = tessere più piccole, + = più grandi, a passi del 10% rispetto alla misura automatica
+  // (100%); tocco sulla percentuale = di nuovo automatico. Mentre si regola, la pagina passa in
+  // anteprima: identica a quella che vede il bambino (vedi app.setPreview).
   const zoomEl = {
     out: document.getElementById('btn-zoom-out'),
     reset: document.getElementById('btn-zoom-reset'),
     in: document.getElementById('btn-zoom-in'),
   };
-  const MAX_COLUMNS = 12;
 
   function updateZoomLabel() {
-    const auto = app.autoColumns();
-    const cols = app.currentColumns();
-    const percent = Math.round((auto / cols) * 100);
-    zoomEl.reset.textContent = `${percent}%`;
-    zoomEl.in.disabled = cols <= 1;
-    zoomEl.out.disabled = cols >= Math.min(MAX_COLUMNS, app.maxColumns());
+    const zoom = app.currentZoom();
+    const { min, max } = app.zoomRange();
+    zoomEl.reset.textContent = `${zoom}%`;
+    zoomEl.out.disabled = zoom <= min;
+    zoomEl.in.disabled = zoom >= max;
   }
 
-  async function setColumns(cols) {
-    const auto = app.autoColumns();
-    if (!cols || cols === auto) {
-      const { columns, ...rest } = appearance;
+  async function setTileZoom(percent) {
+    const { min, max } = app.zoomRange();
+    const zoom = Math.min(max, Math.max(min, Math.round(percent || 100)));
+    if (zoom === 100) {
+      const { tileZoom, ...rest } = appearance;
       appearance = rest;
     } else {
-      appearance = { ...appearance, columns: cols };
+      appearance = { ...appearance, tileZoom: zoom };
     }
+    app.setPreview(true);
     applyAppearance();
     updateZoomLabel();
     await storage.set('appearance', appearance);
   }
 
-  function columnsRow() {
-    const cols = appearance.columns;
+  // Passo successivo: dal valore mostrato (già entro i limiti dello schermo) di 10 in 10
+  function stepTileZoom(direction) {
+    const step = app.zoomRange().step;
+    const current = app.currentZoom();
+    const next = direction > 0
+      ? Math.floor(current / step) * step + step
+      : Math.ceil(current / step) * step - step;
+    setTileZoom(next);
+  }
+
+  // Fine dell'anteprima: al primo tocco fuori dai pulsanti dello zoom si torna alla modifica.
+  // Quel tocco non apre nulla (es. la modifica di una tessera), serve solo a uscire dall'anteprima.
+  function bindZoomPreview() {
+    // Il clic che segue quel tocco va ignorato; se il browser non lo genera (l'elemento toccato è
+    // stato ridisegnato) l'attesa scade da sola, così il tocco successivo funziona normalmente
+    let swallowUntil = 0;
+    document.addEventListener('pointerdown', (event) => {
+      if (!app.preview || event.target.closest('.zoom-control')) return;
+      const passThrough = Boolean(event.target.closest('.adult-btn'));
+      swallowUntil = passThrough ? 0 : Date.now() + 800;
+      app.setPreview(false);
+      // Il tocco non deve avviare altro (es. lo spostamento della tessera tenuta premuta)
+      if (!passThrough) event.stopPropagation();
+    }, true);
+    document.addEventListener('click', (event) => {
+      if (Date.now() > swallowUntil) return;
+      swallowUntil = 0;
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+  }
+
+  function tileZoomRow() {
+    const zoom = appearance.tileZoom;
     const control = document.createElement('div');
     control.className = 'choice-group';
     const status = document.createElement('span');
     status.className = 'setting-status';
-    status.textContent = cols ? t('columnsFixed').replace('{n}', cols) : t('columnsAuto');
+    status.textContent = zoom ? t('tileZoomFixed').replace('{n}', zoom) : t('tileZoomAuto');
     control.append(status);
-    if (cols) {
-      control.append(button(t('columnsBackAuto'), async () => { await setColumns(null); renderSettings(); }, false));
+    if (zoom) {
+      control.append(button(t('tileZoomBackAuto'), async () => {
+        await setTileZoom(100);
+        app.setPreview(false);
+        renderSettings();
+      }, false));
     }
-    return settingRow('optColumns', 'optColumnsHelp', control);
+    return settingRow('optTileZoom', 'optTileZoomHelp', control);
   }
 
   function renderAppearanceGroups() {
     APPEARANCE_GROUPS.forEach((group) => {
       const wrap = section(group.titleKey);
-      if (group.titleKey === 'grpCells') wrap.append(columnsRow());
+      if (group.titleKey === 'grpCells') wrap.append(tileZoomRow());
       group.options.forEach((opt) => {
         const current = appearance[opt.key] || opt.values[0][0];
         wrap.append(settingRow(opt.labelKey, opt.helpKey, segmented(opt.values, current, async (value) => {
@@ -1338,9 +1376,10 @@
     el.openSettings.addEventListener('click', openSettings);
     el.exitAdult.addEventListener('click', exitAdult);
     // "Indietro": su telefono, dal contenuto di una categoria torna all'elenco; altrimenti chiude
-    zoomEl.in.addEventListener('click', () => setColumns(Math.max(1, app.currentColumns() - 1)));
-    zoomEl.out.addEventListener('click', () => setColumns(Math.min(MAX_COLUMNS, app.maxColumns(), app.currentColumns() + 1)));
-    zoomEl.reset.addEventListener('click', () => setColumns(null));
+    zoomEl.in.addEventListener('click', () => stepTileZoom(1));
+    zoomEl.out.addEventListener('click', () => stepTileZoom(-1));
+    zoomEl.reset.addEventListener('click', () => setTileZoom(100));
+    bindZoomPreview();
     window.addEventListener('resize', () => { if (app.mode === 'adult') setTimeout(updateZoomLabel, 150); });
     el.settingsBack.addEventListener('click', () => {
       if (showPanelOnPhone && window.matchMedia('(max-width: 720px)').matches) {
@@ -1394,6 +1433,15 @@
   async function restoreAppearance() {
     appearance = (await storage.get('appearance')) || {};
     delete appearance.imageZoom; // vecchia impostazione (zoom solo immagini), sostituita dallo zoom delle tessere
+    // Vecchio zoom a numero di colonne: non si traduce in una misura, si torna alla misura automatica
+    if ('columns' in appearance) {
+      delete appearance.columns;
+      await storage.set('appearance', appearance);
+    }
+    // Zoom delle tessere: solo numeri interi plausibili (dati letti dal dispositivo o da un backup)
+    if (!Number.isInteger(appearance.tileZoom) || appearance.tileZoom < 30 || appearance.tileZoom > 300) {
+      delete appearance.tileZoom;
+    }
     if (!appearance.labelCase) {
       const legacy = await storage.get('labelCase');
       if (legacy) appearance.labelCase = legacy;

@@ -1529,3 +1529,29 @@ body > .adult-bar { order: 0; }
   opacity: 0.95;
 }
 .is-reordering, .is-reordering .symbol-grid { touch-action: none; cursor: grabbing; }
+
+/* ---------- Zoom delle tessere: pagina identica a quella del bambino ---------- */
+
+/* Con le impostazioni sbloccate il pulsante "•••" resta invisibile ma occupa il suo spazio:
+   la barra del percorso ha la stessa altezza della comunicazione e le tessere non si spostano */
+.mode-adult .lock-btn[hidden] { display: flex !important; visibility: hidden; pointer-events: none; }
+
+/* Anteprima dello zoom: la barra scura si appoggia sopra la striscia frase invece di spingere giù
+   la pagina, e spariscono i segni di modifica (matita sulle tessere, ✕ sulla frase) */
+.adult-preview-text { display: none; }
+.is-zoom-preview .adult-bar {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.is-zoom-preview .adult-badge-text { display: none; }
+.is-zoom-preview .adult-preview-text { display: inline; }
+.mode-adult.is-zoom-preview .symbol-cell:not(.add-cell)::before,
+.mode-adult.is-zoom-preview .sentence-chip::after { display: none; }
+/* Su telefono la barra non ha spazio per la scritta dell'anteprima: restano − % + e i pulsanti */
+@media (max-width: 600px) {
+  .is-zoom-preview .adult-preview-text { display: none; }
+}

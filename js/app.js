@@ -19,6 +19,8 @@
     // Frase: copie delle tessere scelte (parola, voce, tipo, immagine), indipendenti dalla scheda
     sentence: [],
     ready: false,
+    // Anteprima dello zoom: con le impostazioni sbloccate, griglia identica a quella del bambino
+    preview: false,
   };
 
   const el = {
@@ -95,8 +97,9 @@
     if (isHome) el.home.setAttribute('aria-current', 'page');
     else el.home.removeAttribute('aria-current');
 
-    // In modalità impostazioni si vedono anche le tessere nascoste (attenuate) e la tessera "+"
-    const editing = state.mode === 'adult';
+    // In modalità impostazioni si vedono anche le tessere nascoste (attenuate) e la tessera "+",
+    // tranne durante l'anteprima dello zoom, che mostra la pagina esattamente come la vede il bambino
+    const editing = state.mode === 'adult' && !state.preview;
     const cells = data.orderedCells(page, { includeHidden: editing }).map((item) => {
       const button = document.createElement('button');
       button.type = 'button';
@@ -138,25 +141,32 @@
   // nello spazio disponibile (poche celle = celle grandi, come chiede la logopedista)
   const MIN_COMFORT_CELL = 88;
   const MIN_COMFORT_WIDTH = 76;
-  const MIN_ZOOM_WIDTH = 90; // con − non si scende sotto questa larghezza di tessera
+  // Zoom delle tessere (percentuale della misura automatica): limiti e passo
+  const ZOOM = { step: 10, min: 30, max: 300, minTile: 64 }; // minTile = bersaglio di tocco minimo
 
+  // Misure della griglia come le vede il bambino in comunicazione, anche quando le impostazioni
+  // sono sbloccate: si contano solo le tessere visibili (non quelle nascoste né la tessera "+")
+  // e si restituisce l'altezza occupata dalla barra scura delle impostazioni.
+  // Così misura e disposizione delle tessere sono identiche nelle due modalità.
   function gridMetrics() {
     const style = getComputedStyle(el.grid);
+    const count = el.grid.querySelectorAll('.symbol-cell:not(.is-hidden-cell):not(.add-cell):not(.reorder-ghost)').length;
+    const bar = document.getElementById('adult-bar');
+    const barHeight = bar && !bar.hidden && getComputedStyle(bar).position !== 'fixed' ? bar.offsetHeight : 0;
     return {
-      count: el.grid.childElementCount,
+      count,
       gap: parseFloat(style.columnGap) || 0,
       width: el.grid.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
-      height: el.grid.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
+      height: el.grid.clientHeight + barHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
     };
   }
 
-  // Numero di colonne "automatico": celle il più possibile grandi e quadrate nello spazio disponibile
-  function autoColumns() {
-    const { count, gap, width, height } = gridMetrics();
-    if (!count) return 1;
+  // Disposizione "automatica": celle il più possibile grandi nello spazio disponibile
+  function autoLayout(metrics = gridMetrics()) {
+    const { count, gap, width, height } = metrics;
     let best = { cols: 1, size: 0 };
-    for (let cols = 1; cols <= count; cols += 1) {
-      const rows = Math.ceil(count / cols);
+    for (let cols = 1; cols <= Math.max(1, count); cols += 1) {
+      const rows = Math.ceil(Math.max(1, count) / cols);
       const cellW = (width - gap * (cols - 1)) / cols;
       const cellH = (height - gap * (rows - 1)) / rows;
       // Celle mai più strette di una misura comoda: su schermi bassi la griglia scorre invece di stringersi
@@ -168,34 +178,55 @@
       // A parità di misura si preferiscono più colonne (meno righe da scorrere)
       if (size > best.size || (size === best.size && cols > best.cols)) best = { cols, size };
     }
-    return best.cols;
+    const cols = best.cols;
+    const rows = Math.ceil(Math.max(1, count) / cols);
+    const cellW = (width - gap * (cols - 1)) / cols;
+    const cellH = Math.max((height - gap * (rows - 1)) / rows, MIN_COMFORT_CELL);
+    return { cols, cellW, cellH };
   }
 
-  // Massimo di colonne che lo schermo permette senza tessere troppo strette per le parole
-  function maxColumns() {
-    const { count, gap, width } = gridMetrics();
-    return Math.max(1, Math.min(count || 1, Math.floor((width + gap) / (MIN_ZOOM_WIDTH + gap))));
+  // Percentuali di zoom ammesse su questo schermo e in questa pagina:
+  // in giù finché la tessera resta toccabile (≥ 64 px), in su finché una tessera sta tutta nello schermo
+  function zoomRange() {
+    const metrics = gridMetrics();
+    const { cellW, cellH } = autoLayout(metrics);
+    const side = Math.min(cellW, cellH);
+    const roundUp = (v) => Math.ceil(v / ZOOM.step) * ZOOM.step;
+    const roundDown = (v) => Math.floor(v / ZOOM.step) * ZOOM.step;
+    const min = Math.min(100, Math.max(ZOOM.min, roundUp((ZOOM.minTile / side) * 100)));
+    const max = Math.max(100, Math.min(ZOOM.max,
+      roundDown(Math.min(metrics.width / cellW, metrics.height / cellH) * 100)));
+    return { min, max, step: ZOOM.step };
   }
 
-  // Colonne effettive: quelle scelte con lo zoom (data-columns su <html>) oppure automatiche
-  function currentColumns() {
-    const fixed = parseInt(document.documentElement.dataset.columns, 10);
-    if (fixed > 0) return Math.max(1, Math.min(fixed, maxColumns()));
-    return autoColumns();
+  // Zoom scelto dall'adulto (data-tile-zoom su <html>), ricondotto ai limiti di questo schermo
+  function currentZoom() {
+    const saved = parseInt(document.documentElement.dataset.tileZoom, 10);
+    if (!(saved > 0) || saved === 100) return 100;
+    const { min, max } = zoomRange();
+    return Math.min(max, Math.max(min, saved));
   }
 
   function layoutGrid() {
-    const { count, gap, width, height } = gridMetrics();
-    if (!count) return;
-    const cols = currentColumns();
-    const zoomed = parseInt(document.documentElement.dataset.columns, 10) > 0;
-    const rows = Math.ceil(count / cols);
-    el.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
-    const cellW = (width - gap * (cols - 1)) / cols;
-    const fitH = (height - gap * (rows - 1)) / rows;
-    // Con lo zoom le tessere restano quasi quadrate (la griglia scorre); in automatico riempiono lo spazio
-    const cellH = zoomed ? Math.max(fitH, Math.min(cellW, height), MIN_COMFORT_CELL * 0.8)
-      : Math.max(fitH, MIN_COMFORT_CELL);
+    const metrics = gridMetrics();
+    if (!el.grid.childElementCount) return;
+    const auto = autoLayout(metrics);
+    const zoom = currentZoom();
+    let { cols, cellW, cellH } = auto;
+    if (zoom === 100) {
+      // Misura automatica: le tessere riempiono lo spazio
+      el.grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+      el.grid.style.justifyContent = '';
+    } else {
+      // Zoom: la tessera automatica ingrandita o rimpicciolita in proporzione (larghezza e altezza);
+      // entrano tante colonne quante ne permette lo schermo e la griglia resta centrata
+      cellW = Math.max(ZOOM.minTile, auto.cellW * (zoom / 100));
+      cellH = Math.max(ZOOM.minTile, auto.cellH * (zoom / 100));
+      const fit = Math.floor((metrics.width + metrics.gap) / (cellW + metrics.gap));
+      cols = Math.max(1, Math.min(fit, Math.max(1, metrics.count)));
+      el.grid.style.gridTemplateColumns = `repeat(${cols}, ${cellW}px)`;
+      el.grid.style.justifyContent = 'center';
+    }
     el.grid.style.gridAutoRows = `${cellH}px`;
     // Immagine ed etichetta proporzionate al lato minore della cella
     el.grid.style.setProperty('--cell-size', `${Math.min(cellW, cellH)}px`);
@@ -339,9 +370,21 @@
   // Cambio modalità: 'child' (comunicazione) o 'adult' (modifica, impostazioni)
   function setMode(mode) {
     state.mode = mode === 'adult' ? 'adult' : 'child';
+    state.preview = false;
     document.body.classList.toggle('mode-adult', state.mode === 'adult');
+    document.body.classList.remove('is-zoom-preview');
     renderGrid();
     renderSentence();
+  }
+
+  // Anteprima dello zoom (solo con le impostazioni sbloccate): la griglia appare identica a quella
+  // della comunicazione, senza tessere nascoste, tessera "+" e segni di modifica
+  function setPreview(on) {
+    const next = Boolean(on) && state.mode === 'adult';
+    if (next === Boolean(state.preview)) return;
+    state.preview = next;
+    document.body.classList.toggle('is-zoom-preview', next);
+    renderGrid();
   }
 
   // Ridisegna tutti i testi dopo un cambio di lingua
@@ -476,10 +519,10 @@
     renderGrid,
     goToPage,
     get pageId() { return state.pageId; },
-    autoColumns,
-    currentColumns,
-    maxColumns,
-    itemCount: () => el.grid.childElementCount,
+    zoomRange,
+    currentZoom,
+    setPreview,
+    get preview() { return state.preview; },
     get mode() { return state.mode; },
   };
 })();
