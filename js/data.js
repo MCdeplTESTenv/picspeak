@@ -257,6 +257,26 @@
     await savePage(p);
   }
 
+  // Nuovo ordine completo delle celle (dal trascinamento): le posizioni seguono l'elenco di id.
+  // Eventuali celle non presenti nell'elenco restano in fondo, nel loro ordine.
+  async function reorderCells(pageId, cellIds) {
+    const p = page(pageId);
+    if (!p || !Array.isArray(cellIds)) return;
+    const byId = new Map(p.cells.map((c) => [c.id, c]));
+    const ordered = [];
+    cellIds.forEach((id) => {
+      const cell = byId.get(id);
+      if (cell) { ordered.push(cell); byId.delete(id); }
+    });
+    const rest = [...byId.values()].sort((a, b) => (a.row - b.row) || (a.col - b.col));
+    const cols = p.grid.cols || DEFAULT_COLS;
+    [...ordered, ...rest].forEach((cell, i) => {
+      cell.row = Math.floor(i / cols);
+      cell.col = i % cols;
+    });
+    await savePage(p);
+  }
+
   async function addImage(fields) {
     const image = { id: newId('img'), addedAt: now(), ...fields };
     model.images.set(image.id, image);
@@ -288,6 +308,7 @@
     addFolder,
     deleteCell,
     moveCell,
+    reorderCells,
     addImage,
     saveImage,
     allImages: () => [...model.images.values()],

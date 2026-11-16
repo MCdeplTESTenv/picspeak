@@ -3,7 +3,7 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v15';
+const CACHE_VERSION = 'picspeak-v16';
 // Pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji): cache separate, mai cancellate dagli aggiornamenti
 const PACK_CACHE_PREFIX = 'picspeak-pack-';
 
@@ -24,6 +24,7 @@ const APP_FILES = [
   'js/adult.js',
   'js/symbol-search.js',
   'js/editor.js',
+  'js/reorder.js',
   // Dizionario italiano → inglese per la ricerca dei simboli (funziona anche offline)
   'symbols/it-en.json',
   'icons/icon-192.png',

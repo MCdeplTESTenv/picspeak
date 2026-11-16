@@ -295,7 +295,7 @@
           app.renderGrid();
         }, 'dlg-btn-danger'),
       );
-      form.append(manage);
+      form.append(manage, el('small', 'editor-hint', t('editorMoveHint')));
     }
 
     const error = el('p', 'dialog-error');
