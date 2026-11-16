@@ -12,6 +12,9 @@ const APP_FILES = [
   'index.html',
   'manifest.webmanifest',
   'css/style.css',
+  // Guida all'uso per gli adulti (aperta dal menu dei tre puntini)
+  'guida.html',
+  'css/guida.css',
   'js/i18n.js',
   'js/storage.js',
   'js/security.js',

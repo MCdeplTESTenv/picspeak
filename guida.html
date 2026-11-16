@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <!-- Pagina statica senza script: solo stili del sito stesso -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="color-scheme" content="light">
+  <title>Guida – PicSpeak</title>
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/guida.css">
+</head>
+<body>
+  <!--
+    Guida all'uso per adulti (genitori, insegnanti, terapisti).
+    Regola di progetto: va aggiornata a ogni nuova funzione, solo con istruzioni d'uso (niente informazioni sul codice).
+  -->
+  <header class="guide-top">
+    <a class="back" href="./">‹ Torna a PicSpeak</a>
+  </header>
+
+  <main class="guide">
+    <h1>Guida a PicSpeak</h1>
+    <p class="lead">PicSpeak è uno strumento gratuito di Comunicazione Aumentativa Alternativa: la persona tocca le immagini
+      per comporre una frase, e il dispositivo la legge ad alta voce. Questa guida è per gli adulti che la accompagnano:
+      genitori, insegnanti, logopedisti e terapisti.</p>
+
+    <nav class="toc" aria-label="Indice">
+      <h2>Indice</h2>
+      <ol>
+        <li><a href="#inizio">Per iniziare</a></li>
+        <li><a href="#comunicare">Comunicare</a></li>
+        <li><a href="#menu">Il menu dei tre puntini</a></li>
+        <li><a href="#pin">Impostazioni e PIN</a></li>
+        <li><a href="#tessere">Modificare le tessere</a></li>
+        <li><a href="#simboli">Cercare simboli e usare foto</a></li>
+        <li><a href="#aspetto">Aspetto della tabella</a></li>
+        <li><a href="#voce">Voce</a></li>
+        <li><a href="#internet">Internet e consumo dati</a></li>
+        <li><a href="#app">Installare come app e uso senza internet</a></li>
+        <li><a href="#guidato">Tenere il bambino dentro PicSpeak</a></li>
+        <li><a href="#dati">Dove restano i dati</a></li>
+        <li><a href="#domande">Domande frequenti</a></li>
+      </ol>
+    </nav>
+
+    <section id="inizio">
+      <h2>1. Per iniziare</h2>
+      <p>PicSpeak si apre dal browser, senza installare nulla e senza creare account. Funziona su tablet, telefono e computer
+        (Safari, Chrome, Edge, Firefox).</p>
+      <p>Lo schermo ha tre parti:</p>
+      <ul>
+        <li><strong>Striscia frase</strong> (in alto, o in basso se l’avete scelto): raccoglie le immagini toccate.</li>
+        <li><strong>Barra del percorso</strong>: mostra dove ci si trova (<em>Home › Cibo</em>). A destra ci sono i
+          <strong>tre puntini</strong>, riservati all’adulto.</li>
+        <li><strong>Tabella</strong>: le tessere con immagine e parola.</li>
+      </ul>
+      <p class="tip">Il bambino vede solo la tabella e la frase: nessun pulsante gli permette di modificare o cancellare le tessere.</p>
+    </section>
+
+    <section id="comunicare">
+      <h2>2. Comunicare</h2>
+      <ol>
+        <li>Toccando una tessera, PicSpeak pronuncia la parola e la aggiunge alla frase.</li>
+        <li>Una tessera <strong>cartella</strong> (per esempio «Cibo») apre un’altra pagina di tessere. Per tornare indietro
+          si tocca <strong>Home</strong> nella barra del percorso.</li>
+        <li>Nella striscia frase:
+          <ul>
+            <li><strong>Altoparlante</strong>: legge tutta la frase.</li>
+            <li><strong>Freccia con la ×</strong>: toglie l’ultima immagine.</li>
+            <li><strong>×</strong>: cancella tutta la frase.</li>
+            <li>Toccando un’immagine della frase, PicSpeak ripete solo quella parola (non la cancella).</li>
+          </ul>
+        </li>
+      </ol>
+      <p>Due gesti facoltativi, da attivare in Impostazioni → Aspetto:</p>
+      <ul>
+        <li><strong>Spingi via la frase</strong>: un colpo deciso del dito sulla striscia la cancella.</li>
+        <li><strong>Scuoti per ricominciare</strong>: due scosse decise del tablet o del telefono riportano alla Home e
+          cancellano la frase.</li>
+      </ul>
+    </section>
+
+    <section id="menu">
+      <h2>3. Il menu dei tre puntini</h2>
+      <p>Tenete premuti i <strong>tre puntini</strong> in alto a destra per <strong>3 secondi</strong>: in cima allo schermo
+        compare una barra che si riempie. Un tocco veloce non fa nulla, così il bambino non apre il menu per sbaglio.</p>
+      <p>Al termine si apre una finestra con tre voci:</p>
+      <ul>
+        <li><strong>Impostazioni</strong>: chiede il PIN e sblocca la modifica (vedi sotto).</li>
+        <li><strong>Crediti</strong>: autori dei simboli, licenze e informazioni sulla privacy. Non serve il PIN.</li>
+        <li><strong>Guida</strong>: apre questa pagina. Non serve il PIN.</li>
+      </ul>
+      <p>«Chiudi» o il tasto Esc tornano alla tabella senza cambiare nulla.</p>
+    </section>
+
+    <section id="pin">
+      <h2>4. Impostazioni e PIN</h2>
+      <h3>La prima volta</h3>
+      <ol>
+        <li>Dal menu scegliete <strong>Impostazioni</strong>.</li>
+        <li>Create un PIN da 4 a 6 cifre e ripetetelo.</li>
+        <li>PicSpeak mostra un <strong>codice di recupero</strong>: annotatelo o stampatelo e conservatelo in un posto sicuro.
+          Serve se dimenticate il PIN e non viene mostrato di nuovo.</li>
+      </ol>
+      <h3>Con le impostazioni sbloccate</h3>
+      <p>In alto compare una barra scura con:</p>
+      <ul>
+        <li><strong>− 100% +</strong>: rimpicciolisce o ingrandisce le tessere (cambia il numero di colonne). Toccando la
+          percentuale si torna alla misura automatica.</li>
+        <li><strong>Impostazioni</strong>: apre le categorie Generale, Aspetto, Simboli, Voce, Sicurezza.</li>
+        <li><strong>Torna alla comunicazione</strong> (sul telefono «Fine»): richiude tutto.</li>
+      </ul>
+      <p class="tip">Dopo 5 minuti senza tocchi PicSpeak torna da solo alla modalità di comunicazione.</p>
+      <h3>Cambiare il PIN</h3>
+      <p>Impostazioni → Sicurezza → <strong>Cambia PIN</strong>: serve il PIN attuale.</p>
+    </section>
+
+    <section id="tessere">
+      <h2>5. Modificare le tessere</h2>
+      <p>Con le impostazioni sbloccate, toccare una tessera non la pronuncia ma apre la sua <strong>modifica</strong>.
+        In fondo a ogni pagina c’è la tessera <strong>Aggiungi</strong> per crearne una nuova.</p>
+      <ul>
+        <li><strong>Tessera o Cartella</strong>: la cartella apre una nuova pagina di tessere.</li>
+        <li><strong>Parola</strong>: il testo scritto sotto l’immagine.</li>
+        <li><strong>Parola pronunciata</strong> (facoltativa): se la voce deve dire qualcosa di diverso da quello scritto.</li>
+        <li><strong>Tipo di parola</strong>: dà il colore secondo la chiave di Fitzgerald (giallo persone, verde azioni,
+          arancio cose, blu descrizioni, rosa parole sociali, rosso negazioni).</li>
+        <li><strong>Colore</strong>: «A» lascia il colore automatico del tipo di parola; si può sceglierne un altro.</li>
+        <li><strong>Immagine</strong>: <em>Cerca simbolo</em>, oppure una foto o immagine dal dispositivo.</li>
+        <li><strong>Nascosta</strong>: toglie la tessera dalla vista senza cancellarla.</li>
+        <li><strong>Prima / Dopo</strong>: sposta la tessera nella pagina.</li>
+        <li><strong>Elimina</strong>: cancella la tessera (chiede conferma).</li>
+      </ul>
+      <p>Premete <strong>Salva</strong> per confermare.</p>
+      <p class="tip">Con le impostazioni sbloccate, toccare un’immagine nella striscia frase la toglie dalla frase.</p>
+    </section>
+
+    <section id="simboli">
+      <h2>6. Cercare simboli e usare foto</h2>
+      <ol>
+        <li>Nella modifica della tessera toccate <strong>Cerca simbolo</strong>.</li>
+        <li>Scrivete una parola semplice, possibilmente al singolare («mela», «bere»), e premete <strong>Cerca</strong>.</li>
+        <li>I risultati sono divisi per fonte: prima quelli <strong>già sul dispositivo</strong> (subito, anche senza
+          internet), poi ARASAAC e gli altri set attivi.</li>
+        <li>Toccate l’immagine scelta: viene salvata sul dispositivo e da quel momento funziona anche offline.</li>
+      </ol>
+      <p>Le fonti si scelgono in Impostazioni → <strong>Simboli</strong>:</p>
+      <ul>
+        <li><strong>ARASAAC</strong>: pittogrammi colorati, lo standard della CAA in Italia. Consigliato come base.</li>
+        <li><strong>Mulberry</strong>: disegni puliti, adatti anche agli adulti.</li>
+        <li><strong>OpenMoji</strong>: emoji a linea, ottime per emozioni, cibo e oggetti.</li>
+        <li><strong>Foto personali</strong>: persone, oggetti e luoghi reali della persona.</li>
+      </ul>
+      <p>Mulberry e OpenMoji sono pacchetti di pochi MB: si scaricano una volta sola quando li attivate.</p>
+      <p class="tip">Se un simbolo non si trova, provate un sinonimo o una parola più semplice. Si può anche salvare la
+        tessera con la sola parola, o con una foto.</p>
+    </section>
+
+    <section id="aspetto">
+      <h2>7. Aspetto della tabella</h2>
+      <p>In Impostazioni → <strong>Aspetto</strong>:</p>
+      <ul>
+        <li><strong>Stili pronti</strong>: dieci punti di partenza (Scheda, Scheda grande, Fogli, Colore pieno, Pulito,
+          Essenziale, Alto contrasto, Bianco e nero, Notte, Solo parole). Dopo averne scelto uno, ogni dettaglio si può cambiare.</li>
+        <li><strong>Modalità colori</strong> e <strong>colore di sfondo</strong> della pagina.</li>
+        <li><strong>Simboli</strong>: a colori o in bianco e nero, immagine e parola oppure solo una delle due.</li>
+        <li><strong>Testo</strong>: dimensione, carattere ad alta leggibilità, MAIUSCOLO o minuscolo.</li>
+        <li><strong>Celle</strong>: spazio, bordi, angoli, trasparenza.</li>
+        <li><strong>Disposizione e tocco</strong>: striscia frase in alto o in basso, pulsanti a destra o a sinistra
+          (per chi usa la mano sinistra), evidenziazione al tocco, gesti.</li>
+      </ul>
+      <p class="tip">Pensate alla persona: chi si distrae con i colori sta meglio con «Bianco e nero» o «Essenziale»; chi vede
+        poco con «Alto contrasto»; chi legge può passare a «Solo parole». L’aspetto può crescere con la persona.</p>
+    </section>
+
+    <section id="voce">
+      <h2>8. Voce</h2>
+      <p>PicSpeak usa le voci già presenti sul dispositivo. In Impostazioni → <strong>Voce</strong> potete scegliere la voce,
+        la velocità e il tono, e provarla.</p>
+      <p>Se la voce sembra metallica, nella stessa pagina trovate le istruzioni per installare gratis una voce più naturale
+        (iPad e iPhone, Mac, Android, Windows).</p>
+    </section>
+
+    <section id="internet">
+      <h2>9. Internet e consumo dati</h2>
+      <p>PicSpeak funziona sempre senza internet con i simboli già salvati. Internet serve solo per cercare simboli nuovi e
+        per gli aggiornamenti.</p>
+      <p>In Impostazioni → Generale → <strong>Ricerca online di nuovi simboli</strong>: <em>Attiva</em>, <em>Solo Wi-Fi</em>
+        oppure <em>Disattivata</em>.</p>
+    </section>
+
+    <section id="app">
+      <h2>10. Installare come app e uso senza internet</h2>
+      <p>In Impostazioni → Generale → <strong>Installa PicSpeak come app</strong> trovate le istruzioni per il vostro
+        dispositivo. L’icona compare nella schermata Home, PicSpeak si apre a schermo intero e funziona anche senza
+        connessione.</p>
+    </section>
+
+    <section id="guidato">
+      <h2>11. Tenere il bambino dentro PicSpeak</h2>
+      <p>Tablet e telefoni hanno una funzione che impedisce di uscire dall’app senza un codice: su iPad e iPhone si chiama
+        <strong>Accesso guidato</strong>, su Android <strong>Blocco app</strong> o «Fissa app». Va attivata una volta nelle
+        impostazioni del dispositivo: i passi sono in Impostazioni → <strong>Sicurezza</strong> di PicSpeak.</p>
+    </section>
+
+    <section id="dati">
+      <h2>12. Dove restano i dati</h2>
+      <p>Tessere, foto e impostazioni restano <strong>solo su questo dispositivo</strong>, nel browser. Non ci sono account
+        e nessun dato della persona viene inviato su internet: quando cercate un simbolo esce soltanto la parola cercata.</p>
+      <p class="warn">Attenzione: cancellare i dati di navigazione del browser per questo sito cancella anche le tessere
+        personalizzate. Il backup su file è in arrivo.</p>
+    </section>
+
+    <section id="domande">
+      <h2>13. Domande frequenti</h2>
+      <h3>Ho dimenticato il PIN.</h3>
+      <p>Nella finestra del PIN toccate <strong>PIN dimenticato?</strong> e inserite il codice di recupero.</p>
+      <h3>Il bambino ha aperto il menu.</h3>
+      <p>Senza il PIN può solo leggere i crediti o questa guida; «Chiudi» o «Torna a PicSpeak» riportano alla tabella.
+        Nulla viene modificato.</p>
+      <h3>Le tessere sono troppo piccole o troppo grandi.</h3>
+      <p>Sbloccate le impostazioni e usate <strong>−</strong> e <strong>+</strong> nella barra in alto.</p>
+      <h3>Chi ha fatto i simboli?</h3>
+      <p>Lo trovate nei <strong>Crediti</strong> dal menu dei tre puntini. I pittogrammi ARASAAC sono di Sergio Palao,
+        proprietà del Governo di Aragona, con licenza Creative Commons BY-NC-SA 4.0.</p>
+    </section>
+
+    <p class="back-bottom"><a class="back" href="./">‹ Torna a PicSpeak</a></p>
+  </main>
+</body>
+</html>

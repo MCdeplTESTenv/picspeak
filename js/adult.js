@@ -194,6 +194,121 @@
     });
   }
 
+  /*
+   * Finestra informativa o di scelta, senza campi: contenuto già costruito con createElement,
+   * pulsante "Chiudi" in fondo. Risolve con il valore passato a close (null se chiusa).
+   */
+  function runPanelDialog({ title, help, build, className }) {
+    return new Promise((resolve) => {
+      const dialog = el.dialog;
+      const box = document.createElement('div');
+      box.className = `dialog-form ${className || ''}`.trim();
+
+      const heading = document.createElement('h2');
+      heading.textContent = title;
+      box.append(heading);
+      if (help) {
+        const p = document.createElement('p');
+        p.className = 'dialog-help';
+        p.textContent = help;
+        box.append(p);
+      }
+
+      function close(result) {
+        closeCurrentDialog = null;
+        if (dialog.open) dialog.close();
+        dialog.replaceChildren();
+        resolve(result);
+      }
+      closeCurrentDialog = () => close(null);
+
+      box.append(build(close));
+
+      const actions = document.createElement('div');
+      actions.className = 'dialog-actions';
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'dlg-btn';
+      closeBtn.textContent = t('close');
+      closeBtn.addEventListener('click', () => close(null));
+      actions.append(closeBtn);
+      box.append(actions);
+
+      dialog.oncancel = (event) => {
+        event.preventDefault();
+        close(null);
+      };
+      dialog.replaceChildren(box);
+      dialog.showModal();
+      const first = box.querySelector('button');
+      if (first) first.focus();
+    });
+  }
+
+  // ---------- Menu dei tre puntini: Impostazioni, Crediti, Guida ----------
+
+  // Icone costanti (mai dati dell'utente)
+  const MENU_ITEMS = [
+    { id: 'settings', labelKey: 'menuSettings', descKey: 'menuSettingsDesc',
+      icon: '<path d="M19.4 10.1 L21.9 10.3 L21.9 13.7 L19.4 13.9 L18.5 15.9 L20.2 17.8 L17.8 20.2 L15.9 18.5 L13.9 19.4 L13.7 21.9 L10.3 21.9 L10.1 19.4 L8.1 18.5 L6.2 20.2 L3.8 17.8 L5.5 15.9 L4.6 13.9 L2.1 13.7 L2.1 10.3 L4.6 10.1 L5.5 8.1 L3.8 6.2 L6.2 3.8 L8.1 5.5 L10.1 4.6 L10.3 2.1 L13.7 2.1 L13.9 4.6 L15.9 5.5 L17.8 3.8 L20.2 6.2 L18.5 8.1Z"/><circle cx="12" cy="12" r="3"/>' },
+    { id: 'credits', labelKey: 'menuCredits', descKey: 'menuCreditsDesc',
+      icon: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5a3.5 3.5 0 1 0 0 5"/>' },
+    { id: 'guide', labelKey: 'menuGuide', descKey: 'menuGuideDesc',
+      icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/>' },
+  ];
+
+  async function openMainMenu() {
+    if (closeCurrentDialog) return;
+    const choice = await runPanelDialog({
+      title: t('menuTitle'),
+      className: 'menu-dialog',
+      build: (close) => {
+        const listNode = document.createElement('div');
+        listNode.className = 'menu-list';
+        MENU_ITEMS.forEach((item) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'menu-item';
+          const icon = document.createElement('span');
+          icon.className = 'menu-item-icon';
+          icon.setAttribute('aria-hidden', 'true');
+          // innerHTML solo con icone costanti scritte nel codice
+          icon.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>`;
+          const text = document.createElement('span');
+          text.className = 'menu-item-text';
+          const name = document.createElement('strong');
+          name.textContent = t(item.labelKey);
+          const desc = document.createElement('span');
+          desc.textContent = t(item.descKey);
+          text.append(name, desc);
+          btn.append(icon, text);
+          btn.addEventListener('click', () => close(item.id));
+          listNode.append(btn);
+        });
+        return listNode;
+      },
+    });
+    if (choice === 'settings') requestAdultAccess();
+    else if (choice === 'credits') showCredits();
+    else if (choice === 'guide') openGuide();
+  }
+
+  // Crediti senza PIN: sono solo da leggere e devono restare sempre raggiungibili (obbligo delle licenze)
+  async function showCredits() {
+    const ul = await buildCreditsList(false);
+    await runPanelDialog({
+      title: t('secCreditsTitle'),
+      help: t('secCreditsHelp'),
+      className: 'credits-dialog',
+      build: () => ul,
+    });
+  }
+
+  // Guida all'uso: pagina statica dello stesso sito (funziona anche offline)
+  function openGuide() {
+    window.location.assign('guida.html');
+  }
+
   function lockedMessage(seconds) {
     return t('pinLocked').replace('{s}', String(seconds));
   }
@@ -324,7 +439,8 @@
     inactivityTimer = setTimeout(exitAdult, INACTIVITY_MS);
   }
 
-  // Lucchetto: serve una pressione continua di 3 secondi (un tocco veloce non fa nulla)
+  // Tre puntini: serve una pressione continua di 3 secondi (un tocco veloce non fa nulla),
+  // poi si apre il menu con Impostazioni (con PIN), Crediti e Guida
   function bindLock() {
     let holdTimer = null;
     const indicator = document.getElementById('hold-indicator');
@@ -345,7 +461,7 @@
       indicator.classList.add('is-running');
       holdTimer = setTimeout(() => {
         cancel();
-        requestAdultAccess();
+        openMainMenu();
       }, HOLD_MS);
     };
     el.lock.addEventListener('pointerdown', start);
@@ -685,7 +801,16 @@
   }
 
   // Crediti automatici: si elencano le fonti presenti sul dispositivo (ARASAAC c'è sempre: set incluso)
-  function creditLink(href, label) {
+  function creditText(href, label) {
+    const span = document.createElement('span');
+    span.className = 'credit-url';
+    const address = href.replace(/^https:\/\//, '');
+    // L'indirizzo della licenza resta leggibile anche senza link (requisito delle licenze CC)
+    span.textContent = address.startsWith(label) ? address : `${label} (${address})`;
+    return span;
+  }
+
+  function creditAnchor(href, label) {
     const link = document.createElement('a');
     link.href = href;
     link.target = '_blank';
@@ -694,8 +819,9 @@
     return link;
   }
 
-  async function renderCreditsSection() {
-    const wrap = section('secCreditsTitle', 'secCreditsHelp');
+  // links=false: indirizzi scritti ma non toccabili (crediti aperti senza PIN: il bambino non esce dall'app)
+  async function buildCreditsList(links = true) {
+    const creditLink = links ? creditAnchor : creditText;
     const status = await symbols.packStatus();
     const used = new Set(data.allImages().map((image) => image.source));
     const ul = document.createElement('ul');
@@ -718,7 +844,17 @@
     if (used.has('photo')) add(t('creditsPhotos'));
     add(t('creditsPrivacy'));
     add(`${t('creditsCode')} `, creditLink('https://github.com/MCdeplTESTenv/picspeak', 'github.com/MCdeplTESTenv/picspeak'));
-    wrap.append(ul);
+    return ul;
+  }
+
+  async function renderCreditsSection() {
+    const wrap = section('secCreditsTitle', 'secCreditsHelp');
+    wrap.append(await buildCreditsList());
+  }
+
+  function renderGuideSection() {
+    const wrap = section('secGuideTitle', 'secGuideHelp');
+    wrap.append(button(t('guideOpen'), openGuide));
   }
 
   function renderComingSection() {
@@ -1113,8 +1249,8 @@
 
   // Categorie delle impostazioni: icona, titolo, sezioni contenute
   const CATEGORIES = [
-    { id: 'general', icon: '<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.2 6.2l2.1 2.1M17.7 15.7l2.1 2.1M2.5 12h3M18.5 12h3M4.2 17.8l2.1-2.1M17.7 8.3l2.1-2.1"/>', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
-      render: [renderLanguageSection, renderOnlineSection, renderInstallSection, renderCreditsSection] },
+    { id: 'general', icon: '<path d="M19.4 10.1 L21.9 10.3 L21.9 13.7 L19.4 13.9 L18.5 15.9 L20.2 17.8 L17.8 20.2 L15.9 18.5 L13.9 19.4 L13.7 21.9 L10.3 21.9 L10.1 19.4 L8.1 18.5 L6.2 20.2 L3.8 17.8 L5.5 15.9 L4.6 13.9 L2.1 13.7 L2.1 10.3 L4.6 10.1 L5.5 8.1 L3.8 6.2 L6.2 3.8 L8.1 5.5 L10.1 4.6 L10.3 2.1 L13.7 2.1 L13.9 4.6 L15.9 5.5 L17.8 3.8 L20.2 6.2 L18.5 8.1Z"/><circle cx="12" cy="12" r="3"/>', titleKey: 'catGeneral', introKey: 'catGeneralIntro',
+      render: [renderLanguageSection, renderOnlineSection, renderInstallSection, renderGuideSection, renderCreditsSection] },
     { id: 'appearance', icon: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>', titleKey: 'catAppearance', introKey: 'catAppearanceIntro',
       render: [renderPresetSection, renderColorModeSection, renderBackgroundSection, renderAppearanceGroups] },
     { id: 'sources', icon: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="9" cy="9.5" r="1.8"/><path d="m20.5 15-4.5-4.5-9 9"/>', titleKey: 'catSources', introKey: 'catSourcesIntro',
