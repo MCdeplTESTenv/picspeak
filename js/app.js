@@ -21,6 +21,8 @@
     ready: false,
     // Anteprima dello zoom: con le impostazioni sbloccate, griglia identica a quella del bambino
     preview: false,
+    // La pagina corrente usa la griglia fissa (calcolato da layoutGrid in base allo schermo)
+    fixed: false,
   };
 
   const el = {
@@ -108,6 +110,9 @@
       if (item.locked) button.classList.add('is-locked-cell');
       if (item.kind === 'empty') button.classList.add('is-empty-cell');
       button.dataset.id = item.id;
+      // Casella nella griglia fissa (usata da layoutGrid quando la pagina ha la disposizione fissa)
+      button.dataset.row = String(item.row);
+      button.dataset.col = String(item.col);
       applyCustomColor(button, item);
       if (item.kind === 'folder') {
         button.setAttribute('aria-label', `${t('openPage')}: ${labelOf(item)}`);
@@ -135,6 +140,44 @@
     el.grid.replaceChildren(...cells);
     el.grid.dataset.count = String(cells.length);
     layoutGrid();
+    applySuggestions();
+  }
+
+  // ---------- Previsione: evidenzia (senza spostarle) le tessere probabili ----------
+
+  // La cartella porta (direttamente o in una sottocartella) a una tessera con questa parola?
+  function folderContains(pageId, word, depth, visited = new Set()) {
+    const page = data.page(pageId);
+    if (!page || visited.has(pageId)) return false;
+    visited.add(pageId);
+    const cells = data.orderedCells(page);
+    if (cells.some((c) => c.kind !== 'folder' && window.PicSpeak.predict.wordKey(c.label) === word)) return true;
+    if (depth <= 1) return false;
+    return cells.some((c) => c.kind === 'folder' && folderContains(c.targetPageId, word, depth - 1, visited));
+  }
+
+  function applySuggestions() {
+    el.grid.querySelectorAll('.is-suggested').forEach((node) => node.classList.remove('is-suggested'));
+    const predict = window.PicSpeak.predict;
+    // Solo in comunicazione (o nell'anteprima): mentre si modificano le schede non si evidenzia nulla
+    if (!predict || !predict.settings.suggest || (state.mode === 'adult' && !state.preview)) return;
+    const page = data.page(state.pageId);
+    if (!page) return;
+    const prevItem = state.sentence[state.sentence.length - 1] || null;
+    const list = predict.candidates(prevItem);
+    if (!list.length) return;
+    const visible = data.orderedCells(page).filter((c) => c.kind !== 'empty');
+    const marked = new Set();
+    const max = predict.settings.count;
+    for (const { word } of list) {
+      if (marked.size >= max) break;
+      let target = visible.find((c) => c.kind !== 'folder' && predict.wordKey(c.label) === word);
+      if (!target) target = visible.find((c) => c.kind === 'folder' && folderContains(c.targetPageId, word, 2));
+      if (target) marked.add(target.id);
+    }
+    el.grid.querySelectorAll('.symbol-cell[data-id]').forEach((node) => {
+      if (marked.has(node.dataset.id)) node.classList.add('is-suggested');
+    });
   }
 
   // Sceglie il numero di colonne che rende le celle più grandi possibile
@@ -188,6 +231,8 @@
   // Percentuali di zoom ammesse su questo schermo e in questa pagina:
   // in giù finché la tessera resta toccabile (≥ 64 px), in su finché una tessera sta tutta nello schermo
   function zoomRange() {
+    // Pagina a griglia fissa: la misura dipende solo dalle colonne scelte, lo zoom non si applica
+    if (state.fixed) return { min: 100, max: 100, step: ZOOM.step };
     const metrics = gridMetrics();
     const { cellW, cellH } = autoLayout(metrics);
     const side = Math.min(cellW, cellH);
@@ -201,15 +246,57 @@
 
   // Zoom scelto dall'adulto (data-tile-zoom su <html>), ricondotto ai limiti di questo schermo
   function currentZoom() {
+    if (state.fixed) return 100;
     const saved = parseInt(document.documentElement.dataset.tileZoom, 10);
     if (!(saved > 0) || saved === 100) return 100;
     const { min, max } = zoomRange();
     return Math.min(max, Math.max(min, saved));
   }
 
+  /*
+   * Disposizione fissa (scelta per la pagina, es. le schede pronte di base): ogni tessera sta nella
+   * sua riga e colonna, uguale su ogni schermo. Se lo schermo è troppo stretto per tessere da almeno
+   * 64 px (telefono in verticale con molte colonne) si torna alla disposizione automatica,
+   * che mantiene comunque l'ordine di lettura. Restituisce null se la pagina non è fissa.
+   */
+  function fixedLayout(metrics) {
+    const page = data.page(state.pageId);
+    if (!data.isFixed(page)) return null;
+    const cols = page.grid.cols;
+    const cellW = (metrics.width - metrics.gap * (cols - 1)) / cols;
+    if (cellW < ZOOM.minTile) return null;
+    const placed = [...el.grid.querySelectorAll('.symbol-cell[data-row]:not(.reorder-ghost)')];
+    // Le righe previste dalla pagina restano anche se le ultime tessere sono nascoste: le misure non cambiano
+    let rows = Math.max(1, page.grid.rows || 1, ...placed.map((n) => Number(n.dataset.row) + 1));
+    // In modifica la tessera "+" occupa la prima casella libera: se la griglia è piena serve una riga in più
+    if (el.grid.querySelector('.add-cell') && placed.length >= rows * cols) rows += 1;
+    const cellH = Math.max(ZOOM.minTile, (metrics.height - metrics.gap * (rows - 1)) / rows);
+    return { cols, rows, cellW, cellH };
+  }
+
   function layoutGrid() {
     const metrics = gridMetrics();
     if (!el.grid.childElementCount) return;
+    const fixed = fixedLayout(metrics);
+    state.fixed = Boolean(fixed);
+    el.grid.classList.toggle('is-fixed-grid', state.fixed);
+    el.grid.querySelectorAll('.symbol-cell:not(.reorder-ghost)').forEach((node) => {
+      if (fixed && node.dataset.row !== undefined) {
+        node.style.gridRow = String(Number(node.dataset.row) + 1);
+        node.style.gridColumn = String(Number(node.dataset.col) + 1);
+      } else {
+        node.style.gridRow = '';
+        node.style.gridColumn = '';
+      }
+    });
+    if (fixed) {
+      el.grid.style.gridTemplateColumns = `repeat(${fixed.cols}, minmax(0, 1fr))`;
+      el.grid.style.justifyContent = '';
+      el.grid.style.gridAutoRows = `${fixed.cellH}px`;
+      el.grid.style.setProperty('--cell-size', `${Math.min(fixed.cellW, fixed.cellH)}px`);
+      fitLabels();
+      return;
+    }
     const auto = autoLayout(metrics);
     const zoom = currentZoom();
     let { cols, cellW, cellH } = auto;
@@ -296,6 +383,7 @@
     el.clear.disabled = empty;
     // Mantiene visibile l'ultimo simbolo aggiunto
     el.strip.scrollLeft = el.strip.scrollWidth;
+    if (state.ready) applySuggestions();
   }
 
   function sentenceText() {
@@ -339,10 +427,13 @@
     }
     say(speechOf(item));
     if (state.sentence.length < MAX_SENTENCE_LENGTH) {
-      state.sentence.push({
+      const entry = {
         cellId: item.id, label: item.label, speak: item.speak, kind: item.kind,
         wordType: item.wordType, color: item.color, imageId: item.imageId,
-      });
+      };
+      // Abitudini d'uso (solo sul dispositivo): coppia «parola precedente → parola»
+      if (window.PicSpeak.predict) window.PicSpeak.predict.record(entry, state.sentence[state.sentence.length - 1] || null);
+      state.sentence.push(entry);
       renderSentence();
     }
   }
@@ -506,7 +597,8 @@
   renderSentence();
 
   // Caricamento dei dati salvati sul dispositivo (al primo avvio: schede di prova)
-  data.load().then(() => {
+  data.load().then(async () => {
+    if (window.PicSpeak.predict) await window.PicSpeak.predict.load(data.profile.id);
     state.ready = true;
     state.pageId = data.homePageId;
     renderGrid();
@@ -522,6 +614,8 @@
     zoomRange,
     currentZoom,
     setPreview,
+    applySuggestions,
+    get fixedLayout() { return Boolean(state.fixed); },
     get preview() { return state.preview; },
     get mode() { return state.mode; },
   };

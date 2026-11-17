@@ -95,6 +95,9 @@
   }
 
   // Controllo della firma reale del file (non del tipo dichiarato): solo PNG, JPEG o WebP
+  const MAX_SIDE = 8192; // lato massimo dichiarato di un'immagine
+  const MAX_PIXELS = 24 * 1024 * 1024; // circa 24 Mpx (le foto dei telefoni stanno sotto)
+
   async function checkImage(blob) {
     if (!blob || blob.size > MAX_DOWNLOAD_BYTES) throw new Error('too-big');
     const b = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
@@ -103,6 +106,50 @@
     const webp = b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46
       && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
     if (!png && !jpeg && !webp) throw new Error('bad-type');
+    // Misura dichiarata nell'intestazione, letta prima di decodificare: un file piccolo può dichiarare
+    // dimensioni enormi e bloccare il dispositivo durante la decodifica
+    const size = await headerSize(blob, png ? 'png' : jpeg ? 'jpeg' : 'webp');
+    if (!size || size.width < 1 || size.height < 1 || size.width > MAX_SIDE || size.height > MAX_SIDE
+      || size.width * size.height > MAX_PIXELS) {
+      throw new Error('too-big');
+    }
+  }
+
+  // Larghezza e altezza dall'intestazione di PNG, JPEG o WebP (null se non si trovano)
+  async function headerSize(blob, type) {
+    const b = new Uint8Array(await blob.slice(0, 65536).arrayBuffer());
+    const u16be = (i) => (b[i] << 8) | b[i + 1];
+    const u16le = (i) => b[i] | (b[i + 1] << 8);
+    const u24le = (i) => b[i] | (b[i + 1] << 8) | (b[i + 2] << 16);
+    const u32be = (i) => ((b[i] << 24) >>> 0) + (b[i + 1] << 16) + (b[i + 2] << 8) + b[i + 3];
+    if (type === 'png') {
+      // Il primo blocco deve essere IHDR
+      if (b.length < 24 || String.fromCharCode(b[12], b[13], b[14], b[15]) !== 'IHDR') return null;
+      return { width: u32be(16), height: u32be(20) };
+    }
+    if (type === 'webp') {
+      if (b.length < 30) return null;
+      const chunk = String.fromCharCode(b[12], b[13], b[14], b[15]);
+      if (chunk === 'VP8X') return { width: u24le(24) + 1, height: u24le(27) + 1 };
+      if (chunk === 'VP8L') {
+        const bits = (b[21] | (b[22] << 8) | (b[23] << 16) | (b[24] << 24)) >>> 0;
+        return { width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 };
+      }
+      if (chunk === 'VP8 ') return { width: u16le(26) & 0x3fff, height: u16le(28) & 0x3fff };
+      return null;
+    }
+    // JPEG: si scorrono i segmenti fino al primo SOF (inizio dell'immagine)
+    let i = 2;
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) return null;
+      const marker = b[i + 1];
+      if (marker === 0xff) { i += 1; continue; }
+      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+      const isSof = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+      if (isSof) return { width: u16be(i + 7), height: u16be(i + 5) };
+      i += 2 + u16be(i + 2);
+    }
+    return null;
   }
 
   async function resizeToBlob(blob) {
@@ -284,7 +331,11 @@
       const id = Number(item._id);
       if (!Number.isInteger(id) || id <= 0) return null;
       const words = (item.keywords || []).map((k) => normalize(k && k.keyword)).filter(Boolean);
+      // Tipo di parola indicato da ARASAAC (1 nome proprio, 2 nome, 3 verbo, 4 descrizione, 5 sociale)
+      const arasaacType = item.keywords && item.keywords[0] && item.keywords[0].type;
+      const wordType = { 1: 'pronoun', 2: 'noun', 3: 'verb', 4: 'adjective', 5: 'social' }[arasaacType] || null;
       return {
+        wordType,
         key: `arasaac:${id}`, source: 'arasaac', sourceId: String(id), imageId: ID_PREFIX.arasaac + id,
         thumb: `${ARASAAC_STATIC}/${id}/${id}_300.png`, file: `${ARASAAC_STATIC}/${id}/${id}_300.png`,
         label: words[0] || term, keywords: { [lang]: words.slice(0, 5) },
@@ -410,5 +461,7 @@
     downloadPack,
     removePack,
     resizeToBlob,
+    checkImage,
+    downloadImage,
   };
 })();

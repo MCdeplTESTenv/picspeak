@@ -831,8 +831,10 @@
       li.append(...parts);
       ul.append(li);
     };
-    add(`${t('creditsArasaac')} `, creditLink('https://arasaac.org', 'arasaac.org'));
-    add(`${t('creditsArasaacLicense')} `, creditLink('https://creativecommons.org/licenses/by-nc-sa/4.0/deed.it', 'CC BY-NC-SA 4.0'));
+    // Formula ufficiale di attribuzione indicata da ARASAAC («Come citare la licenza ARASAAC»)
+    add(`${t('creditsArasaacAuthor')} `, creditLink('https://arasaac.org', 'ARASAAC (http://www.arasaac.org)'),
+      `. ${t('creditsArasaacLicenseLabel')} `, creditLink('https://creativecommons.org/licenses/by-nc-sa/4.0/deed.it', 'CC (BY-NC-SA)'),
+      `. ${t('creditsArasaacOwner')}`);
     if (used.has('mulberry') || status.mulberry) {
       add(`${t('creditsMulberry')} `, creditLink('https://mulberrysymbols.org', 'mulberrysymbols.org'), ` – ${t('creditsLicense')} `,
         creditLink('https://creativecommons.org/licenses/by-sa/4.0/deed.it', 'CC BY-SA 4.0'), `. ${t('creditsChanged')}`);
@@ -1455,6 +1457,24 @@
   }
 
   window.PicSpeak.network = { onlineSearchStatus, onlineSearchMode: () => onlineSearch };
+
+  // Strumenti condivisi con le altre pagine delle impostazioni (schede pronte, previsione)
+  window.PicSpeak.settingsUi = {
+    section: (titleKey, helpKey) => section(titleKey, helpKey),
+    settingRow,
+    segmented,
+    button,
+    list,
+    runDialog,
+    runPanelDialog,
+    render: () => { if (!el.settings.hidden) renderSettings(); },
+    closeSettings,
+    // Nuova categoria nel menu delle impostazioni, dopo quella indicata
+    addCategory(category, afterId) {
+      const index = CATEGORIES.findIndex((cat) => cat.id === afterId);
+      CATEGORIES.splice(index < 0 ? CATEGORIES.length : index + 1, 0, category);
+    },
+  };
 
   bindEvents();
   restoreOnlineSearch();

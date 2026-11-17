@@ -119,7 +119,7 @@
         tile.disabled = true;
         try {
           const acquired = await symbols.acquire(result);
-          finish({ ...acquired, label: result.label });
+          finish({ ...acquired, label: result.label, wordType: result.wordType || null });
         } catch (error) {
           tile.classList.remove('is-busy');
           tile.disabled = false;

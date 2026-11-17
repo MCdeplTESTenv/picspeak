@@ -41,6 +41,8 @@
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     const cell = event.target.closest('.symbol-cell[data-id]');
     if (!cell || !grid.contains(cell)) return;
+    // Posizioni bloccate (per tutte le tessere o per questa tessera): niente spostamento
+    if (document.documentElement.dataset.lockPositions === 'on' || cell.classList.contains('is-locked-cell')) return;
     pending = {
       pointerId: event.pointerId,
       cell,
@@ -68,6 +70,12 @@
     ghost.style.left = `${rect.left}px`;
     ghost.style.top = `${rect.top}px`;
     grid.append(ghost);
+    // Griglia fissa: durante lo spostamento le tessere scorrono in ordine di lettura, così il segnaposto
+    // si vede muovere; al rilascio le posizioni si salvano e la griglia fissa torna com'era
+    grid.querySelectorAll('.symbol-cell').forEach((node) => {
+      node.style.gridRow = '';
+      node.style.gridColumn = '';
+    });
     cell.classList.add('is-drag-placeholder');
     document.body.classList.add('is-reordering');
     drag = {

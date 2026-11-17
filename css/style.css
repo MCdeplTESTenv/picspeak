@@ -22,6 +22,10 @@
   --fz-social: #e05fa3;
   --fz-negation: #d64045;
   --fz-folder: #8a8f98;
+  --fz-question: #8a5cd6;
+  --fz-connector: #a7acb5;
+  /* Tessera suggerita dalla previsione (bordo, mai animazioni) */
+  --suggest: #1f6feb;
 
   --gap: clamp(6px, 1.2vw, 12px);
   --radius: 14px;
@@ -227,13 +231,17 @@ button:focus-visible {
 .type-social    { border-top-color: var(--fz-social); }
 .type-negation  { border-top-color: var(--fz-negation); }
 .type-folder    { border-top-color: var(--fz-folder); }
+.type-question  { border-top-color: var(--fz-question); }
+.type-connector { border-top-color: var(--fz-connector); }
 
 .sentence-chip.type-pronoun,
 .sentence-chip.type-verb,
 .sentence-chip.type-noun,
 .sentence-chip.type-adjective,
 .sentence-chip.type-social,
-.sentence-chip.type-negation { border-top-width: 6px; }
+.sentence-chip.type-negation,
+.sentence-chip.type-question,
+.sentence-chip.type-connector { border-top-width: 6px; }
 
 /* Le cartelle hanno un aspetto "a scheda" per distinguerle dai simboli */
 .symbol-cell.type-folder {
@@ -537,6 +545,8 @@ button:focus-visible {
 .type-social    { --cat: #d0468f; --tint: #fbdcec; }
 .type-negation  { --cat: #cf3439; --tint: #fbd9da; }
 .type-folder    { --cat: #3b4252; --tint: #e7e9ef; }
+.type-question  { --cat: #7a4fc9; --tint: #ece3fa; }
+.type-connector { --cat: #8a8f98; --tint: #f6f7f9; }
 
 /* ---------- Colore pieno ---------- */
 [data-color-mode="full"] {
@@ -702,6 +712,8 @@ body { background: var(--page-bg, var(--bg)); }
 .type-social    { --card-fill: #fbeaf2; --card-line: #eeb0cd; }
 .type-negation  { --card-fill: #fbe6e6; --card-line: #eea4a4; }
 .type-folder    { --card-fill: #e4e4e4; --card-line: #b8b8b8; }
+.type-question  { --card-fill: #f3edfc; --card-line: #c8b3ee; }
+.type-connector { --card-fill: #ffffff; --card-line: #d3d6dc; }
 
 [data-color-mode="card"] {
   --bg: #ffffff;
@@ -1555,3 +1567,85 @@ body > .adult-bar { order: 0; }
 @media (max-width: 600px) {
   .is-zoom-preview .adult-preview-text { display: none; }
 }
+
+/* =====================================================================
+ * Previsione: tessera suggerita. Solo un bordo netto intorno alla tessera (nessuna animazione,
+ * nessuno spostamento, nessun cambio di misura): la posizione resta quella di sempre.
+ * ===================================================================== */
+.symbol-cell.is-suggested,
+.suggest-sample-tile.is-suggested { outline: 5px solid var(--suggest); outline-offset: 2px; }
+[data-page-dark="true"] .symbol-cell.is-suggested { outline-color: #ffd43b; }
+.suggest-sample { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.suggest-sample-tile {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 88px; height: 64px; border-radius: 12px; background: #daf2df; font-weight: 700;
+  margin: 7px;
+}
+.suggest-sample small { color: #6b717b; line-height: 1.35; }
+
+/* Griglia fissa: con molte colonne il testo resta su una riga se possibile */
+.symbol-grid.is-fixed-grid { align-content: start; }
+
+/* =====================================================================
+ * Impostazioni → Schede: schede pronte, modelli, legenda dei colori
+ * ===================================================================== */
+.tpl-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 12px; width: calc(100% - 32px); }
+.tpl-card {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  padding: 12px; background: #ffffff; border: 1px solid #e3e5e8; border-radius: 12px;
+}
+.tpl-preview { display: grid; gap: 3px; padding: 6px; border-radius: 8px; background: #f6f7f8; border: 1px solid #eceef1; }
+.tpl-preview span { height: 14px; border-radius: 3px; background: var(--card-fill, #fff); border: 1.5px solid var(--card-line, #d8dbe0); }
+.tpl-preview span.type-folder { background: #3b4252; border-color: #3b4252; }
+.tpl-preview span.is-blank { background: transparent; border-color: transparent; }
+.tpl-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tpl-name { font-size: 16px; }
+.tpl-desc { font-size: 14px; line-height: 1.4; }
+.tpl-stats { color: #4a505a; font-size: 13px; }
+.tpl-basis { color: #6b717b; font-size: 12px; line-height: 1.4; }
+.tpl-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.tpl-actions .dlg-btn { flex: 1 1 auto; min-height: 44px; }
+.tpl-tools { display: flex; flex-wrap: wrap; gap: 8px; width: calc(100% - 32px); }
+.tpl-tools .dlg-btn { flex: 1 1 220px; min-height: 44px; white-space: normal; }
+.tpl-status { margin: 0; padding: 10px 12px; border-radius: 10px; background: #e8f0fe; color: #17325c; line-height: 1.4; width: calc(100% - 32px); box-sizing: border-box; }
+.tpl-status.is-error { background: #fdecec; color: #8a1c1c; }
+.tpl-page-name { font-weight: 600; }
+.dlg-btn-danger { color: #b3261e; }
+
+.type-legend { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(210px, 100%), 1fr)); gap: 8px; width: calc(100% - 32px); }
+.type-legend li { display: grid; grid-template-columns: 28px 1fr; column-gap: 10px; align-items: center; }
+.type-legend .legend-swatch { grid-row: span 2; width: 28px; height: 28px; border-radius: 7px; background: var(--card-fill); border: 3px solid var(--card-line); box-sizing: border-box; }
+.type-legend li.type-folder .legend-swatch { background: #3b4252; border-color: #3b4252; }
+.type-legend small { color: #6b717b; font-size: 12px; }
+
+.habits-top-title { font-weight: 600; }
+.habits-top { padding-left: 22px; line-height: 1.6; text-transform: uppercase; font-size: 14px; }
+
+/* Finestre di scelta (usa un modello, conferme) e richiesta del nome */
+.choice-options { display: flex; flex-direction: column; gap: 10px; }
+.choice-option {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left;
+  padding: 12px 14px; min-height: 64px; font: inherit; color: inherit; cursor: pointer;
+  background: #ffffff; border: 2px solid #d8dbe0; border-radius: 12px;
+}
+.choice-option.is-primary { border-color: var(--focus); }
+.choice-option.is-danger { border-color: #e0a3a0; color: #8a1c1c; }
+.choice-option strong { font-size: 16px; }
+.choice-option small { color: #5b616b; font-size: 13px; line-height: 1.35; }
+.choice-option:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.name-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.name-input {
+  flex: 1 1 200px; min-height: 48px; padding: 0 12px; font-size: 18px; font-family: inherit;
+  border: 2px solid #d8dbe0; border-radius: 10px; text-transform: none; letter-spacing: normal;
+}
+.name-form .dlg-btn { min-height: 48px; }
+
+/* Scelta del tipo di parola nella modifica della tessera: ogni pulsante con il suo colore */
+.word-type-choice button { border-left: 6px solid var(--card-line, transparent); }
+
+/* Spazi verticali tra gli elementi delle sezioni Schede e Previsione */
+.settings-section > :is(.tpl-list, .tpl-tools, .type-legend, .suggest-sample, .habits-stats, .habits-top-title,
+  .habits-top, .tpl-page-name, .tpl-status) { margin-top: 12px; margin-bottom: 0; }
+.settings-section > :is(.tpl-list, .type-legend, .habits-top, .suggest-sample, .tpl-status):last-child { margin-bottom: 16px; }
+.settings-section > .dlg-btn-danger:last-child { margin: 12px 16px 16px; }
+.settings-section > .tpl-page-name + .setting-row { margin-top: 8px; }

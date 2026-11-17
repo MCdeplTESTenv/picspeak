@@ -10,7 +10,7 @@
 (function () {
   'use strict';
 
-  const { i18n, data, app, symbols, symbolSearch } = window.PicSpeak;
+  const { i18n, data, app, symbols, symbolSearch, lexicon } = window.PicSpeak;
   const t = i18n.t;
 
   const MAX_LABEL = 40;
@@ -151,14 +151,25 @@
     const speakField = field(t('editorSpeak'), speakInput);
     form.append(speakField);
 
-    // Tipo di parola → colore Fitzgerald
+    // Tipo di parola → colore Fitzgerald. Per una tessera nuova il tipo si propone da solo
+    // (dalla parola scritta o dal simbolo ARASAAC scelto) finché l'adulto non lo cambia a mano.
+    let typeTouched = !isNew;
     const typeField = el('div', 'editor-block');
     typeField.append(el('span', 'editor-block-title', t('editorWordType')));
-    typeField.append(segmentedChoice(
+    const typeChoice = segmentedChoice(
       data.WORD_TYPES.map((type) => [type, t(`wordType_${type}`)]),
       draft.wordType,
-      (value) => { draft.wordType = value; },
-    ));
+      (value) => { draft.wordType = value; typeTouched = true; },
+    );
+    typeChoice.classList.add('word-type-choice');
+    typeChoice.querySelectorAll('button').forEach((b) => b.classList.add(`type-${b.dataset.value}`));
+    typeField.append(typeChoice);
+    const setWordType = (type) => {
+      if (typeTouched || !type || !data.WORD_TYPES.includes(type)) return;
+      draft.wordType = type;
+      typeChoice.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === type)));
+    };
+    labelInput.addEventListener('input', () => setWordType(lexicon && lexicon.guess(labelInput.value)));
     form.append(typeField);
 
     // Colore: automatico (Fitzgerald) oppure scelto a mano
@@ -233,6 +244,8 @@
       draft.pending = picked;
       draft.newImageBlob = null;
       if (!labelInput.value.trim() && picked.label) labelInput.value = picked.label.slice(0, MAX_LABEL);
+      // Tipo proposto: prima dal lessico (parola scritta), altrimenti da quello indicato da ARASAAC
+      setWordType((lexicon && lexicon.guess(labelInput.value)) || picked.wordType);
       renderPreview();
     }, 'editor-search-btn');
     const photoButton = actionButton(t('editorPickImage'), async () => {
@@ -278,15 +291,21 @@
     // Posizione ed eliminazione (solo per tessere esistenti)
     if (!isNew) {
       const manage = el('div', 'editor-actions-row');
+      // Posizioni bloccate (per tutte le tessere o per questa): niente «Prima»/«Dopo»
+      const canMove = document.documentElement.dataset.lockPositions !== 'on' && !cell.locked;
+      if (canMove) {
+        manage.append(
+          actionButton(`← ${t('editorMoveBefore')}`, async () => {
+            await data.moveCell(pageId, cell.id, -1);
+            app.renderGrid();
+          }),
+          actionButton(`${t('editorMoveAfter')} →`, async () => {
+            await data.moveCell(pageId, cell.id, 1);
+            app.renderGrid();
+          }),
+        );
+      }
       manage.append(
-        actionButton(`← ${t('editorMoveBefore')}`, async () => {
-          await data.moveCell(pageId, cell.id, -1);
-          app.renderGrid();
-        }),
-        actionButton(`${t('editorMoveAfter')} →`, async () => {
-          await data.moveCell(pageId, cell.id, 1);
-          app.renderGrid();
-        }),
         actionButton(t('editorDelete'), async () => {
           // eslint-disable-next-line no-alert
           if (!window.confirm(t('editorDeleteConfirm'))) return;
@@ -295,7 +314,7 @@
           app.renderGrid();
         }, 'dlg-btn-danger'),
       );
-      form.append(manage, el('small', 'editor-hint', t('editorMoveHint')));
+      form.append(manage, el('small', 'editor-hint', canMove ? t('editorMoveHint') : t('editorMoveLocked')));
     }
 
     const error = el('p', 'dialog-error');
