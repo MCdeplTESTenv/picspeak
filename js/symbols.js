@@ -7,7 +7,8 @@
  *  - "twemoji": fonte online leggera. Dal nostro sito arriva solo un piccolo indice delle parole
  *    (symbols/sources/<id>.json, circa 8 KB compresso), salvato nella stessa Cache Storage solo se la fonte è
  *    attiva; le immagini si scaricano dalla CDN della fonte una alla volta, solo quella scelta, e poi restano
- *    salvate sul dispositivo come gli altri simboli. Verso l'esterno va solo il nome del file dell'immagine.
+ *    salvate sul dispositivo come gli altri simboli. Verso la CDN (jsDelivr) vanno solo i codici delle emoji
+ *    mostrate: non la parola, ma ne rivelano il significato, quindi solo con «Cerca» e la ricerca online consentita.
  * Traduzione italiano → inglese (per i pacchetti con parole inglesi), in quest'ordine:
  *   dizionario locale (symbols/it-en.json) → ponte ARASAAC (stesso pittogramma in inglese) → MyMemory.
  * Rete: solo HTTPS verso i domini ammessi dalla CSP; verso l'esterno va solo la parola cercata.
@@ -30,6 +31,7 @@
   // Versioni fissate: le immagini non cambiano sotto i piedi se la fonte pubblica novità
   const TWEMOJI_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets';
   const MAX_SVG_BYTES = 256 * 1024; // un'emoji Twemoji pesa pochi KB
+  const MAX_INDEX_BYTES = 512 * 1024; // l'indice Twemoji pesa circa 36 KB
   const SVG_TIMEOUT_MS = 10000;
 
   // Licenze e attribuzioni di ogni fonte (usate per i record e per la pagina Crediti)
@@ -318,16 +320,26 @@
     if (sourceIndexes.has(id)) return sourceIndexes.get(id);
     const url = sourceIndexUrl(id);
     const cache = 'caches' in window ? await caches.open(PACK_CACHE_PREFIX + id) : null;
-    let response = cache ? await cache.match(url) : null;
-    if (!response && allowDownload) {
-      const fresh = await fetch(url, { cache: 'no-cache' });
-      if (!fresh.ok) throw new Error(`HTTP ${fresh.status}`);
-      if (cache) await cache.put(url, fresh.clone());
-      response = fresh;
+    const cached = cache ? await cache.match(url) : null;
+    if (cached) {
+      const index = validSourceIndex(await cached.json().catch(() => null), id);
+      if (index) {
+        sourceIndexes.set(id, index);
+        return index;
+      }
+      await cache.delete(url); // copia rovinata: si riscarica
     }
-    if (!response) return null;
-    const index = validSourceIndex(await response.json(), id);
-    if (index) sourceIndexes.set(id, index);
+    if (!allowDownload) return null;
+    const fresh = await fetch(url, { cache: 'no-cache' });
+    if (!fresh.ok) throw new Error(`HTTP ${fresh.status}`);
+    const blob = await fresh.blob();
+    if (blob.size > MAX_INDEX_BYTES) throw new Error('too-big');
+    const index = validSourceIndex(JSON.parse(await blob.text()), id);
+    if (!index) throw new Error('bad-index');
+    // Se nel frattempo l'adulto ha spento la fonte non si salva nulla
+    if (!(await activeSources())[id]) return null;
+    if (cache) await cache.put(url, new Response(blob, { headers: { 'Content-Type': 'application/json' } }));
+    sourceIndexes.set(id, index);
     return index;
   }
 
@@ -380,6 +392,7 @@
         signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer', mode: 'cors',
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (Number(response.headers.get('content-length') || 0) > MAX_SVG_BYTES) throw new Error('too-big');
       const blob = await response.blob();
       if (blob.size > MAX_SVG_BYTES) throw new Error('too-big');
       text = await blob.text();
@@ -387,11 +400,13 @@
       clearTimeout(timer);
     }
     text = text.trim();
-    if (!/^<svg[\s>]/i.test(text) || /<script|<foreignobject|<!|<\?|<image|<use|\son[a-z]+\s*=|(?:xlink:)?href\s*=|url\(\s*['"]?(?!#)/i.test(text)) {
+    if (!/^<svg[\s>]/i.test(text) || /<script|<foreignobject|<style|@import|<!|<\?|<image|<use|\son[a-z]+\s*=|(?:xlink:)?href\s*=|url\(\s*['"]?(?!#)/i.test(text)) {
       throw new Error('bad-type');
     }
     // Misura esplicita: senza larghezza e altezza alcuni browser (Firefox) non disegnano l'SVG sul canvas
-    const sized = text.replace(/^<svg\b/i, `<svg width="${IMAGE_SIZE}" height="${IMAGE_SIZE}"`);
+    const root = text.slice(0, text.indexOf('>') + 1);
+    const sized = /\s(width|height)\s*=/i.test(root) ? text
+      : text.replace(/^<svg\b/i, `<svg width="${IMAGE_SIZE}" height="${IMAGE_SIZE}"`);
     const objectUrl = URL.createObjectURL(new Blob([sized], { type: 'image/svg+xml' }));
     try {
       const img = await new Promise((resolve, reject) => {

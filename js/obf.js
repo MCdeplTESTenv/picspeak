@@ -197,7 +197,7 @@
     else if (hint.includes('arasaac') || hint.includes('sergio palao')) fields.source = 'arasaac';
     else if (hint.includes('mulberry')) fields.source = 'mulberry';
     else if (hint.includes('openmoji')) fields.source = 'openmoji';
-    else if (hint.includes('twemoji')) fields.source = 'twemoji';
+    else if (hint.includes('jdecked/twemoji')) fields.source = 'twemoji';
     else fields.source = 'other'; // senza licenza: fonte esterna sconosciuta (l'adulto riceve un avviso)
     if (fields.source === 'arasaac') {
       fields.author = fields.author || 'Sergio Palao';
