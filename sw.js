@@ -3,10 +3,9 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v27';
-// Pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji) e indici delle fonti online (Twemoji):
-// cache separate, mai cancellate dagli aggiornamenti
-const PACK_CACHE_PREFIX = 'picspeak-pack-';
+const CACHE_VERSION = 'picspeak-v30';
+// I pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji) e gli indici delle fonti online (Twemoji)
+// stanno in cache separate ("picspeak-pack-…"), mai cancellate dagli aggiornamenti
 
 const APP_FILES = [
   './',
@@ -49,6 +48,7 @@ const APP_FILES = [
   'js/storage.js',
   'js/security.js',
   'js/install.js',
+  'js/kiosk.js',
   'js/sample-data.js',
   'js/data.js',
   'js/symbols.js',
@@ -65,6 +65,7 @@ const APP_FILES = [
   'js/zip.js',
   'js/obf.js',
   'js/communication.js',
+  'js/settings-backup.js',
   'js/print.js',
   // Schede pronte (i pittogrammi si scaricano una sola volta quando si usa un modello)
   'templates/index.json',
@@ -129,11 +130,12 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  // Elimina le copie delle versioni precedenti
+  // Elimina solo le copie delle versioni precedenti di questa app: sullo stesso dominio possono esserci
+  // altre copie del tool (es. la versione di prova) con cache proprie, che non vanno toccate
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys
-        .filter((k) => k !== CACHE_VERSION && !k.startsWith(PACK_CACHE_PREFIX))
+        .filter((k) => k !== CACHE_VERSION && /^picspeak-v\d+$/.test(k))
         .map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
