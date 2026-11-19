@@ -33,6 +33,7 @@ const APP_FILES = [
   'guida/pin.webp',
   'guida/previsione.webp',
   'guida/solo-suggerite.webp',
+  'guida/frase-grande.webp',
   'guida/sfumato-trasparenza.webp',
   'guida/pulsanti-rapidi.webp',
   'guida/schede-pronte.webp',
