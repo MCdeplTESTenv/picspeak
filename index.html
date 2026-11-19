@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <!-- Sicurezza: solo script e stili del sito stesso; rete solo verso i servizi di simboli previsti (vedi docs/SICUREZZA.md) -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://static.arasaac.org; connect-src 'self' https://api.arasaac.org https://static.arasaac.org https://api.mymemory.translated.net; media-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'; worker-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://static.arasaac.org https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/; connect-src 'self' https://api.arasaac.org https://static.arasaac.org https://api.mymemory.translated.net https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets/; media-src 'self' blob:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; manifest-src 'self'; worker-src 'self'">
   <meta name="referrer" content="no-referrer">
   <!-- Niente indicizzazione finché il tool non avrà un dominio proprio (ROADMAP, Tappa 10) -->
   <meta name="robots" content="noindex, nofollow">
@@ -44,6 +44,11 @@
   <header class="sentence-bar">
     <ol class="sentence-strip" id="sentence-strip" aria-live="polite"></ol>
     <div class="sentence-actions">
+      <!-- Previsione «solo suggerite»: torna alla scheda intera (visibile solo quando alcune tessere sono nascoste) -->
+      <button type="button" class="action-btn action-show-all" id="btn-show-all" data-i18n-label="showAllTiles" hidden>
+        <span class="action-icon"><svg class="icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></span>
+        <span class="action-text" data-i18n="showAllShort"></span>
+      </button>
       <button type="button" class="action-btn action-speak" id="btn-speak" data-i18n-label="speakSentence">
         <span class="action-icon"><svg class="icon" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/></svg></span>
       </button>
@@ -56,21 +61,39 @@
     </div>
   </header>
 
-  <!-- Barra di navigazione: percorso "HOME › pagina" e accesso adulto -->
+  <!-- Barra di navigazione: freccia «su», percorso "HOME › cartella › pagina" e accesso adulto -->
   <nav class="page-nav">
+    <!-- Freccia «su»: torna alla cartella da cui si è arrivati (nascosta nella Home) -->
+    <button type="button" class="nav-up" id="btn-up" data-i18n-label="goUp" hidden>
+      <svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m11 6-6 6 6 6"/></svg>
+    </button>
     <h1 class="crumbs" id="crumbs">
       <button type="button" class="crumb crumb-home" id="btn-home" data-i18n-label="goHome">
         <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/></svg><span data-i18n="homeLabel"></span>
       </button>
+      <span class="crumb-trail" id="crumb-trail"></span>
       <span class="crumb-sep"><svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span>
       <span class="crumb crumb-current" id="page-title"></span>
     </h1>
+    <!-- Pulsanti rapidi (facoltativi): «Ops», «Aiuto» e frasi sempre raggiungibili, lette senza entrare nella frase -->
+    <div class="quick-bar" id="quick-bar" hidden>
+      <button type="button" class="quick-btn quick-oops" id="btn-oops" hidden>
+        <svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span data-i18n="quickOops"></span>
+      </button>
+      <div class="quick-phrases" id="quick-phrases"></div>
+      <button type="button" class="quick-btn quick-help" id="btn-help" hidden>
+        <svg class="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.3" r=".6" fill="currentColor"/></svg><span data-i18n="quickHelp"></span>
+      </button>
+    </div>
     <!-- Tre puntini: tenere premuto 3 secondi apre il menu (Impostazioni con PIN, Crediti, Guida) -->
     <button type="button" class="lock-btn" id="btn-lock" data-i18n-label="lockHint">
       <span class="lock-icon"><svg class="icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/></svg></span>
       <span class="lock-progress" aria-hidden="true"></span>
     </button>
   </nav>
+
+  <!-- Area usata solo per la stampa delle schede (vuota sullo schermo) -->
+  <div class="print-area" id="print-area" aria-hidden="true"></div>
 
   <!-- Avanzamento della pressione sui tre puntini: in cima allo schermo, mai sotto il dito -->
   <div class="hold-indicator" id="hold-indicator" hidden>
@@ -102,12 +125,22 @@
   <script src="js/storage.js"></script>
   <script src="js/security.js"></script>
   <script src="js/install.js"></script>
+  <script src="js/kiosk.js"></script>
   <script src="js/sample-data.js"></script>
   <script src="js/data.js"></script>
   <script src="js/symbols.js"></script>
   <script src="js/speech.js"></script>
+  <script src="js/lexicon.js"></script>
+  <script src="js/predict.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/zip.js"></script>
+  <script src="js/obf.js"></script>
   <script src="js/app.js"></script>
   <script src="js/adult.js"></script>
+  <script src="js/settings-boards.js"></script>
+  <script src="js/communication.js"></script>
+  <script src="js/settings-backup.js"></script>
+  <script src="js/print.js"></script>
   <script src="js/symbol-search.js"></script>
   <script src="js/editor.js"></script>
   <script src="js/reorder.js"></script>

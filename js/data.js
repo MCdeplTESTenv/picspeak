@@ -10,7 +10,9 @@
   const { storage, sampleData, i18n } = window.PicSpeak;
 
   const DEFAULT_COLS = 4;
-  const WORD_TYPES = ['pronoun', 'verb', 'noun', 'adjective', 'social', 'negation'];
+  // Tipi di parola (chiave di Fitzgerald modificata): ognuno ha il suo colore automatico.
+  // 'question' (domande) e 'connector' (parole di collegamento: e, con, di…) aggiunti il 17/11/2026.
+  const WORD_TYPES = ['pronoun', 'verb', 'noun', 'adjective', 'social', 'negation', 'question', 'connector'];
 
   const model = {
     profile: null,
@@ -168,6 +170,44 @@
     await storage.putRecord('pages', pageRecord);
   }
 
+  // Griglia fissa: ogni tessera resta nella sua riga e colonna su ogni schermo (memoria motoria)
+  function isFixed(pageRecord) {
+    return Boolean(pageRecord && pageRecord.grid && pageRecord.grid.fixed === true);
+  }
+
+  // Prima casella libera (in ordine di lettura) di una griglia fissa
+  function firstFreeSlot(pageRecord) {
+    const cols = pageRecord.grid.cols || DEFAULT_COLS;
+    const used = new Set(pageRecord.cells.map((c) => `${c.row}:${c.col}`));
+    for (let index = 0; ; index += 1) {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      if (!used.has(`${row}:${col}`)) return { row, col };
+    }
+  }
+
+  function updateRows(pageRecord) {
+    const maxRow = pageRecord.cells.reduce((max, c) => Math.max(max, c.row), -1);
+    pageRecord.grid.rows = Math.max(1, maxRow + 1);
+  }
+
+  /*
+   * Assegna le posizioni seguendo un ordine di celle: le tessere bloccate restano dove sono,
+   * le altre occupano, nell'ordine dato, le caselle libere in ordine di lettura.
+   */
+  function placeInOrder(pageRecord, ordered) {
+    const cols = pageRecord.grid.cols || DEFAULT_COLS;
+    const locked = new Set(ordered.filter((c) => c.locked).map((c) => `${c.row}:${c.col}`));
+    let index = 0;
+    ordered.filter((c) => !c.locked).forEach((cell) => {
+      while (locked.has(`${Math.floor(index / cols)}:${index % cols}`)) index += 1;
+      cell.row = Math.floor(index / cols);
+      cell.col = index % cols;
+      index += 1;
+    });
+    updateRows(pageRecord);
+  }
+
   // Ricompatta le posizioni in ordine di lettura (dopo spostamenti o cancellazioni)
   function renumber(pageRecord) {
     const cols = pageRecord.grid.cols || DEFAULT_COLS;
@@ -193,10 +233,12 @@
     if (!p) return null;
     const cols = p.grid.cols || DEFAULT_COLS;
     const index = p.cells.length;
+    // Griglia fissa: la nuova tessera va nella prima casella libera, senza spostare le altre
+    const slot = isFixed(p) ? firstFreeSlot(p) : { row: Math.floor(index / cols), col: index % cols };
     const cell = {
       id: newId('c'),
-      row: Math.floor(index / cols),
-      col: index % cols,
+      row: slot.row,
+      col: slot.col,
       kind: 'symbol',
       label: '',
       speak: null,
@@ -210,7 +252,8 @@
       ...fields,
     };
     p.cells.push(cell);
-    renumber(p);
+    if (isFixed(p)) updateRows(p);
+    else renumber(p);
     await savePage(p);
     return cell;
   }
@@ -236,7 +279,9 @@
     const p = page(pageId);
     if (!p) return;
     p.cells = p.cells.filter((c) => c.id !== cellId);
-    renumber(p);
+    // Griglia fissa: la casella resta vuota, le altre tessere non si spostano
+    if (isFixed(p)) updateRows(p);
+    else renumber(p);
     await savePage(p);
   }
 
@@ -248,12 +293,12 @@
     const index = ordered.findIndex((c) => c.id === cellId);
     const target = index + delta;
     if (index < 0 || target < 0 || target >= ordered.length) return;
-    [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
-    const cols = p.grid.cols || DEFAULT_COLS;
-    ordered.forEach((cell, i) => {
-      cell.row = Math.floor(i / cols);
-      cell.col = i % cols;
-    });
+    // Le tessere bloccate non si scambiano: restano nella loro casella
+    if (ordered[index].locked || ordered[target].locked) return;
+    // Scambio delle caselle: vale sia per la griglia automatica sia per quella fissa
+    const a = ordered[index];
+    const b = ordered[target];
+    [a.row, a.col, b.row, b.col] = [b.row, b.col, a.row, a.col];
     await savePage(p);
   }
 
@@ -269,12 +314,168 @@
       if (cell) { ordered.push(cell); byId.delete(id); }
     });
     const rest = [...byId.values()].sort((a, b) => (a.row - b.row) || (a.col - b.col));
-    const cols = p.grid.cols || DEFAULT_COLS;
-    [...ordered, ...rest].forEach((cell, i) => {
-      cell.row = Math.floor(i / cols);
-      cell.col = i % cols;
-    });
+    placeInOrder(p, [...ordered, ...rest]);
     await savePage(p);
+  }
+
+  // ---------- Cartelle: gerarchia e spostamento tra schede ----------
+
+  // Schede raggiungibili da una scheda attraverso le sue cartelle (compresa la scheda stessa)
+  function pagesUnder(pageId) {
+    const seen = new Set();
+    const queue = [pageId];
+    while (queue.length) {
+      const id = queue.shift();
+      const p = page(id);
+      if (!p || seen.has(id)) continue;
+      seen.add(id);
+      p.cells.forEach((c) => { if (c.kind === 'folder' && c.targetPageId) queue.push(c.targetPageId); });
+    }
+    return seen;
+  }
+
+  // Percorso più breve dalla Home a una scheda, attraverso le cartelle: [Home, …, scheda]
+  // (null se la scheda non è raggiungibile dalla Home)
+  function pathTo(pageId) {
+    const home = model.profile && model.profile.homePageId;
+    if (!home || !page(pageId)) return null;
+    const previous = new Map([[home, null]]);
+    const queue = [home];
+    while (queue.length) {
+      const id = queue.shift();
+      if (id === pageId) break;
+      const p = page(id);
+      if (!p) continue;
+      p.cells.forEach((c) => {
+        if (c.kind === 'folder' && c.targetPageId && page(c.targetPageId) && !previous.has(c.targetPageId)) {
+          previous.set(c.targetPageId, id);
+          queue.push(c.targetPageId);
+        }
+      });
+    }
+    if (!previous.has(pageId)) return null;
+    const path = [];
+    for (let id = pageId; id; id = previous.get(id)) path.unshift(id);
+    return path;
+  }
+
+  /*
+   * Albero delle schede a partire dalla Home, per scegliere dove spostare una tessera:
+   * [{ pageId, title, depth }] in ordine di lettura; ogni scheda compare una sola volta.
+   */
+  function pageTree() {
+    const home = model.profile && model.profile.homePageId;
+    const result = [];
+    const seen = new Set();
+    const visit = (pageId, title, depth) => {
+      const p = page(pageId);
+      if (!p || seen.has(pageId)) return;
+      seen.add(pageId);
+      result.push({ pageId, title, depth });
+      orderedCells(p, { includeHidden: true }).forEach((c) => {
+        if (c.kind === 'folder' && c.targetPageId) visit(c.targetPageId, c.label || (page(c.targetPageId) || {}).title || '', depth + 1);
+      });
+    };
+    if (home) visit(home, '', 0);
+    return result;
+  }
+
+  // Si può spostare la tessera in quella scheda? Una cartella non può finire dentro sé stessa
+  function canMoveCellTo(fromPageId, cellId, toPageId) {
+    const from = page(fromPageId);
+    const cell = from && from.cells.find((c) => c.id === cellId);
+    if (!cell || !page(toPageId) || toPageId === fromPageId) return false;
+    if (cell.kind === 'folder' && cell.targetPageId && pagesUnder(cell.targetPageId).has(toPageId)) return false;
+    return true;
+  }
+
+  // Sposta una tessera (o una cartella con tutto il suo contenuto) in un'altra scheda, in fondo
+  async function moveCellToPage(fromPageId, cellId, toPageId) {
+    if (!canMoveCellTo(fromPageId, cellId, toPageId)) return false;
+    const from = page(fromPageId);
+    const to = page(toPageId);
+    const cell = from.cells.find((c) => c.id === cellId);
+    from.cells = from.cells.filter((c) => c.id !== cellId);
+    if (isFixed(from)) updateRows(from);
+    else renumber(from);
+    // Nella nuova scheda va nella prima casella libera (griglia fissa) o in fondo; la posizione non è più bloccata
+    const cols = to.grid.cols || DEFAULT_COLS;
+    const slot = isFixed(to) ? firstFreeSlot(to) : { row: Math.floor(to.cells.length / cols), col: to.cells.length % cols };
+    Object.assign(cell, { row: slot.row, col: slot.col, locked: false });
+    to.cells.push(cell);
+    if (isFixed(to)) updateRows(to);
+    else renumber(to);
+    await savePage(from);
+    await savePage(to);
+    return true;
+  }
+
+  // Disposizione della pagina: automatica (si adatta allo schermo) o fissa con un numero di colonne
+  async function setPageLayout(pageId, { fixed, cols }) {
+    const p = page(pageId);
+    if (!p) return;
+    const ordered = [...p.cells].sort((a, b) => (a.row - b.row) || (a.col - b.col));
+    const newCols = Math.min(12, Math.max(1, Math.round(cols || p.grid.cols || DEFAULT_COLS)));
+    const changedCols = newCols !== p.grid.cols;
+    p.grid = { ...p.grid, cols: newCols, fixed: Boolean(fixed) };
+    // Cambiando il numero di colonne le tessere si ridispongono in ordine di lettura
+    // (le bloccate restano nella loro casella se ancora dentro la griglia)
+    if (changedCols) {
+      ordered.forEach((c) => { if (c.locked && c.col >= newCols) c.locked = false; });
+      placeInOrder(p, ordered);
+    }
+    await savePage(p);
+  }
+
+  // ---------- Schede intere (schede pronte, modelli, ripristino) ----------
+
+  function profilePages() {
+    return [...model.pages.values()];
+  }
+
+  // Copia di sicurezza delle schede attuali, prima di sostituirle con un modello
+  async function snapshotPages() {
+    const snapshot = {
+      savedAt: now(),
+      homePageId: model.profile.homePageId,
+      pages: JSON.parse(JSON.stringify(profilePages())),
+    };
+    await storage.set(`previousPages:${model.profile.id}`, snapshot);
+    return snapshot;
+  }
+
+  async function previousPages() {
+    if (!model.profile) return null;
+    const snapshot = await storage.get(`previousPages:${model.profile.id}`);
+    return snapshot && Array.isArray(snapshot.pages) ? snapshot : null;
+  }
+
+  // Sostituisce tutte le schede del profilo (la copia di sicurezza va fatta prima)
+  async function replacePages(pages, homePageId) {
+    const oldIds = [...model.pages.keys()];
+    await Promise.all(oldIds.map((id) => storage.deleteRecord('pages', id)));
+    model.pages = new Map();
+    pages.forEach((p) => { p.profileId = model.profile.id; p.updatedAt = now(); model.pages.set(p.id, p); });
+    await storage.putRecords('pages', pages);
+    model.profile.homePageId = homePageId;
+    model.profile.updatedAt = now();
+    await storage.putRecord('profiles', model.profile);
+  }
+
+  async function restorePreviousPages() {
+    const snapshot = await previousPages();
+    if (!snapshot) return false;
+    const current = await snapshotPages();
+    await replacePages(snapshot.pages, snapshot.homePageId);
+    // La copia ora contiene le schede appena tolte: si può tornare indietro di nuovo
+    await storage.set(`previousPages:${model.profile.id}`, current);
+    return true;
+  }
+
+  // Aggiunge schede nuove al profilo (es. un modello aggiunto come cartella)
+  async function addPages(pages) {
+    pages.forEach((p) => { p.profileId = model.profile.id; p.updatedAt = now(); model.pages.set(p.id, p); });
+    await storage.putRecords('pages', pages);
   }
 
   async function addImage(fields) {
@@ -295,7 +496,10 @@
 
   window.PicSpeak.data = {
     WORD_TYPES,
+    DEFAULT_COLS,
+    newId,
     load,
+    isFixed,
     get profile() { return model.profile; },
     get homePageId() { return model.profile ? model.profile.homePageId : null; },
     page,
@@ -309,6 +513,18 @@
     deleteCell,
     moveCell,
     reorderCells,
+    setPageLayout,
+    pagesUnder,
+    pathTo,
+    pageTree,
+    canMoveCellTo,
+    moveCellToPage,
+    profilePages,
+    snapshotPages,
+    previousPages,
+    replacePages,
+    restorePreviousPages,
+    addPages,
     addImage,
     saveImage,
     allImages: () => [...model.images.values()],

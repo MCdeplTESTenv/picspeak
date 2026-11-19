@@ -3,9 +3,9 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v18';
-// Pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji): cache separate, mai cancellate dagli aggiornamenti
-const PACK_CACHE_PREFIX = 'picspeak-pack-';
+const CACHE_VERSION = 'picspeak-v30';
+// I pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji) e gli indici delle fonti online (Twemoji)
+// stanno in cache separate ("picspeak-pack-…"), mai cancellate dagli aggiornamenti
 
 const APP_FILES = [
   './',
@@ -15,10 +15,40 @@ const APP_FILES = [
   // Guida all'uso per gli adulti (aperta dal menu dei tre puntini)
   'guida.html',
   'css/guida.css',
+  'js/guida.js',
+  // Immagini della guida (schermate con dati di prova)
+  'guida/barra-adulto.webp',
+  'guida/cerca-simbolo.webp',
+  'guida/colori-parole.webp',
+  'guida/disposizione.webp',
+  'guida/fonti-simboli.webp',
+  'guida/impostazioni-previsione.webp',
+  'guida/impostazioni-pulsanti-rapidi.webp',
+  'guida/impostazioni-tocco.webp',
+  'guida/impostazioni.webp',
+  'guida/menu.webp',
+  'guida/modelli.webp',
+  'guida/modifica-tessera.webp',
+  'guida/open-board.webp',
+  'guida/pin.webp',
+  'guida/previsione.webp',
+  'guida/solo-suggerite.webp',
+  'guida/sfumato-trasparenza.webp',
+  'guida/pulsanti-rapidi.webp',
+  'guida/schede-pronte.webp',
+  'guida/schermo.webp',
+  'guida/stampa.webp',
+  'guida/stili-pronti.webp',
+  'guida/telefono-impostazioni.webp',
+  'guida/telefono-sbloccato.webp',
+  'guida/telefono.webp',
+  'guida/tre-puntini.webp',
+  'guida/usa-scheda.webp',
   'js/i18n.js',
   'js/storage.js',
   'js/security.js',
   'js/install.js',
+  'js/kiosk.js',
   'js/sample-data.js',
   'js/data.js',
   'js/symbols.js',
@@ -28,6 +58,23 @@ const APP_FILES = [
   'js/symbol-search.js',
   'js/editor.js',
   'js/reorder.js',
+  'js/lexicon.js',
+  'js/predict.js',
+  'js/templates.js',
+  'js/settings-boards.js',
+  'js/zip.js',
+  'js/obf.js',
+  'js/communication.js',
+  'js/settings-backup.js',
+  'js/print.js',
+  // Schede pronte (i pittogrammi si scaricano una sola volta quando si usa un modello)
+  'templates/index.json',
+  'templates/primi-passi-9.json',
+  'templates/primi-passi-16.json',
+  'templates/base-36.json',
+  'templates/base-60.json',
+  'templates/base-36-alto.json',
+  'templates/base-60-alto.json',
   // Dizionario italiano → inglese per la ricerca dei simboli (funziona anche offline)
   'symbols/it-en.json',
   'icons/icon-192.png',
@@ -83,11 +130,12 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  // Elimina le copie delle versioni precedenti
+  // Elimina solo le copie delle versioni precedenti di questa app: sullo stesso dominio possono esserci
+  // altre copie del tool (es. la versione di prova) con cache proprie, che non vanno toccate
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys
-        .filter((k) => k !== CACHE_VERSION && !k.startsWith(PACK_CACHE_PREFIX))
+        .filter((k) => k !== CACHE_VERSION && /^picspeak-v\d+$/.test(k))
         .map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
@@ -101,6 +149,11 @@ self.addEventListener('fetch', (event) => {
   // Pacchetti di simboli: prima la copia scaricata (offline), altrimenti la rete senza salvarla qui
   // (lo scaricamento completo lo gestisce js/symbols.js nella cache del pacchetto)
   const path = new URL(request.url).pathname;
+  // Indici delle fonti online: li salva js/symbols.js nella cache della fonte solo se è attiva
+  if (path.includes('/symbols/sources/')) {
+    event.respondWith(fetch(request).catch(() => caches.match(request).then((c) => c || Response.error())));
+    return;
+  }
   if (path.includes('/symbols/packs/')) {
     // L'indice si chiede prima alla rete (così un nuovo scaricamento prende la versione aggiornata)
     if (path.endsWith('/index.json')) {

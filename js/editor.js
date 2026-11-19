@@ -10,7 +10,7 @@
 (function () {
   'use strict';
 
-  const { i18n, data, app, symbols, symbolSearch } = window.PicSpeak;
+  const { i18n, data, app, symbols, symbolSearch, lexicon } = window.PicSpeak;
   const t = i18n.t;
 
   const MAX_LABEL = 40;
@@ -126,20 +126,36 @@
       imageId: cell ? cell.imageId : null,
       hidden: cell ? cell.hidden : false,
       locked: cell ? cell.locked : false,
+      silent: cell ? cell.silent === true : false,
+      placePageId: pageId,
       newImageBlob: null,
       pending: null, // simbolo scelto con "Cerca simbolo": { imageId, record, previewBlob }
     };
 
     const form = el('form', 'dialog-form editor-form');
     form.noValidate = true;
-    form.append(el('h2', null, isNew ? t('editorNewTitle') : t('editorTitle')));
+    form.append(el('h2', null, isNew ? t('editorNewTitle') : t(cell.kind === 'folder' ? 'editorFolderTitle' : 'editorTitle')));
+
+    // Cartella esistente: si può aprire anche da qui (per aggiungere tessere al suo interno)
+    if (!isNew && cell.kind === 'folder' && data.page(cell.targetPageId)) {
+      const openRow = el('div', 'editor-actions-row');
+      openRow.append(actionButton(`${t('editorOpenFolder')} →`, () => {
+        close();
+        app.openFolder(cell.targetPageId);
+      }, 'dlg-btn-primary editor-open-folder'));
+      form.append(openRow, el('small', 'editor-hint', t('editorFolderTapHint')));
+    }
 
     // Tipo di tessera (solo per una nuova): simbolo o cartella
     if (isNew) {
       form.append(segmentedChoice(
         [['symbol', t('editorKindSymbol')], ['folder', t('editorKindFolder')]],
         draft.kind,
-        (value) => { draft.kind = value; symbolOnly.forEach((n) => { n.hidden = value === 'folder'; }); },
+        (value) => {
+          draft.kind = value;
+          symbolOnly.forEach((n) => { n.hidden = value === 'folder'; });
+          rowSilent.hidden = value !== 'folder';
+        },
       ));
     }
 
@@ -151,14 +167,25 @@
     const speakField = field(t('editorSpeak'), speakInput);
     form.append(speakField);
 
-    // Tipo di parola → colore Fitzgerald
+    // Tipo di parola → colore Fitzgerald. Per una tessera nuova il tipo si propone da solo
+    // (dalla parola scritta o dal simbolo ARASAAC scelto) finché l'adulto non lo cambia a mano.
+    let typeTouched = !isNew;
     const typeField = el('div', 'editor-block');
     typeField.append(el('span', 'editor-block-title', t('editorWordType')));
-    typeField.append(segmentedChoice(
+    const typeChoice = segmentedChoice(
       data.WORD_TYPES.map((type) => [type, t(`wordType_${type}`)]),
       draft.wordType,
-      (value) => { draft.wordType = value; },
-    ));
+      (value) => { draft.wordType = value; typeTouched = true; },
+    );
+    typeChoice.classList.add('word-type-choice');
+    typeChoice.querySelectorAll('button').forEach((b) => b.classList.add(`type-${b.dataset.value}`));
+    typeField.append(typeChoice);
+    const setWordType = (type) => {
+      if (typeTouched || !type || !data.WORD_TYPES.includes(type)) return;
+      draft.wordType = type;
+      typeChoice.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === type)));
+    };
+    labelInput.addEventListener('input', () => setWordType(lexicon && lexicon.guess(labelInput.value)));
     form.append(typeField);
 
     // Colore: automatico (Fitzgerald) oppure scelto a mano
@@ -233,6 +260,8 @@
       draft.pending = picked;
       draft.newImageBlob = null;
       if (!labelInput.value.trim() && picked.label) labelInput.value = picked.label.slice(0, MAX_LABEL);
+      // Tipo proposto: prima dal lessico (parola scritta), altrimenti da quello indicato da ARASAAC
+      setWordType((lexicon && lexicon.guess(labelInput.value)) || picked.wordType);
       renderPreview();
     }, 'editor-search-btn');
     const photoButton = actionButton(t('editorPickImage'), async () => {
@@ -273,20 +302,56 @@
     const rowLocked = el('div', 'editor-option');
     rowLocked.append(el('span', null, t('editorLocked')), lockedChoice);
     optionsField.append(rowHidden, rowLocked);
+    // Solo per le cartelle: leggere o no il nome quando si apre
+    const silentChoice = segmentedChoice([['yes', t('valYes')], ['no', t('valNo')]], draft.silent ? 'no' : 'yes',
+      (v) => { draft.silent = v === 'no'; });
+    const rowSilent = el('div', 'editor-option');
+    rowSilent.append(el('span', null, t('editorSpeakFolder')), silentChoice);
+    rowSilent.hidden = draft.kind !== 'folder';
+    optionsField.append(rowSilent);
     form.append(optionsField);
+
+    // Dove si trova (tessere esistenti): scegliendo un'altra cartella la tessera si sposta lì
+    if (!isNew) {
+      const placeField = el('div', 'editor-block');
+      const select = el('select', 'editor-place');
+      data.pageTree().forEach(({ pageId: id, title, depth }) => {
+        const option = el('option', null, `${'\u00a0\u00a0\u00a0'.repeat(depth)}${depth ? '› ' : ''}${depth ? title : t('editorPlaceHome')}`);
+        option.value = id;
+        option.disabled = id !== pageId && !data.canMoveCellTo(pageId, cell.id, id);
+        option.selected = id === pageId;
+        select.append(option);
+      });
+      // Pagina non raggiungibile dalla Home (caso raro): resta comunque scelta quella attuale
+      if (select.value !== pageId) {
+        const here = el('option', null, (data.page(pageId) || {}).title || '');
+        here.value = pageId;
+        select.prepend(here);
+        select.value = pageId;
+      }
+      select.addEventListener('change', () => { draft.placePageId = select.value; });
+      placeField.append(field(t('editorPlace'), select), el('small', 'editor-hint', t('editorPlaceHint')));
+      form.append(placeField);
+    }
 
     // Posizione ed eliminazione (solo per tessere esistenti)
     if (!isNew) {
       const manage = el('div', 'editor-actions-row');
+      // Posizioni bloccate (per tutte le tessere o per questa): niente «Prima»/«Dopo»
+      const canMove = document.documentElement.dataset.lockPositions !== 'on' && !cell.locked;
+      if (canMove) {
+        manage.append(
+          actionButton(`← ${t('editorMoveBefore')}`, async () => {
+            await data.moveCell(pageId, cell.id, -1);
+            app.renderGrid();
+          }),
+          actionButton(`${t('editorMoveAfter')} →`, async () => {
+            await data.moveCell(pageId, cell.id, 1);
+            app.renderGrid();
+          }),
+        );
+      }
       manage.append(
-        actionButton(`← ${t('editorMoveBefore')}`, async () => {
-          await data.moveCell(pageId, cell.id, -1);
-          app.renderGrid();
-        }),
-        actionButton(`${t('editorMoveAfter')} →`, async () => {
-          await data.moveCell(pageId, cell.id, 1);
-          app.renderGrid();
-        }),
         actionButton(t('editorDelete'), async () => {
           // eslint-disable-next-line no-alert
           if (!window.confirm(t('editorDeleteConfirm'))) return;
@@ -295,7 +360,7 @@
           app.renderGrid();
         }, 'dlg-btn-danger'),
       );
-      form.append(manage, el('small', 'editor-hint', t('editorMoveHint')));
+      form.append(manage, el('small', 'editor-hint', canMove ? t('editorMoveHint') : t('editorMoveLocked')));
     }
 
     const error = el('p', 'dialog-error');
@@ -341,7 +406,7 @@
       if (isNew && draft.kind === 'folder') {
         const { cell: folderCell } = await data.addFolder(pageId, label);
         await data.updateCell(pageId, folderCell.id, {
-          color: draft.color, imageId, hidden: draft.hidden, locked: draft.locked,
+          color: draft.color, imageId, hidden: draft.hidden, locked: draft.locked, silent: draft.silent,
         });
       } else if (isNew) {
         await data.addCell(pageId, {
@@ -351,7 +416,17 @@
       } else {
         const changes = { label, color: draft.color, imageId, hidden: draft.hidden, locked: draft.locked };
         if (cell.kind !== 'folder') Object.assign(changes, { speak, wordType: draft.wordType });
+        else changes.silent = draft.silent;
         await data.updateCell(pageId, cell.id, changes);
+        // Spostata in un'altra cartella
+        if (draft.placePageId && draft.placePageId !== pageId) {
+          const moved = await data.moveCellToPage(pageId, cell.id, draft.placePageId);
+          const target = data.page(draft.placePageId);
+          if (moved && target) {
+            const name = draft.placePageId === data.homePageId ? t('editorPlaceHome') : target.title;
+            app.notice(t('editorPlaceMoved').replace('{name}', () => name));
+          }
+        }
         if (cell.kind === 'folder' && cell.targetPageId) {
           const target = data.page(cell.targetPageId);
           if (target) target.title = label;

@@ -4,6 +4,11 @@
  *  - "arasaac": ricerca online con l'API pubblica di ARASAAC (CC BY-NC-SA 4.0);
  *  - "mulberry", "openmoji": pacchetti pubblicati sul nostro sito, scaricati una sola volta
  *    nella Cache Storage ("picspeak-pack-<id>") solo se l'adulto li attiva; poi funzionano offline.
+ *  - "twemoji": fonte online leggera. Dal nostro sito arriva solo un piccolo indice delle parole
+ *    (symbols/sources/<id>.json, circa 8 KB compresso), salvato nella stessa Cache Storage solo se la fonte è
+ *    attiva; le immagini si scaricano dalla CDN della fonte una alla volta, solo quella scelta, e poi restano
+ *    salvate sul dispositivo come gli altri simboli. Verso la CDN (jsDelivr) vanno solo i codici delle emoji
+ *    mostrate: non la parola, ma ne rivelano il significato, quindi solo con «Cerca» e la ricerca online consentita.
  * Traduzione italiano → inglese (per i pacchetti con parole inglesi), in quest'ordine:
  *   dizionario locale (symbols/it-en.json) → ponte ARASAAC (stesso pittogramma in inglese) → MyMemory.
  * Rete: solo HTTPS verso i domini ammessi dalla CSP; verso l'esterno va solo la parola cercata.
@@ -22,6 +27,12 @@
   const MYMEMORY_API = 'https://api.mymemory.translated.net/get';
   const PACK_CACHE_PREFIX = 'picspeak-pack-';
   const PACK_IDS = ['mulberry', 'openmoji'];
+  const ONLINE_IDS = ['twemoji'];
+  // Versioni fissate: le immagini non cambiano sotto i piedi se la fonte pubblica novità
+  const TWEMOJI_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.3/assets';
+  const MAX_SVG_BYTES = 256 * 1024; // un'emoji Twemoji pesa pochi KB
+  const MAX_INDEX_BYTES = 512 * 1024; // l'indice Twemoji pesa circa 36 KB
+  const SVG_TIMEOUT_MS = 10000;
 
   // Licenze e attribuzioni di ogni fonte (usate per i record e per la pagina Crediti)
   const SOURCE_INFO = {
@@ -37,8 +48,12 @@
       name: 'OpenMoji', author: 'OpenMoji (HfG Schwäbisch Gmünd)', owner: '',
       license: 'CC BY-SA 4.0', licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/', url: 'https://openmoji.org',
     },
+    twemoji: {
+      name: 'Twemoji', author: 'Twitter, Inc. e collaboratori (jdecked/twemoji)', owner: '',
+      license: 'CC BY 4.0', licenseUrl: 'https://creativecommons.org/licenses/by/4.0/', url: 'https://github.com/jdecked/twemoji',
+    },
   };
-  const ID_PREFIX = { arasaac: 'img_ar_', mulberry: 'img_mb_', openmoji: 'img_om_' };
+  const ID_PREFIX = { arasaac: 'img_ar_', mulberry: 'img_mb_', openmoji: 'img_om_', twemoji: 'img_tw_' };
 
   // ---------- Utilità ----------
 
@@ -95,6 +110,9 @@
   }
 
   // Controllo della firma reale del file (non del tipo dichiarato): solo PNG, JPEG o WebP
+  const MAX_SIDE = 8192; // lato massimo dichiarato di un'immagine
+  const MAX_PIXELS = 24 * 1024 * 1024; // circa 24 Mpx (le foto dei telefoni stanno sotto)
+
   async function checkImage(blob) {
     if (!blob || blob.size > MAX_DOWNLOAD_BYTES) throw new Error('too-big');
     const b = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
@@ -103,6 +121,50 @@
     const webp = b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46
       && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
     if (!png && !jpeg && !webp) throw new Error('bad-type');
+    // Misura dichiarata nell'intestazione, letta prima di decodificare: un file piccolo può dichiarare
+    // dimensioni enormi e bloccare il dispositivo durante la decodifica
+    const size = await headerSize(blob, png ? 'png' : jpeg ? 'jpeg' : 'webp');
+    if (!size || size.width < 1 || size.height < 1 || size.width > MAX_SIDE || size.height > MAX_SIDE
+      || size.width * size.height > MAX_PIXELS) {
+      throw new Error('too-big');
+    }
+  }
+
+  // Larghezza e altezza dall'intestazione di PNG, JPEG o WebP (null se non si trovano)
+  async function headerSize(blob, type) {
+    const b = new Uint8Array(await blob.slice(0, 65536).arrayBuffer());
+    const u16be = (i) => (b[i] << 8) | b[i + 1];
+    const u16le = (i) => b[i] | (b[i + 1] << 8);
+    const u24le = (i) => b[i] | (b[i + 1] << 8) | (b[i + 2] << 16);
+    const u32be = (i) => ((b[i] << 24) >>> 0) + (b[i + 1] << 16) + (b[i + 2] << 8) + b[i + 3];
+    if (type === 'png') {
+      // Il primo blocco deve essere IHDR
+      if (b.length < 24 || String.fromCharCode(b[12], b[13], b[14], b[15]) !== 'IHDR') return null;
+      return { width: u32be(16), height: u32be(20) };
+    }
+    if (type === 'webp') {
+      if (b.length < 30) return null;
+      const chunk = String.fromCharCode(b[12], b[13], b[14], b[15]);
+      if (chunk === 'VP8X') return { width: u24le(24) + 1, height: u24le(27) + 1 };
+      if (chunk === 'VP8L') {
+        const bits = (b[21] | (b[22] << 8) | (b[23] << 16) | (b[24] << 24)) >>> 0;
+        return { width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 };
+      }
+      if (chunk === 'VP8 ') return { width: u16le(26) & 0x3fff, height: u16le(28) & 0x3fff };
+      return null;
+    }
+    // JPEG: si scorrono i segmenti fino al primo SOF (inizio dell'immagine)
+    let i = 2;
+    while (i + 9 < b.length) {
+      if (b[i] !== 0xff) return null;
+      const marker = b[i + 1];
+      if (marker === 0xff) { i += 1; continue; }
+      if (marker === 0xd8 || marker === 0x01 || (marker >= 0xd0 && marker <= 0xd7)) { i += 2; continue; }
+      const isSof = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+      if (isSof) return { width: u16be(i + 7), height: u16be(i + 5) };
+      i += 2 + u16be(i + 2);
+    }
+    return null;
   }
 
   async function resizeToBlob(blob) {
@@ -122,7 +184,7 @@
 
   // ---------- Fonti attive ----------
 
-  const SOURCE_DEFAULTS = { arasaac: true, mulberry: false, openmoji: false, photo: true };
+  const SOURCE_DEFAULTS = { arasaac: true, mulberry: false, openmoji: false, twemoji: false, photo: true };
 
   async function activeSources() {
     const saved = (await storage.get('symbolSources')) || {};
@@ -224,12 +286,157 @@
     return status[id];
   }
 
+  // Toglie dal dispositivo tutti i pacchetti e gli indici scaricati (per «Cancella tutto»)
+  async function clearDownloads() {
+    PACK_IDS.forEach((id) => packIndexes.delete(id));
+    ONLINE_IDS.forEach((id) => sourceIndexes.delete(id));
+    if (!('caches' in window)) return;
+    await Promise.all([...PACK_IDS, ...ONLINE_IDS].map((id) => caches.delete(PACK_CACHE_PREFIX + id)));
+  }
+
   async function removePack(id) {
     packIndexes.delete(id);
     if ('caches' in window) await caches.delete(PACK_CACHE_PREFIX + id);
     const status = await packStatus();
     delete status[id];
     await storage.set('symbolPacks', status);
+  }
+
+  // ---------- Fonti online leggere (Twemoji) ----------
+
+  const sourceIndexes = new Map(); // id → indice in memoria
+  const sourceIndexUrl = (id) => `symbols/sources/${id}.json`;
+
+  // Indice di una fonte online: formato atteso, id sicuri, parole chiave corte
+  const TWEMOJI_CODE = /^[0-9a-f]{2,6}(-[0-9a-f]{2,6}){0,9}$/;
+  function validSourceIndex(index, id) {
+    if (!index || index.format !== 'picspeak-source' || index.id !== id || !Array.isArray(index.items)) return null;
+    const words = (list) => (Array.isArray(list) ? list.map(normalize).filter(Boolean).slice(0, 8) : []);
+    const items = [];
+    index.items.slice(0, 5000).forEach((item) => {
+      if (!item || typeof item.id !== 'string') return;
+      if (id === 'twemoji' && TWEMOJI_CODE.test(item.id)) {
+        items.push({ id: item.id, key: item.id, it: words(item.it), en: words(item.en) });
+      }
+    });
+    return { id, items };
+  }
+
+  // Indice salvato (anche offline); se manca e "allowDownload", lo scarica dal nostro sito e lo salva
+  async function loadSourceIndex(id, allowDownload) {
+    if (!ONLINE_IDS.includes(id)) return null;
+    if (sourceIndexes.has(id)) return sourceIndexes.get(id);
+    const url = sourceIndexUrl(id);
+    const cache = 'caches' in window ? await caches.open(PACK_CACHE_PREFIX + id) : null;
+    const cached = cache ? await cache.match(url) : null;
+    if (cached) {
+      const index = validSourceIndex(await cached.json().catch(() => null), id);
+      if (index) {
+        sourceIndexes.set(id, index);
+        return index;
+      }
+      await cache.delete(url); // copia rovinata: si riscarica
+    }
+    if (!allowDownload) return null;
+    const fresh = await fetch(url, { cache: 'no-cache' });
+    if (!fresh.ok) throw new Error(`HTTP ${fresh.status}`);
+    const blob = await fresh.blob();
+    if (blob.size > MAX_INDEX_BYTES) throw new Error('too-big');
+    const index = validSourceIndex(JSON.parse(await blob.text()), id);
+    if (!index) throw new Error('bad-index');
+    // Se nel frattempo l'adulto ha spento la fonte non si salva nulla
+    if (!(await activeSources())[id]) return null;
+    if (cache) await cache.put(url, new Response(blob, { headers: { 'Content-Type': 'application/json' } }));
+    sourceIndexes.set(id, index);
+    return index;
+  }
+
+  // Spegnendo la fonte si toglie l'indice (i simboli già usati restano nelle tessere)
+  async function removeSource(id) {
+    if (!ONLINE_IDS.includes(id)) return;
+    sourceIndexes.delete(id);
+    if ('caches' in window) await caches.delete(PACK_CACHE_PREFIX + id);
+  }
+
+  function onlineResult(id, item, label) {
+    const base = {
+      key: `${id}:${item.key}`, source: id, sourceId: item.key, imageId: ID_PREFIX[id] + item.key,
+      label, keywords: { it: item.it, en: item.en },
+    };
+    // Miniatura leggera (PNG 72 px); per il simbolo salvato si usa il disegno vettoriale, ridisegnato a 256 px
+    return { ...base, thumb: `${TWEMOJI_BASE}/72x72/${item.id}.png`, file: `${TWEMOJI_BASE}/svg/${item.id}.svg` };
+  }
+
+  async function searchOnlineSource(id, terms, enTerms) {
+    const index = await loadSourceIndex(id, true);
+    if (!index) return [];
+    const lang = i18n.language;
+    const exact = [];
+    const partial = [];
+    index.items.forEach((item) => {
+      const own = lang === 'it' ? item.it : item.en;
+      const hit = own.some((k) => terms.includes(k)) || item.en.some((k) => enTerms.includes(k));
+      const near = !hit && (matches(own, terms) || matches(item.en, enTerms));
+      if (!hit && !near) return;
+      // Etichetta: la parola cercata se il simbolo la contiene, altrimenti la prima parola del simbolo
+      const label = own.find((k) => terms.includes(k)) || (item.en.some((k) => enTerms.includes(k)) ? terms[0] : '')
+        || own[0] || item.en[0] || '';
+      (hit ? exact : partial).push(onlineResult(id, item, label));
+    });
+    return exact.concat(partial).slice(0, 30);
+  }
+
+  /*
+   * SVG di una fonte fidata (Twemoji) → bitmap: il testo viene controllato (niente script, riferimenti esterni,
+   * entità o foreignObject), caricato come <img> da un URL blob (il browser non esegue nulla) e ridisegnato
+   * a 256 px con un piccolo margine, come gli altri simboli. L'SVG non viene mai salvato.
+   */
+  async function downloadSvgAsImage(url) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    let text;
+    try {
+      const response = await fetch(url, {
+        signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer', mode: 'cors',
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (Number(response.headers.get('content-length') || 0) > MAX_SVG_BYTES) throw new Error('too-big');
+      const blob = await response.blob();
+      if (blob.size > MAX_SVG_BYTES) throw new Error('too-big');
+      text = await blob.text();
+    } finally {
+      clearTimeout(timer);
+    }
+    text = text.trim();
+    if (!/^<svg[\s>]/i.test(text) || /<script|<foreignobject|<style|@import|<!|<\?|<image|<use|\son[a-z]+\s*=|(?:xlink:)?href\s*=|url\(\s*['"]?(?!#)/i.test(text)) {
+      throw new Error('bad-type');
+    }
+    // Misura esplicita: senza larghezza e altezza alcuni browser (Firefox) non disegnano l'SVG sul canvas
+    const root = text.slice(0, text.indexOf('>') + 1);
+    const sized = /\s(width|height)\s*=/i.test(root) ? text
+      : text.replace(/^<svg\b/i, `<svg width="${IMAGE_SIZE}" height="${IMAGE_SIZE}"`);
+    const objectUrl = URL.createObjectURL(new Blob([sized], { type: 'image/svg+xml' }));
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        const stop = setTimeout(() => { image.onload = null; image.onerror = null; reject(new Error('svg-timeout')); }, SVG_TIMEOUT_MS);
+        image.onload = () => { clearTimeout(stop); resolve(image); };
+        image.onerror = () => { clearTimeout(stop); reject(new Error('svg')); };
+        image.src = objectUrl;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = IMAGE_SIZE;
+      canvas.height = IMAGE_SIZE;
+      const margin = Math.round(IMAGE_SIZE * 0.06); // le emoji arrivano fino al bordo: un po' d'aria come gli altri simboli
+      canvas.getContext('2d').drawImage(img, margin, margin, IMAGE_SIZE - 2 * margin, IMAGE_SIZE - 2 * margin);
+      const toBlob = (type, quality) => new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+      let out = await toBlob('image/webp', 0.88);
+      if (!out || out.type !== 'image/webp') out = await toBlob('image/png');
+      if (!out) throw new Error('svg');
+      return out;
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
   }
 
   // ---------- Ricerca ----------
@@ -284,7 +491,11 @@
       const id = Number(item._id);
       if (!Number.isInteger(id) || id <= 0) return null;
       const words = (item.keywords || []).map((k) => normalize(k && k.keyword)).filter(Boolean);
+      // Tipo di parola indicato da ARASAAC (1 nome proprio, 2 nome, 3 verbo, 4 descrizione, 5 sociale)
+      const arasaacType = item.keywords && item.keywords[0] && item.keywords[0].type;
+      const wordType = { 1: 'pronoun', 2: 'noun', 3: 'verb', 4: 'adjective', 5: 'social' }[arasaacType] || null;
       return {
+        wordType,
         key: `arasaac:${id}`, source: 'arasaac', sourceId: String(id), imageId: ID_PREFIX.arasaac + id,
         thumb: `${ARASAAC_STATIC}/${id}/${id}_300.png`, file: `${ARASAAC_STATIC}/${id}/${id}_300.png`,
         label: words[0] || term, keywords: { [lang]: words.slice(0, 5) },
@@ -308,7 +519,8 @@
   /*
    * Ricerca completa. "online" dice se si può usare internet (interruttore già controllato dall'interfaccia).
    * onUpdate(groups) viene chiamata più volte: prima i risultati sul dispositivo, poi quelli online.
-   * groups = { device: [], arasaac: [], mulberry: [], openmoji: [] }; stati: 'loading' | 'done' | 'error'.
+   * groups = { device, arasaac, mulberry, openmoji, twemoji } con { state, items };
+   * stati: 'loading' | 'done' | 'error'.
    */
   async function search(rawTerm, { online, onUpdate }) {
     const term = normalize(rawTerm);
@@ -329,12 +541,34 @@
     }));
     emit();
 
+    // Fonti online leggere: le immagini arrivano da internet, quindi si cercano solo quando si può andare online
+    const onlineSources = online ? ONLINE_IDS.filter((id) => sources[id]) : [];
+    const searchOnlineSources = () => Promise.all(onlineSources.map(async (id) => {
+      try {
+        groups[id] = { state: 'done', items: await searchOnlineSource(id, terms, enTerms) };
+      } catch (error) {
+        groups[id] = { state: 'error', items: [] };
+      }
+    }));
+    // Pacchetti e fonti online che cercano con le parole inglesi
+    const englishUsers = packs.length + onlineSources.length;
+    const refreshEnglish = async () => {
+      await Promise.all(packs.map(async (id) => { groups[id] = { state: 'done', items: await searchPack(id, terms, enTerms) }; }));
+      await searchOnlineSources();
+      emit();
+    };
+    if (onlineSources.length) {
+      onlineSources.forEach((id) => { groups[id] = { state: 'loading', items: [] }; });
+      emit();
+      await searchOnlineSources();
+      emit();
+    }
+
     if (!online || !sources.arasaac) {
-      if (online && lang === 'it' && !enTerms.length && packs.length) {
-        // ARASAAC spento: la traduzione online serve solo ai pacchetti
+      if (online && lang === 'it' && !enTerms.length && englishUsers) {
+        // ARASAAC spento: la traduzione online serve solo ai pacchetti e alle altre fonti
         enTerms = await myMemory(term).catch(() => []);
-        await Promise.all(packs.map(async (id) => { groups[id] = { state: 'done', items: await searchPack(id, terms, enTerms) }; }));
-        emit();
+        if (enTerms.length) await refreshEnglish();
       }
       return groups;
     }
@@ -348,13 +582,10 @@
       groups.arasaac = { state: 'done', items };
       emit();
       // 3. Traduzione per i pacchetti se il dizionario non la conosceva: ponte ARASAAC, poi MyMemory
-      if (lang === 'it' && !enTerms.length && packs.length) {
+      if (lang === 'it' && !enTerms.length && englishUsers) {
         if (items.length) enTerms = await arasaacEnglish(items[0].sourceId).catch(() => []);
         if (!enTerms.length) enTerms = await myMemory(term).catch(() => []);
-        if (enTerms.length) {
-          await Promise.all(packs.map(async (id) => { groups[id] = { state: 'done', items: await searchPack(id, terms, enTerms) }; }));
-          emit();
-        }
+        if (enTerms.length) await refreshEnglish();
       }
     } catch (error) {
       groups.arasaac = { state: 'error', items: [] };
@@ -376,6 +607,8 @@
     let blob;
     if (result.source === 'arasaac') {
       blob = await downloadImage(result.file);
+    } else if (result.source === 'twemoji') {
+      blob = await downloadSvgAsImage(result.file);
     } else {
       // Pacchetto: già nella Cache Storage (o dal sito, se il service worker non c'è)
       const cache = await caches.open(PACK_CACHE_PREFIX + result.source);
@@ -403,12 +636,19 @@
   window.PicSpeak.symbols = {
     SOURCE_INFO,
     PACK_IDS,
+    ONLINE_IDS,
     activeSources,
+    loadSourceIndex,
+    removeSource,
+    clearDownloads,
     search,
     acquire,
     packStatus,
     downloadPack,
     removePack,
     resizeToBlob,
+    checkImage,
+    headerSize,
+    downloadImage,
   };
 })();
