@@ -647,10 +647,11 @@
   }
 
   // Peso generale (senza preferenza per l'ora): per statistiche ed esportazione
-  function generalWeights(now = new Date()) {
+  // withStarter = false: senza la base di PicSpeak (le statistiche mostrano solo le abitudini vere del bambino)
+  function generalWeights(now = new Date(), withStarter = true) {
     const nowDay = localDay(now);
     const map = filteredWeights(null, HALF_LIFE_DAYS, nowDay, null);
-    base.filter((b) => !b.ctx).forEach((b) => {
+    base.filter((b) => !b.ctx && (withStarter || b.src !== STARTER)).forEach((b) => {
       const key = pairKey(b.prev, b.word);
       const value = b.weight * decay(nowDay - b.day, HALF_LIFE_DAYS);
       const item = map.get(key);
@@ -757,7 +758,7 @@
   }
 
   function stats() {
-    const weights = generalWeights();
+    const weights = generalWeights(new Date(), false);
     let uses = 0;
     let entries = 0;
     const count = (list) => { entries += list.length; list.forEach((v) => { uses += v & 255; }); };
@@ -1161,7 +1162,7 @@
         existing = null;
       }
       if (existing) ctx.id = existing;
-      else if (contexts.length >= MAX_CONTEXTS) continue;
+      else if (contexts.length >= MAX_CONTEXTS) { fromFile.set(fileName, null); continue; } // non entra: i suoi pesi neanche
       fromFile.set(fileName, ctx.id);
       const index = contexts.findIndex((c) => c.id === ctx.id);
       if (index >= 0) contexts[index] = ctx; else contexts.push(ctx);
@@ -1214,7 +1215,10 @@
     // Pesi di partenza
     const byKey = new Map(base.map((x) => [`${x.ctx || ''}\u0002${pairKey(x.prev, x.word)}`, x]));
     parsed.base.forEach((b) => {
-      const ctxId = b.ctxName ? (fromFile.get(b.ctxName.toLowerCase()) || idByName.get(b.ctxName.toLowerCase())) : null;
+      const lower = b.ctxName ? b.ctxName.toLowerCase() : null;
+      const ctxId = lower ? (fromFile.has(lower) ? fromFile.get(lower) : idByName.get(lower)) : null;
+      // Mai pesi da un file su un contesto pronto
+      if (ctxId && contexts.some((c) => c.id === ctxId && c.builtin)) return;
       if (b.ctxName && !ctxId) return;
       const key = `${ctxId || ''}\u0002${pairKey(b.prev, b.word)}`;
       if (!byKey.has(key) && byKey.size >= MAX_BASE) return;

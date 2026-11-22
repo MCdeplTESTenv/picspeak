@@ -587,8 +587,12 @@
       { value: 'yes', label: t('ctxRestore'), danger: true },
     ]);
     if (ok !== 'yes') return;
-    const ctx = await predict.restoreBuiltin(draft.id);
-    notice = { text: format('ctxRestored', { name: ctx.name }) };
+    try {
+      const ctx = await predict.restoreBuiltin(draft.id);
+      notice = { text: format('ctxRestored', { name: ctx.name }) };
+    } catch (error) {
+      notice = { text: t('ctxError_rule'), error: true };
+    }
     draft = null;
     if (window.PicSpeak.app) window.PicSpeak.app.applySuggestions();
     updateChip();
