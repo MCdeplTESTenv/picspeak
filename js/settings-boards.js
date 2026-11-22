@@ -601,8 +601,10 @@
           { value: 'replace', label: t('habitsImportReplace'), help: t('habitsImportReplaceHelp'), danger: true },
         ]);
         if (mode !== 'merge' && mode !== 'replace') return;
-        const n = await predict.importRows(rows, mode);
-        habitsNotice = { text: skipped ? format('habitsImportedSkipped', { n, skipped }) : format('habitsImported', { n }) };
+        const { imported: n, unknown } = await predict.importRows(rows, mode);
+        let text = skipped ? format('habitsImportedSkipped', { n, skipped }) : format('habitsImported', { n });
+        if (unknown) text += ` ${format('habitsUnknownContext', { n: unknown })}`;
+        habitsNotice = { text };
       } catch (error) {
         habitsNotice = { text: habitsMessage(error), error: true };
       }
@@ -623,6 +625,12 @@
     )));
     const stats = predict.stats();
     wrap.append(el('p', 'habits-stats', format('habitsStats', { uses: stats.uses, pairs: stats.pairs })));
+    // Quanto occupa lo storico sul dispositivo
+    const size = stats.bytes < 1024 * 1024 ? `${Math.max(1, Math.round(stats.bytes / 1024))} KB`
+      : `${(stats.bytes / 1024 / 1024).toLocaleString(i18n.language, { maximumFractionDigits: 1 })} MB`;
+    if (stats.days || stats.months) wrap.append(el('p', 'habits-stats', format('habitsHistory', { days: stats.days, size })));
+    const active = predict.activeContexts();
+    if (active.length) wrap.append(el('p', 'habits-stats', format('habitsActiveContexts', { names: active.join(', ') })));
     if (stats.top.length) {
       wrap.append(el('p', 'habits-top-title', t('habitsTop')));
       const ol = el('ol', 'habits-top');
@@ -639,7 +647,7 @@
       ui.render();
     }));
     clear.classList.add('dlg-btn-danger');
-    clear.disabled = !stats.pairs;
+    clear.disabled = !stats.pairs && !stats.days && !stats.months;
     wrap.append(clear);
 
     // File CSV modificabile dal terapista
@@ -655,6 +663,19 @@
     exp.disabled = !stats.pairs;
     tools.append(exp, ui.button(t('habitsImport'), importHabits));
     file.append(tools);
+
+    // Storico completo e contesti in un file a parte (lo stesso contenuto entrerà nel backup completo)
+    const history = ui.section('historyFileTitle', 'historyFileHelp');
+    const ctxUi = window.PicSpeak.contextsUi;
+    const htools = el('div', 'tpl-tools');
+    const hexp = ui.button(t('historyExport'), () => ctxUi.exportHistory());
+    hexp.disabled = !stats.days && !stats.months && !stats.pairs && !predict.listContexts().length;
+    htools.append(hexp, ui.button(t('historyImport'), () => ctxUi.importFile((m) => { habitsNotice = m; ui.render(); })));
+    history.append(htools);
+  }
+
+  function contextEditing() {
+    return Boolean(window.PicSpeak.contextsUi && window.PicSpeak.contextsUi.editing);
   }
 
   function renderHowSection() {
@@ -679,7 +700,13 @@
     icon: '<path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
     titleKey: 'catPrediction',
     introKey: 'catPredictionIntro',
-    render: [renderSuggestSection, renderHabitsSection, renderHowSection],
+    // Mentre si modifica un contesto si vede solo la sua scheda
+    render: [
+      () => { if (!contextEditing()) renderSuggestSection(); },
+      () => { if (!contextEditing()) renderHabitsSection(); },
+      () => { if (window.PicSpeak.contextsUi) window.PicSpeak.contextsUi.render(); },
+      () => { if (!contextEditing()) renderHowSection(); },
+    ],
   }, 'boards');
 
   restoreLock();
