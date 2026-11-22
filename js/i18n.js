@@ -824,6 +824,7 @@
       storyActionsTitle: 'Salva', storySave: 'Salva la storia',
       storyErrorTitle: 'Scrivi un titolo.', storyErrorSentences: 'Aggiungi almeno una frase.', storyErrorTooMany: 'Troppe storie: eliminane qualcuna.',
       storySaved: 'Storia salvata: {title}.',
+      storyExportPrivacy: 'Un file di storie esportato contiene i titoli e le frasi che avete scritto (per esempio il nome del bambino o le sue abitudini): datelo solo a persone di fiducia.',
     },
     en: {
       appName: 'PicSpeak',
@@ -1639,6 +1640,7 @@
       storyActionsTitle: 'Save', storySave: 'Save the story',
       storyErrorTitle: 'Write a title.', storyErrorSentences: 'Add at least one sentence.', storyErrorTooMany: 'Too many stories: delete some.',
       storySaved: 'Story saved: {title}.',
+      storyExportPrivacy: 'An exported stories file contains the titles and sentences you wrote (for example the child’s name or habits): share it only with people you trust.',
     },
   };
 

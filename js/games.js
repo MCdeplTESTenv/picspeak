@@ -83,8 +83,8 @@
   // ---------- Validazione dei dati (letti dal dispositivo o da un file) ----------
 
   function cleanText(value, max) {
-    // eslint-disable-next-line no-control-regex
-    return typeof value === 'string' ? value.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '';
+    // Caratteri di controllo e invisibili o di direzione (\p{Cf}) tolti, come per i contesti
+    return typeof value === 'string' ? value.replace(/[\p{Cc}\p{Cf}]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '';
   }
 
   function cleanQuiet(list) {
@@ -274,6 +274,9 @@
 
   // Scarica i pittogrammi mancanti dei giochi (una sola volta; restano sul dispositivo come gli altri simboli)
   async function downloadPictograms(onProgress) {
+    // Difesa in più: con internet spento per i simboli non si scarica nulla, chiunque chiami
+    const network = window.PicSpeak.network;
+    if (!network || network.onlineSearchStatus() === 'blocked') return { total: 0, failed: 0, blocked: true };
     const list = missingPictograms();
     let done = 0;
     let failed = 0;

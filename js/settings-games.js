@@ -248,9 +248,14 @@
     let raw;
     try { raw = JSON.parse(await file.text()); } catch (error) { throw new Error('format'); }
     if (!raw || raw.format !== 'picspeak-stories' || !Array.isArray(raw.stories)) throw new Error('format');
-    if (!Number.isInteger(raw.formatVersion) || raw.formatVersion > games.FORMAT_VERSION) throw new Error('version');
+    if (!Number.isInteger(raw.formatVersion) || raw.formatVersion < 1 || raw.formatVersion > games.FORMAT_VERSION) throw new Error('version');
     // Versione 1: nessuna migrazione necessaria (le versioni future andranno convertite qui)
-    return raw.stories.slice(0, games.LIMITS.stories).map((s) => games.cleanStory({ ...s, id: null, from: null, enabled: true })).filter(Boolean);
+    // Solo le parole: un id di tessera in un file (che PicSpeak non scrive mai) potrebbe far toccare un'altra tessera
+    const wordsOnly = (sentences) => (Array.isArray(sentences) ? sentences.map((sentence) => (Array.isArray(sentence)
+      ? sentence.map((w) => (typeof w === 'string' ? w : w && w.label)) : [])) : []);
+    return raw.stories.slice(0, games.LIMITS.stories).filter((s) => s && typeof s === 'object')
+      .map((s) => games.cleanStory({ title: s.title, level: s.level, lang: s.lang, sentences: wordsOnly(s.sentences), id: null, from: null, enabled: true }))
+      .filter(Boolean);
   }
 
   function importFile() {
@@ -374,6 +379,7 @@
       ul.append(li);
     });
     if (stories.length) wrap.append(ul); else wrap.append(el('p', 'settings-help', t('storyNone')));
+    wrap.append(ui.advanced(el('p', 'settings-help', t('storyExportPrivacy'))));
     const tools = el('div', 'tpl-tools');
     tools.append(
       ui.button(t('storyNew'), () => {
