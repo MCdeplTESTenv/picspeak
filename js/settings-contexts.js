@@ -281,7 +281,7 @@
     wrap.append(ui.settingRow('ctxShowTag', 'ctxShowTagHelp', ui.segmented(
       [['off', 'valNo'], ['on', 'valYes']], predict.settings.showContext ? 'on' : 'off',
       async (value) => { await predict.setSettings({ showContext: value === 'on' }); refresh(); },
-    )));
+    ), { advanced: true }));
     const list = predict.listContexts();
     // Molti contesti accesi insieme: nessun divieto, ma un avviso (le spinte si sommano e si diluiscono)
     const activeCount = list.filter((c) => c.activeNow).length;
@@ -309,7 +309,7 @@
     const tools = el('div', 'tpl-tools');
     tools.append(
       ui.button(t('ctxNew'), () => { draft = newDraft(); refresh(); }, true),
-      ui.button(t('ctxImportFile'), () => importFile((m) => { notice = m; refresh(); })),
+      ui.advanced(ui.button(t('ctxImportFile'), () => importFile((m) => { notice = m; refresh(); }))),
     );
     wrap.append(tools);
     renderBuiltins();
@@ -648,7 +648,7 @@
       (value) => { draft.mode = value; refresh(); },
     )));
 
-    const data = ui.section('ctxDataTitle', 'ctxDataHelp');
+    const data = ui.section('ctxDataTitle', 'ctxDataHelp', { advanced: true });
     renderSource(data);
     data.append(ui.settingRow('ctxBoost', 'ctxBoostHelp', ui.segmented(
       [['2', 'ctxBoostLow'], ['4', 'ctxBoostMedium'], ['8', 'ctxBoostHigh']], String(draft.boost),
@@ -666,7 +666,7 @@
     );
     if (draft.id) {
       const id = draft.id;
-      tools.append(ui.button(t('ctxExportOne'), () => exportOne(id, draft.name)));
+      tools.append(ui.advanced(ui.button(t('ctxExportOne'), () => exportOne(id, draft.name))));
       if (draft.builtin) tools.append(ui.button(t('ctxRestore'), restore));
       const del = ui.button(t('ctxDelete'), remove);
       del.classList.add('dlg-btn-danger');
