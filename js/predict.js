@@ -24,7 +24,9 @@
   const DAY_MS = 24 * 60 * 60 * 1000;
   const MIN_SCORE = 1.5; // sotto questo valore (circa due usi recenti) non si suggerisce nulla
   const SETTINGS_KEY = 'prediction';
-  const DEFAULTS = { collect: true, suggest: false, count: 2, style: 'outline', dim: false, width: 'medium', color: 'blue' };
+  const DEFAULTS = { collect: true, suggest: false, count: 2, style: 'outline', dim: false, dimLevel: 50, width: 'medium', color: 'blue' };
+  // Trasparenza delle tessere non suggerite, in percentuale (passi di 10)
+  const DIM_LEVEL = { min: 10, max: 90, step: 10 };
   // Spessore e colore del contorno dei suggerimenti
   const WIDTHS = ['thin', 'medium', 'thick'];
   const COLORS = ['blue', 'yellow', 'green', 'orange', 'purple'];
@@ -76,6 +78,9 @@
     if (settings.style === 'fade') { settings.style = 'outline'; settings.dim = true; }
     settings.style = STYLES.includes(settings.style) ? settings.style : DEFAULTS.style;
     settings.dim = settings.dim === true;
+    settings.dimLevel = Number.isInteger(settings.dimLevel) && settings.dimLevel >= DIM_LEVEL.min
+      && settings.dimLevel <= DIM_LEVEL.max && settings.dimLevel % DIM_LEVEL.step === 0
+      ? settings.dimLevel : DEFAULTS.dimLevel;
     settings.width = WIDTHS.includes(settings.width) ? settings.width : DEFAULTS.width;
     settings.color = COLORS.includes(settings.color) ? settings.color : DEFAULTS.color;
     applyLook();
@@ -320,6 +325,8 @@
   function applyLook() {
     document.documentElement.dataset.suggestWidth = settings.width;
     document.documentElement.dataset.suggestColor = settings.color;
+    // Opacità delle tessere non suggerite = 100% meno la trasparenza scelta
+    document.documentElement.style.setProperty('--suggest-fade-opacity', String((100 - settings.dimLevel) / 100));
   }
 
   async function setSettings(changes) {
@@ -344,6 +351,7 @@
     importRows,
     CsvError,
     STYLES,
+    DIM_LEVEL,
     WIDTHS,
     COLORS,
     get settings() { return { ...settings }; },

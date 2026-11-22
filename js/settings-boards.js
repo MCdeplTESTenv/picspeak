@@ -518,6 +518,24 @@
           [['off', 'valNo'], ['on', 'valYes']], s.dim ? 'on' : 'off',
           (value) => changeSuggest({ dim: value === 'on' }),
         )));
+        // Quanto sono trasparenti le altre tessere, in percentuale; l'esempio qui sotto si aggiorna subito
+        if (s.dim) {
+          const { min, max, step } = predict.DIM_LEVEL;
+          const stepper = el('div', 'stepper');
+          const minus = el('button', 'stepper-btn', '−');
+          minus.type = 'button';
+          minus.setAttribute('aria-label', t('dimLess'));
+          minus.disabled = s.dimLevel <= min;
+          minus.addEventListener('click', () => changeSuggest({ dimLevel: s.dimLevel - step }));
+          const value = el('span', 'stepper-value', `${s.dimLevel}%`);
+          const plus = el('button', 'stepper-btn', '+');
+          plus.type = 'button';
+          plus.setAttribute('aria-label', t('dimMore'));
+          plus.disabled = s.dimLevel >= max;
+          plus.addEventListener('click', () => changeSuggest({ dimLevel: s.dimLevel + step }));
+          stepper.append(minus, value, plus);
+          wrap.append(ui.settingRow('optSuggestDimLevel', 'optSuggestDimLevelHelp', stepper));
+        }
       }
       const widthKeys = { thin: 'widthThin', medium: 'widthMedium', thick: 'widthThick' };
       wrap.append(ui.settingRow('optSuggestWidth', 'optSuggestWidthHelp', ui.segmented(
