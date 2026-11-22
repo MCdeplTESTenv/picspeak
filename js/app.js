@@ -553,6 +553,11 @@
     speech.speak(text, i18n.speechLocale);
   }
 
+  // Parola di una tessera: si legge dopo quelle toccate subito prima, senza tagliarle
+  function sayWord(text) {
+    speech.speak(text, i18n.speechLocale, { queue: true });
+  }
+
   // Breve evidenziazione visiva del tocco (senza animazioni invasive)
   function flash(node) {
     node.classList.add('is-pressed');
@@ -612,11 +617,11 @@
     const speakNow = options.speakWords !== 'sentence';
     if (item.kind === 'folder') {
       // Cartella «silenziosa» (opzione nelle sue impostazioni): si apre senza leggerne il nome
-      if (speakNow && !item.silent) say(speechOf(item));
+      if (speakNow && !item.silent) sayWord(speechOf(item));
       openFolder(item.targetPageId);
       return;
     }
-    if (speakNow) say(speechOf(item));
+    if (speakNow) sayWord(speechOf(item));
     // Ritorno automatico alla Home dopo una parola presa in una cartella
     if (options.autoHome && state.pageId !== data.homePageId) setTimeout(() => goToPage(data.homePageId), 250);
     if (state.sentence.length < MAX_SENTENCE_LENGTH) {
@@ -643,7 +648,7 @@
       renderSentence();
       return;
     }
-    say(speechOf(state.sentence[index]));
+    sayWord(speechOf(state.sentence[index]));
   }
 
   function applyStaticLabels() {
@@ -741,6 +746,7 @@
   }
 
   function clearSentenceAnimated(direction) {
+    speech.stop();
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) {
       state.sentence = [];
@@ -814,9 +820,10 @@
     if (!text) return;
     if (!options.clearAfter) { say(text); return; }
     const snapshot = state.sentence;
+    const length = snapshot.length;
     const clear = () => {
-      // Solo se nel frattempo non si è cominciata un'altra frase
-      if (state.sentence === snapshot) { state.sentence = []; renderSentence(); }
+      // Solo se nel frattempo non si è cominciata un'altra frase né aggiunta un'altra parola
+      if (state.sentence === snapshot && snapshot.length === length) { state.sentence = []; renderSentence(); }
     };
     if (!speech.speak(text, i18n.speechLocale, { onEnd: clear })) setTimeout(clear, 1500);
   }
@@ -856,6 +863,8 @@
       renderSentence();
     });
     el.clear.addEventListener('click', () => {
+      // Cancellando la frase si zittiscono anche le parole ancora in coda
+      speech.stop();
       state.sentence = [];
       renderSentence();
     });

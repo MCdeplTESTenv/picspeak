@@ -373,7 +373,7 @@
   }
 
   function renderObfSection() {
-    const wrap = ui.section('secObfTitle', 'secObfHelp');
+    const wrap = ui.section('secObfTitle', 'secObfHelp', { advanced: true });
     const tools = el('div', 'tpl-tools');
     const imp = ui.button(t('obfImport'), importObf, true);
     const all = ui.button(t('obfExportAll'), () => runSafely(() => exportObfFile('obz')));
@@ -430,7 +430,7 @@
   }
 
   function renderLegendSection() {
-    const wrap = ui.section('secLegendTitle', 'secLegendHelp');
+    const wrap = ui.section('secLegendTitle', 'secLegendHelp', { advanced: true });
     const legend = el('ul', 'type-legend');
     [...data.WORD_TYPES, 'folder'].forEach((type) => {
       const li = el('li', `type-${type}`);
@@ -518,21 +518,39 @@
           [['off', 'valNo'], ['on', 'valYes']], s.dim ? 'on' : 'off',
           (value) => changeSuggest({ dim: value === 'on' }),
         )));
+        // Quanto sono trasparenti le altre tessere, in percentuale; l'esempio qui sotto si aggiorna subito
+        if (s.dim) {
+          const { min, max, step } = predict.DIM_LEVEL;
+          const stepper = el('div', 'stepper');
+          const minus = el('button', 'stepper-btn', '−');
+          minus.type = 'button';
+          minus.setAttribute('aria-label', t('dimLess'));
+          minus.disabled = s.dimLevel <= min;
+          minus.addEventListener('click', () => changeSuggest({ dimLevel: s.dimLevel - step }));
+          const value = el('span', 'stepper-value', `${s.dimLevel}%`);
+          const plus = el('button', 'stepper-btn', '+');
+          plus.type = 'button';
+          plus.setAttribute('aria-label', t('dimMore'));
+          plus.disabled = s.dimLevel >= max;
+          plus.addEventListener('click', () => changeSuggest({ dimLevel: s.dimLevel + step }));
+          stepper.append(minus, value, plus);
+          wrap.append(ui.settingRow('optSuggestDimLevel', 'optSuggestDimLevelHelp', stepper, { advanced: true }));
+        }
       }
       const widthKeys = { thin: 'widthThin', medium: 'widthMedium', thick: 'widthThick' };
       wrap.append(ui.settingRow('optSuggestWidth', 'optSuggestWidthHelp', ui.segmented(
         predict.WIDTHS.map((w) => [w, widthKeys[w]]), s.width, (width) => changeSuggest({ width }),
-      )));
+      ), { advanced: true }));
       const colorKeys = { blue: 'colorBlue', yellow: 'colorYellow', green: 'colorGreen', orange: 'colorOrange', purple: 'colorPurple' };
       const colors = ui.segmented(predict.COLORS.map((c) => [c, colorKeys[c]]), s.color, (color) => changeSuggest({ color }));
       // Un pallino del colore davanti a ogni nome
       colors.querySelectorAll('button').forEach((btn, i) => btn.prepend(el('span', `suggest-swatch suggest-swatch-${predict.COLORS[i]}`)));
-      wrap.append(ui.settingRow('optSuggestColor', 'optSuggestColorHelp', colors));
+      wrap.append(ui.settingRow('optSuggestColor', 'optSuggestColorHelp', colors, { advanced: true }));
       const counts = s.style === 'outline' ? ['1', '2', '3'] : ['3', '5', '10'];
       wrap.append(ui.settingRow('optSuggestCount', 'optSuggestCountHelp', ui.segmented(
         counts.map((n) => [n, `val${n}`]), String(s.count),
         (value) => changeSuggest({ count: Number(value) }),
-      )));
+      ), { advanced: true }));
     }
     // Esempio dell'aspetto con lo stile scelto: tre tessere, dalla più usata a una non suggerita
     const sample = el('div', 'suggest-sample');
@@ -583,8 +601,10 @@
           { value: 'replace', label: t('habitsImportReplace'), help: t('habitsImportReplaceHelp'), danger: true },
         ]);
         if (mode !== 'merge' && mode !== 'replace') return;
-        const n = await predict.importRows(rows, mode);
-        habitsNotice = { text: skipped ? format('habitsImportedSkipped', { n, skipped }) : format('habitsImported', { n }) };
+        const { imported: n, unknown } = await predict.importRows(rows, mode);
+        let text = skipped ? format('habitsImportedSkipped', { n, skipped }) : format('habitsImported', { n });
+        if (unknown) text += ` ${format('habitsUnknownContext', { n: unknown })}`;
+        habitsNotice = { text };
       } catch (error) {
         habitsNotice = { text: habitsMessage(error), error: true };
       }
@@ -603,8 +623,23 @@
       [['off', 'valNo'], ['on', 'valYes']], s.collect ? 'on' : 'off',
       async (value) => { await predict.setSettings({ collect: value === 'on' }); ui.render(); },
     )));
+    // Base di partenza: combinazioni di parole di base con pesi bassi, superate presto dall'uso reale
+    wrap.append(ui.settingRow('optStarter', 'optStarterHelp', ui.segmented(
+      [['off', 'valNo'], ['on', 'valYes']], predict.starterBaseOn() ? 'on' : 'off',
+      (value) => runSafely(async () => {
+        await predict.setStarterBase(value === 'on', i18n.language);
+        app.applySuggestions();
+        ui.render();
+      }),
+    )));
     const stats = predict.stats();
     wrap.append(el('p', 'habits-stats', format('habitsStats', { uses: stats.uses, pairs: stats.pairs })));
+    // Quanto occupa lo storico sul dispositivo
+    const size = stats.bytes < 1024 * 1024 ? `${Math.max(1, Math.round(stats.bytes / 1024))} KB`
+      : `${(stats.bytes / 1024 / 1024).toLocaleString(i18n.language, { maximumFractionDigits: 1 })} MB`;
+    if (stats.days || stats.months) wrap.append(el('p', 'habits-stats', format('habitsHistory', { days: stats.days, size })));
+    const active = predict.activeContexts();
+    if (active.length) wrap.append(el('p', 'habits-stats', format('habitsActiveContexts', { names: active.join(', ') })));
     if (stats.top.length) {
       wrap.append(el('p', 'habits-top-title', t('habitsTop')));
       const ol = el('ol', 'habits-top');
@@ -616,16 +651,16 @@
         { value: 'yes', label: t('habitsClear'), danger: true },
       ]);
       if (ok !== 'yes') return;
-      await predict.clearAll();
+      await predict.clearAll({ keepStarter: true });
       app.applySuggestions();
       ui.render();
     }));
     clear.classList.add('dlg-btn-danger');
-    clear.disabled = !stats.pairs;
+    clear.disabled = !stats.pairs && !stats.days && !stats.months;
     wrap.append(clear);
 
     // File CSV modificabile dal terapista
-    const file = ui.section('habitsFileTitle', 'habitsFileHelp');
+    const file = ui.section('habitsFileTitle', 'habitsFileHelp', { advanced: true });
     if (habitsNotice) {
       const box = el('p', `tpl-status${habitsNotice.error ? ' is-error' : ''}`, habitsNotice.text);
       box.setAttribute('role', 'status');
@@ -637,6 +672,19 @@
     exp.disabled = !stats.pairs;
     tools.append(exp, ui.button(t('habitsImport'), importHabits));
     file.append(tools);
+
+    // Storico completo e contesti in un file a parte (lo stesso contenuto entrerà nel backup completo)
+    const history = ui.section('historyFileTitle', 'historyFileHelp', { advanced: true });
+    const ctxUi = window.PicSpeak.contextsUi;
+    const htools = el('div', 'tpl-tools');
+    const hexp = ui.button(t('historyExport'), () => ctxUi.exportHistory());
+    hexp.disabled = !stats.days && !stats.months && !stats.pairs && !predict.listContexts().length;
+    htools.append(hexp, ui.button(t('historyImport'), () => ctxUi.importFile((m) => { habitsNotice = m; ui.render(); })));
+    history.append(htools);
+  }
+
+  function contextEditing() {
+    return Boolean(window.PicSpeak.contextsUi && window.PicSpeak.contextsUi.editing);
   }
 
   function renderHowSection() {
@@ -661,7 +709,13 @@
     icon: '<path d="M12 3.5l1.9 4.6 4.6 1.9-4.6 1.9L12 16.5l-1.9-4.6L5.5 10l4.6-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
     titleKey: 'catPrediction',
     introKey: 'catPredictionIntro',
-    render: [renderSuggestSection, renderHabitsSection, renderHowSection],
+    // Mentre si modifica un contesto si vede solo la sua scheda
+    render: [
+      () => { if (!contextEditing()) renderSuggestSection(); },
+      () => { if (!contextEditing()) renderHabitsSection(); },
+      () => { if (window.PicSpeak.contextsUi) window.PicSpeak.contextsUi.render(); },
+      () => { if (!contextEditing()) renderHowSection(); },
+    ],
   }, 'boards');
 
   restoreLock();
