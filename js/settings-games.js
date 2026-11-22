@@ -91,7 +91,7 @@
       list.append(ui.settingRow('gamesLetterMode', 'gamesLetterModeHelp', ui.segmented(
         [['sounds', 'gamesLetterSounds'], ['names', 'gamesLetterNames']], s.letterMode,
         async (value) => { await games.saveSettings({ letterMode: value }); refresh(); },
-      )));
+      ), { advanced: true }));
     }
   }
 
@@ -113,7 +113,7 @@
 
   function renderQuiet() {
     const s = games.settings;
-    const wrap = ui.section('gamesQuietTitle', 'gamesQuietHelp');
+    const wrap = ui.section('gamesQuietTitle', 'gamesQuietHelp', { advanced: true });
     if (s.quiet.length) {
       const ul = el('ul', 'ctx-list');
       s.quiet.forEach((slot, index) => {
@@ -197,7 +197,7 @@
   }
 
   function renderPictograms() {
-    const wrap = ui.section('gamesPicsTitle', 'gamesPicsHelp');
+    const wrap = ui.section('gamesPicsTitle', 'gamesPicsHelp', { advanced: true });
     const missing = games.missingPictograms().length;
     const total = window.PicSpeak.gamesData.words.length;
     if (downloading) {
@@ -339,7 +339,7 @@
     wrap.append(ui.settingRow('storySpeed', 'storySpeedHelp', ui.segmented(
       [['slow', 'storySpeedSlow'], ['normal', 'storySpeedNormal'], ['fast', 'storySpeedFast']], s.storySpeed,
       async (value) => { await games.saveSettings({ storySpeed: value }); refresh(); },
-    )));
+    ), { advanced: true }));
     const stories = games.allStories();
     const ul = el('ul', 'ctx-list story-list');
     stories.forEach((story) => {
@@ -367,7 +367,7 @@
           notice = { text: format('storyDuplicated', { title: copy.title }) };
           refresh();
         }),
-        ui.button(t('storyExport'), () => exportFile([story], story.title)),
+        ui.advanced(ui.button(t('storyExport'), () => exportFile([story], story.title))),
         ui.button(t('storyDelete'), () => removeStory(story)),
       );
       li.append(text, state, row);
@@ -380,9 +380,9 @@
         draft = { id: null, from: null, title: '', level: 1, lang: i18n.language, enabled: true, sentences: [] };
         refresh();
       }, true),
-      ui.button(t('storyImport'), importFile),
+      ui.advanced(ui.button(t('storyImport'), importFile)),
     );
-    if (stories.length) tools.append(ui.button(t('storyExportAll'), () => exportFile(stories, i18n.language === 'it' ? 'tutte' : 'all')));
+    if (stories.length) tools.append(ui.advanced(ui.button(t('storyExportAll'), () => exportFile(stories, i18n.language === 'it' ? 'tutte' : 'all'))));
     if (s.hiddenBuiltIns.length || s.disabledBuiltIns.length || games.userStories.some((x) => x.from)) {
       tools.append(ui.button(t('storyRestore'), restoreBuiltIns));
     }
