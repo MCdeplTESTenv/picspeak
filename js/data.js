@@ -49,9 +49,9 @@
     };
   }
 
-  async function seedDefaultProfile() {
+  // Crea un profilo con le schede di prova (prima apertura o «Aggiungi un profilo»), senza renderlo attivo
+  async function seedDefaultProfile(profileId, name = '') {
     const lang = i18n.language;
-    const profileId = newId('p');
     const images = new Map();
     const pageIds = {};
     Object.keys(sampleData.pages).forEach((key) => { pageIds[key] = newId('pg'); });
@@ -95,7 +95,7 @@
 
     const profile = {
       id: profileId,
-      name: '',
+      name,
       kind: 'child',
       language: lang,
       homePageId: pageIds[sampleData.homePage],
@@ -107,17 +107,16 @@
     await storage.putRecords('images', [...images.values()]);
     await storage.putRecords('pages', pages);
     await storage.putRecord('profiles', profile);
-    await storage.set('activeProfileId', profileId);
     return profile;
   }
 
   // ---------- Caricamento ----------
 
   async function load() {
-    let profileId = await storage.get('activeProfileId');
-    let profile = profileId ? await storage.getRecord('profiles', profileId) : null;
-    if (!profile) profile = await seedDefaultProfile();
-    profileId = profile.id;
+    // Si carica solo il profilo in uso; alla prima apertura si crea con l'id già preparato dall'archivio
+    const profileId = await storage.activeProfileId();
+    let profile = await storage.getRecord('profiles', profileId);
+    if (!profile) profile = await seedDefaultProfile(profileId);
     const [pages, images] = await Promise.all([
       storage.getAllRecords('pages'),
       storage.getAllRecords('images'),
@@ -478,11 +477,28 @@
     await storage.putRecords('pages', pages);
   }
 
+  // Immagine nuova (foto o immagine da un file): appartiene al profilo in uso, gli altri profili non la vedono
+  // nella ricerca (le immagini restano comunque in comune per le schede che le usano, per esempio dopo «Duplica»)
   async function addImage(fields) {
-    const image = { id: newId('img'), addedAt: now(), ...fields };
+    const image = { id: newId('img'), addedAt: now(), profileId: model.profile ? model.profile.id : undefined, ...fields };
     model.images.set(image.id, image);
     await storage.putRecord('images', image);
     return image;
+  }
+
+  /*
+   * Immagini che il profilo in uso può trovare con la ricerca «sul dispositivo». Le foto e le immagini personali
+   * (fonte «photo» o «other») si vedono solo nel profilo che le ha aggiunte o se le usano le sue schede: per
+   * privacy un profilo non vede le foto di un altro. Simboli delle raccolte (ARASAAC, pacchetti…) per tutti.
+   */
+  function searchableImages() {
+    const own = model.profile ? model.profile.id : null;
+    const used = new Set();
+    model.pages.forEach((p) => (Array.isArray(p.cells) ? p.cells : []).forEach((c) => { if (c && c.imageId) used.add(c.imageId); }));
+    return [...model.images.values()].filter((image) => {
+      if (image.source !== 'photo' && image.source !== 'other') return true;
+      return (image.profileId && image.profileId === own) || used.has(image.id);
+    });
   }
 
   // Salva un'immagine con id stabile (es. img_ar_2462): se esiste già sul dispositivo la riusa
@@ -520,6 +536,7 @@
     canMoveCellTo,
     moveCellToPage,
     profilePages,
+    seedDefaultProfile,
     snapshotPages,
     previousPages,
     replacePages,
@@ -528,5 +545,6 @@
     addImage,
     saveImage,
     allImages: () => [...model.images.values()],
+    searchableImages,
   };
 })();

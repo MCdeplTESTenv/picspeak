@@ -77,7 +77,7 @@
   // ---------- Finestra di dialogo generica (PIN, recupero, messaggi) ----------
 
   /*
-   * cfg: { title, help, code, fields: [{ id, label, text }], primary, secondary, link, onSubmit }
+   * cfg: { title, help, code, fields: [{ id, label, text | plain | secret, value, maxLength }], primary, secondary, link, onSubmit }
    * onSubmit(values) restituisce: una stringa = errore (la finestra resta aperta),
    * altrimenti il risultato con cui chiudere. Risolve null se annullata.
    */
@@ -116,7 +116,20 @@
         input.autocomplete = 'off';
         input.autocapitalize = 'characters';
         input.spellcheck = false;
-        if (field.text) {
+        if (field.secret) {
+          // Password libera (backup): lettere e numeri, nessun limite a 6 cifre
+          input.type = 'password';
+          input.className = 'is-plain';
+          input.autocapitalize = 'off';
+          input.maxLength = 128;
+        } else if (field.plain) {
+          // Testo normale (es. nome del profilo): maiuscole e minuscole come le scrive l'adulto
+          input.type = 'text';
+          input.className = 'is-plain';
+          input.autocapitalize = 'words';
+          input.maxLength = field.maxLength || 60;
+          if (field.value) input.value = field.value;
+        } else if (field.text) {
           input.type = 'text';
         } else {
           input.type = 'password';
@@ -170,13 +183,14 @@
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         primary.disabled = true;
-        const values = Object.fromEntries(inputs.map((input) => [input.name, input.value.trim()]));
+        const values = Object.fromEntries(inputs.map((input) => [input.name, input.type === 'password' && input.classList.contains('is-plain') ? input.value : input.value.trim()]));
         const outcome = cfg.onSubmit ? await cfg.onSubmit(values) : true;
         primary.disabled = false;
         if (typeof outcome === 'string') {
           error.textContent = outcome;
-          inputs.forEach((input) => { input.value = ''; });
-          if (inputs[0]) inputs[0].focus();
+          inputs.forEach((input) => { if (input.type === 'password' || !input.classList.contains('is-plain')) input.value = ''; });
+          const firstEmpty = inputs.find((input) => !input.value) || inputs[0];
+          if (firstEmpty) firstEmpty.focus();
           return;
         }
         close(outcome ?? true);
@@ -416,6 +430,7 @@
 
   function enterAdult() {
     app.setMode('adult');
+    if (window.PicSpeak.profiles) window.PicSpeak.profiles.showProfileInBar();
     storage.requestPersistence();
     setTimeout(updateZoomLabel, 0);
     el.adultBar.hidden = false;
@@ -481,23 +496,24 @@
 
   // ---------- Impostazioni ----------
 
-  // Sezioni richiudibili: il titolo resta sempre visibile, con una freccia che apre o chiude il contenuto.
-  // All'inizio sono chiuse; quelle aperte dall'adulto restano aperte (elenco salvato sul dispositivo).
-  // Chiudere una sezione non cambia nulla: i valori scelti continuano a valere.
-  let openSections = new Set();
+  // Sezioni richiudibili: ogni sezione ha il titolo sempre visibile, con una freccia che apre o chiude il contenuto.
+  // All'inizio sono tutte chiuse: si vede l'elenco dei titoli; quelle che l'adulto apre o chiude restano così
+  // (stato salvato sul dispositivo). Chiudere una sezione non cambia nulla: i valori scelti continuano a valere.
+  let sectionState = {};
 
-  function saveOpenSections() {
-    storage.set('openSections', [...openSections]);
+  function saveSectionState() {
+    storage.set('sectionState', sectionState);
   }
 
-  // options.collapsible: true = sezione richiudibile; options.key: nome con cui ricordarla (predefinito: il titolo)
+  // options.collapsible: false = sezione sempre aperta, senza freccia (avvisi, pulsanti di salvataggio)
+  // options.open: true = aperta all'inizio (scheda di un contesto); options.key: nome con cui ricordarla
   function section(titleKey, helpKey, options = {}) {
     const wrap = document.createElement('section');
     wrap.className = 'settings-section';
     const title = document.createElement('h3');
-    if (options.collapsible) {
+    if (options.collapsible !== false) {
       const key = options.key || titleKey;
-      const open = openSections.has(key);
+      const open = typeof sectionState[key] === 'boolean' ? sectionState[key] : Boolean(options.open);
       wrap.classList.add('is-collapsible');
       wrap.classList.toggle('is-collapsed', !open);
       const toggle = document.createElement('button');
@@ -515,8 +531,8 @@
         const nowOpen = wrap.classList.contains('is-collapsed');
         wrap.classList.toggle('is-collapsed', !nowOpen);
         toggle.setAttribute('aria-expanded', String(nowOpen));
-        if (nowOpen) openSections.add(key); else openSections.delete(key);
-        saveOpenSections();
+        sectionState[key] = nowOpen;
+        saveSectionState();
       });
       title.append(toggle);
     } else {
@@ -985,7 +1001,7 @@
     }
     // Immagini arrivate da schede di altre app (Open Board Format): autore e licenza dichiarati nel file
     const others = new Map();
-    data.allImages().forEach((image) => {
+    data.searchableImages().forEach((image) => { // solo quelle di questo profilo
       if (image.source !== 'other' || !(image.author || image.license)) return;
       const key = `${image.author || ''}|${image.license || ''}|${image.licenseUrl || ''}`;
       if (!others.has(key)) others.set(key, image);
@@ -1380,7 +1396,7 @@
 
   function renderAppearanceGroups() {
     APPEARANCE_GROUPS.forEach((group) => {
-      const wrap = section(group.titleKey, null, { collapsible: true });
+      const wrap = section(group.titleKey);
       if (group.titleKey === 'grpCells') wrap.append(tileZoomRow());
       group.options.forEach((opt) => {
         const current = appearance[opt.key] || opt.values[0][0];
@@ -1546,6 +1562,39 @@
     if (kiosk.autoFullscreen()) kiosk.enterFullscreen();
   }
 
+  // ---------- Riapertura dopo il cambio di profilo ----------
+
+  // Il cambio di profilo ricarica la pagina: per non chiedere di nuovo il PIN all'adulto che lo ha appena
+  // inserito, si lascia un segno valido una sola volta e per pochi secondi, solo in questa scheda del browser.
+  // Chiave diversa per ogni copia dell'app sullo stesso sito (sito pubblico e anteprima)
+  const REOPEN_KEY = `${storage.name}-reopen`;
+  const REOPEN_MS = 20000;
+
+  function reopenAfterReload(categoryId) {
+    try {
+      sessionStorage.setItem(REOPEN_KEY, JSON.stringify({ at: Date.now(), category: String(categoryId), path: location.pathname }));
+    } catch (error) {
+      // Senza sessionStorage si riapre sulla comunicazione: l'adulto rientra con il PIN
+    }
+    location.reload();
+  }
+
+  function resumeAfterReload() {
+    let saved = null;
+    try {
+      saved = JSON.parse(sessionStorage.getItem(REOPEN_KEY) || 'null');
+      sessionStorage.removeItem(REOPEN_KEY);
+    } catch (error) {
+      return;
+    }
+    if (!saved || typeof saved.at !== 'number' || typeof saved.category !== 'string') return;
+    const age = Date.now() - saved.at;
+    if (age < 0 || age > REOPEN_MS || saved.path !== location.pathname) return;
+    if (window.top !== window.self) return;
+    enterAdult();
+    openSettings(saved.category);
+  }
+
   // ---------- Avvio ----------
 
   function bindEvents() {
@@ -1626,14 +1675,26 @@
     applyAppearance();
   }
 
-  // Sezioni richiudibili aperte dall'adulto (solo nomi di testo plausibili).
-  // La vecchia preferenza «Mostra impostazioni avanzate» non esiste più e si toglie.
-  async function restoreOpenSections() {
-    const saved = await storage.get('openSections');
-    if (Array.isArray(saved)) {
-      openSections = new Set(saved.filter((key) => typeof key === 'string' && key.length <= 60).slice(0, 100));
+  // Sezioni aperte o chiuse dall'adulto (solo nomi brevi e valori sì/no).
+  // Recupero dei formati precedenti: «openSections» (elenco delle sole sezioni aperte) e «showAdvanced» (tolto).
+  async function restoreSectionState() {
+    const saved = await storage.get('sectionState');
+    const clean = {};
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      Object.keys(saved).slice(0, 200).forEach((key) => {
+        if (key.length <= 60 && typeof saved[key] === 'boolean') clean[key] = saved[key];
+      });
     }
+    const legacy = await storage.get('openSections');
+    if (Array.isArray(legacy)) {
+      legacy.slice(0, 100).forEach((key) => {
+        if (typeof key === 'string' && key.length <= 60 && !(key in clean)) clean[key] = true;
+      });
+      await storage.set('sectionState', clean);
+    }
+    if (legacy !== undefined) await storage.remove('openSections');
     if ((await storage.get('showAdvanced')) !== undefined) await storage.remove('showAdvanced');
+    sectionState = clean;
   }
 
   async function restoreOnlineSearch() {
@@ -1655,6 +1716,7 @@
     render: () => { if (!el.settings.hidden) renderSettings(); },
     closeSettings,
     openSettings,
+    reopenAfterReload,
     // Nuova categoria nel menu delle impostazioni, dopo quella indicata
     addCategory(category, afterId) {
       const index = CATEGORIES.findIndex((cat) => cat.id === afterId);
@@ -1663,11 +1725,16 @@
   };
 
   bindEvents();
-  restoreOpenSections();
+  restoreSectionState();
   restoreOnlineSearch();
   restorePageBackground();
   restoreAppearance();
   restoreLanguage();
   restoreVoice();
   restoreColorMode();
+  // Dopo il cambio di profilo: si torna nelle impostazioni quando le schede del nuovo profilo sono pronte
+  // (e quando tutti gli script sono caricati, compresa la pagina «Profili»)
+  const pageLoaded = document.readyState === 'complete'
+    ? Promise.resolve() : new Promise((resolve) => window.addEventListener('load', resolve, { once: true }));
+  if (app.ready) Promise.all([app.ready, pageLoaded]).then(resumeAfterReload);
 })();

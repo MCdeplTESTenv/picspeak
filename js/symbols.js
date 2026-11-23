@@ -189,7 +189,8 @@
   async function activeSources() {
     const saved = (await storage.get('symbolSources')) || {};
     const out = {};
-    Object.keys(SOURCE_DEFAULTS).forEach((id) => { out[id] = saved[id] ?? SOURCE_DEFAULTS[id]; });
+    // Solo sì/no: un valore diverso (per esempio da un file) vale come la scelta iniziale
+    Object.keys(SOURCE_DEFAULTS).forEach((id) => { out[id] = typeof saved[id] === 'boolean' ? saved[id] : SOURCE_DEFAULTS[id]; });
     return out;
   }
 
@@ -448,7 +449,8 @@
   // Simboli già sul dispositivo (set incluso, ARASAAC salvati, pacchetti già usati, foto)
   function searchDevice(terms, enTerms) {
     const results = [];
-    data.allImages().forEach((image) => {
+    // Solo le immagini di questo profilo: le foto personali degli altri profili non compaiono
+    data.searchableImages().forEach((image) => {
       const kw = image.keywords || {};
       const it = (kw.it || []).map(normalize);
       const en = (kw.en || []).map(normalize);

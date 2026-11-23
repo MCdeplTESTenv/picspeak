@@ -89,6 +89,7 @@
           <div>
             <h3>Adattare PicSpeak alla persona</h3>
             <ul>
+              <li><a href="#profili">Usare PicSpeak con più persone (profili)</a></li>
               <li><a href="#pulsanti-rapidi">Aggiungere «Ops», «Aiuto» e frasi rapide</a></li>
               <li><a href="#tocco">Aiutare chi ha tremori o tocca per sbaglio</a></li>
               <li><a href="#frase">Decidere come si comporta la frase</a></li>
@@ -114,7 +115,8 @@
               <li><a href="#installare">Installare come app e usarla senza internet</a></li>
               <li><a href="#accesso-guidato">Tenere PicSpeak sempre aperto e a schermo intero</a></li>
               <li><a href="#dati">Sapere dove restano i dati</a></li>
-              <li><a href="#ripristino">Tornare alle impostazioni iniziali</a></li>
+              <li><a href="#backup">Fare un backup e ripristinarlo</a></li>
+              <li><a href="#ripristino">Azzerare l’app</a></li>
               <li><a href="#crediti">Trovare crediti e licenze</a></li>
             </ul>
           </div>
@@ -267,6 +269,7 @@
         <caption>Cosa trovate in ogni categoria</caption>
         <tbody>
           <tr><th scope="row">Generale</th><td>lingua, ricerca online dei simboli, installare come app, guida, crediti</td></tr>
+          <tr><th scope="row">Profili</th><td>le persone che usano PicSpeak su questo dispositivo: usare, aggiungere, duplicare, rinominare, eliminare un profilo</td></tr>
           <tr><th scope="row">Aspetto</th><td>stili pronti, colori, sfondo, simboli, testo, celle, posizione della frase, gesti</td></tr>
           <tr><th scope="row">Tocco e frase</th><td>pulsanti «Ops» e «Aiuto», frasi rapide, tempo di pressione, tocchi ripetuti, comportamento della frase</td></tr>
           <tr><th scope="row">Schede</th><td>schede pronte, i miei modelli, importa ed esporta, altre app, stampa, disposizione e posizioni, colori per tipo di parola</td></tr>
@@ -274,7 +277,7 @@
           <tr><th scope="row">Simboli</th><td>ARASAAC, Mulberry, OpenMoji, Twemoji, foto personali</td></tr>
           <tr><th scope="row">Voce</th><td>voce, velocità, tono, come avere una voce più naturale</td></tr>
           <tr><th scope="row">Sicurezza</th><td>cambiare il PIN, schermo sempre acceso, schermo intero, blocco del dispositivo su PicSpeak (Accesso guidato, Fissa app)</td></tr>
-          <tr><th scope="row">Backup e ripristino</th><td>tornare alle impostazioni iniziali, cancellare tutto; copia di sicurezza in arrivo</td></tr>
+          <tr><th scope="row">Backup e ripristino</th><td>backup locale (con password facoltativa), ripristinare un backup, azzerare l’app (impostazioni iniziali, cancella tutto); backup online in arrivo</td></tr>
           <tr><th scope="row">In arrivo</th><td>le funzioni previste nelle prossime versioni</td></tr>
         </tbody>
       </table>
@@ -283,19 +286,15 @@
         <figcaption>Sul telefono le categorie sono un elenco.</figcaption>
       </figure>
       <h4>Aprire e chiudere le sezioni con la freccia</h4>
-      <p>Alcune sezioni più lunghe mostrano solo il titolo, con una freccia <strong>▸</strong> davanti: toccate il titolo
-        per aprirle (la freccia diventa <strong>▾</strong>) e toccatelo di nuovo per chiuderle. All’inizio sono chiuse;
-        quelle che aprite restano aperte anche le volte successive, finché non le richiudete.</p>
-      <p>Chiudere una sezione non cambia nulla: le scelte fatte al suo interno continuano a valere.</p>
-      <table class="map">
-        <caption>Le sezioni con la freccia</caption>
-        <tbody>
-          <tr><th scope="row">Aspetto</th><td>Simboli, Testo, Celle, Disposizione e tocco</td></tr>
-          <tr><th scope="row">Schede</th><td>I miei modelli, Scambio con altre app, Colori per tipo di parola</td></tr>
-          <tr><th scope="row">Previsione</th><td>Esporta e importa le abitudini, Storico e contesti in un file, Contesti
-            pronti, Come funziona; nella pagina di un contesto, Da quali dati</td></tr>
-        </tbody>
-      </table>
+      <p>Ogni sezione delle impostazioni ha il titolo con una freccia davanti. Toccate il titolo per aprirla (la freccia
+        diventa <strong>▾</strong>) e toccatelo di nuovo per chiuderla (<strong>▸</strong>). Quando entrate in una
+        categoria all’inizio sono tutte chiuse: così vedete subito l’elenco di cosa contiene e aprite solo quello che vi
+        serve.</p>
+      <p>Ogni sezione resta come l’avete lasciata anche le volte successive: se ne aprite una, la ritrovate aperta;
+        se la richiudete, resta chiusa. Chiudere una sezione non cambia nulla: le scelte fatte al suo interno continuano a
+        valere.</p>
+      <p>Nella pagina di un contesto sono aperte all’inizio il nome, <strong>Quando vale</strong> e <strong>Le
+        combinazioni del contesto</strong>; i pulsanti per salvare restano sempre visibili.</p>
       <p class="to-index"><a href="#indice">↑ Torna all’indice</a></p>
     </section>
 
@@ -323,13 +322,17 @@
           <tr><th scope="row">Parole di base · 36 tessere, cartelle in alto</th><td>griglia 6×6 con le cartelle nella prima
             riga, le persone a sinistra, sì / finito / no in basso a sinistra e le domande a destra.</td></tr>
           <tr><th scope="row">Parole di base · 60 tessere, cartelle in alto</th><td>griglia 10×6 con la stessa disposizione
-            della 36 «cartelle in alto»: passando dalla 36 alla 60 le parole restano negli stessi posti. Casa, animali e
-            colori sono dentro Luoghi e Giochi.</td></tr>
+            della 36 «cartelle in alto»: passando dalla 36 alla 60 le parole restano negli stessi posti. Animali e colori
+            sono dentro Giochi.</td></tr>
         </tbody>
       </table>
       <p class="tip">Le due serie «Parole di base» sono alternative: provatele entrambe e tenete quella che funziona meglio.
         Se cambiate idea, in <strong>Recupero</strong> c’è sempre <strong>Ripristina le schede di prima</strong>. La
         cartella <strong>parole piccole</strong> contiene le parole di collegamento (e, con, per, di, il, un…).
+        I luoghi (casa, scuola, parco…) sono tessere della cartella <strong>luoghi</strong>, così «voglio andare a casa»
+        si completa con un tocco; le azioni di ogni giorno sono dove servono: lavarsi e svegliarsi in
+        <strong>corpo</strong>, vestirsi in <strong>vestiti</strong>, colazione, pranzo e cena in <strong>cibo</strong>.
+        Gli oggetti e le persone della scuola sono nella cartella <strong>cose di scuola</strong>.
         Le schede pronte sono un punto di partenza: la scelta delle parole va adattata al bambino, meglio insieme alla
         logopedista.</p>
       <ol class="steps">
@@ -557,6 +560,54 @@
     <!-- ===================== ADATTARE ===================== -->
     <h2 class="chapter" data-hide-on-search>Adattare PicSpeak alla persona</h2>
 
+    <section id="profili" data-search>
+      <h3>Usare PicSpeak con più persone (profili)</h3>
+      <p class="where-line"><span class="where"><span>Impostazioni</span><span>Profili</span></span></p>
+      <p>Sullo stesso dispositivo possono esserci più persone, per esempio i bambini seguiti da una terapista o da
+        un’insegnante. Ogni <strong>profilo</strong> ha le sue schede, i suoi contesti, le sue abitudini d’uso, il suo
+        aspetto, la sua voce e le sue opzioni di tocco e frase. Il PIN è uno solo, quello dell’adulto.</p>
+      <p>Anche le <strong>foto personali</strong> restano di ogni profilo: cercando un simbolo si trovano solo le foto
+        caricate in quel profilo o già usate nelle sue schede, mai quelle di un altro bambino. I simboli delle raccolte
+        (ARASAAC e gli altri) invece sono in comune e si scaricano una volta sola.</p>
+      <p>PicSpeak si apre sempre sull’<strong>ultimo profilo usato</strong>, senza chiedere niente: chi comunica vede solo
+        le sue schede e non può cambiare profilo. Quando i profili sono più di uno, nella barra delle impostazioni
+        sbloccate compare il nome del profilo in uso, così si modificano sempre le schede della persona giusta.</p>
+      <figure class="shot">
+        <img src="guida/profili.webp" width="1176" height="758" alt="La pagina Profili con due profili: Luca, con i pulsanti Usa questo profilo, Duplica, Rinomina ed Elimina, e Luca grande, evidenziato con la scritta In uso e i pulsanti Duplica, Rinomina ed Elimina. Sotto, il pulsante Aggiungi un profilo." loading="lazy">
+      </figure>
+      <ol class="steps">
+        <li><strong>Passare a un altro profilo</strong>: toccate <strong>Usa questo profilo</strong> accanto al nome.
+          PicSpeak si riapre sulle sue schede e resta nella pagina Profili, senza chiedere di nuovo il PIN.</li>
+        <li><strong>Aggiungere un profilo nuovo</strong>: toccate <strong>Aggiungi un profilo</strong>, scrivete il nome e
+          toccate <strong>Crea e usa questo profilo</strong>. Parte dalle schede della prima apertura, con aspetto e voce
+          iniziali; le schede pronte, come Base 36 o Base 60, si scelgono poi in Schede.</li>
+        <li><strong>Duplicare un profilo</strong>: toccate <strong>Duplica</strong> accanto al profilo da copiare, anche
+          se non è quello in uso, scrivete il nome e toccate <strong>Duplica</strong>. Il nuovo profilo è uguale
+          all’originale (schede con le tessere negli stessi posti, contesti, abitudini d’uso, aspetto e voce) e compare
+          nell’elenco; l’originale non cambia. Per usarlo toccate <strong>Usa questo profilo</strong>.</li>
+        <li><strong>Cambiare il nome</strong>: toccate <strong>Rinomina</strong>. Il nome lo vede solo l’adulto: meglio un
+          soprannome o le iniziali che nome e cognome.</li>
+        <li><strong>Eliminare un profilo</strong>: toccate <strong>Elimina…</strong>. Si cancellano per sempre le sue
+          schede, i suoi contesti, le abitudini d’uso, il suo aspetto e la sua voce, e le foto usate solo da quel
+          profilo; gli altri profili e le immagini in comune restano. Per il profilo in uso PicSpeak propone prima di
+          salvarne un backup; per gli altri, se volete conservarne una copia, prima usate quel profilo e salvate un
+          backup. Per confermare servono il PIN e la parola <strong>ELIMINA</strong>. Se eliminate il profilo in uso,
+          PicSpeak passa a un altro profilo. Con un solo profilo il pulsante non c’è: per ricominciare da zero c’è
+          <a href="#ripristino">Cancella tutto</a>.</li>
+      </ol>
+      <p class="tip"><strong>Far crescere la tabella insieme alla persona.</strong> Per i cambiamenti di tutti i giorni
+        restate sullo stesso profilo: aggiungete tessere o nascondetele e mostratele un po’ alla volta, senza spostare
+        quelle che la persona conosce già (vedi <a href="#posizioni">Tenere le tessere sempre allo stesso posto</a>).
+        Per un passo più grande, per esempio una griglia con molte più tessere, usate <strong>Duplica</strong>: la copia ha
+        le tessere negli stessi posti e le stesse abitudini d’uso, così i suggerimenti non ripartono da zero. Preparate
+        con calma la copia e passate a quella quando la persona è pronta; il profilo di prima resta come riserva
+        finché non lo eliminate.</p>
+      <p>Il backup salva il profilo in uso. Ripristinando un backup potete scegliere se crearne un profilo nuovo,
+        senza toccare quello in uso, oppure metterlo al posto del profilo in uso
+        (vedi <a href="#backup">Fare un backup e ripristinarlo</a>).</p>
+      <p class="to-index"><a href="#indice">↑ Torna all’indice</a></p>
+    </section>
+
     <section id="pulsanti-rapidi" data-search>
       <h3>Aggiungere «Ops», «Aiuto» e frasi rapide</h3>
       <p class="where-line"><span class="where"><span>Impostazioni</span><span>Tocco e frase</span><span>Pulsanti rapidi</span></span></p>
@@ -715,8 +766,8 @@
           bambino.</li>
       </ul>
       <h4>Preparare le parole prioritarie (per il terapista)</h4>
-      <p>Le sezioni <strong>Esporta e importa le abitudini</strong> e <strong>Storico e contesti in un file</strong>
-        sono chiuse all’inizio: toccate il loro titolo (con la freccia <strong>▸</strong>) per aprirle.</p>
+      <p>La sezione <strong>Esporta e importa le abitudini</strong> si apre toccando il suo titolo (con la freccia
+        <strong>▸</strong>).</p>
       <ol class="steps">
         <li>In <strong>Esporta e importa le abitudini</strong> toccate <strong>Esporta le abitudini (CSV)</strong>: si
           scarica un file che si apre con Excel, Numbers o Fogli Google.</li>
@@ -735,14 +786,37 @@
       <p class="tip">Le parole si scrivono come sulle tessere (maiuscole e minuscole non contano). Anche i pesi importati
         si affievoliscono col tempo come le abitudini vere, se il bambino non usa quelle parole.</p>
       <p class="warn">Il file contiene le abitudini del bambino: condividetelo solo con persone di fiducia.</p>
-      <h4>Spostare lo storico e i contesti su un altro dispositivo</h4>
-      <ol class="steps">
-        <li>In <strong>Storico e contesti in un file</strong> toccate <strong>Esporta storico e contesti</strong>: si
-          scarica un file con tutto lo storico d’uso, i contesti e le loro modifiche.</li>
-        <li>Sull’altro dispositivo toccate <strong>Importa storico e contesti</strong> e scegliete
-          <strong>Unisci</strong> (gli usi si sommano: non importate due volte lo stesso file) oppure
-          <strong>Sostituisci</strong>.</li>
-      </ol>
+      <h4>Spostare le abitudini e i contesti su un altro dispositivo</h4>
+      <p>Abitudini d’uso e contesti viaggiano con il <a href="#backup">backup completo</a>, insieme alle schede. Sul
+        nuovo dispositivo aprite il backup con <strong>Apri backup…</strong>; se volete riportare solo questa parte,
+        scegliete <strong>Scegli cosa ripristinare</strong> e tenete solo <strong>Abitudini d’uso e contesti</strong>. Con
+        <strong>Apri backup…</strong> si aprono anche i file «storico e contesti» salvati con le versioni precedenti di
+        PicSpeak.</p>
+      <h4 id="previsione-esempi">Come funziona, con qualche esempio</h4>
+      <p>PicSpeak tiene un solo archivio delle <strong>abitudini</strong>: per ogni giorno e per ogni ora, quante volte
+        ogni coppia di parole è stata usata. Da lì nascono i suggerimenti. I <a href="#contesti">contesti</a> non hanno
+        un archivio loro: sono un filtro su queste stesse abitudini, che fa salire le parole di un certo momento.</p>
+      <ul>
+        <li><strong>Le abitudini da sole.</strong> Ogni mattina verso le 8 il bambino compone «voglio → latte». Dopo un
+          paio di giorni, quando a quell’ora tocca «voglio», <strong>Latte</strong> viene suggerito per primo. Il
+          pomeriggio compone «voglio → giocare»: la stessa tessera «voglio» porta a un suggerimento diverso secondo
+          l’ora. Se un’abitudine si perde, per esempio non chiede più il biberon, pesa sempre meno e sparisce dai
+          suggerimenti.</li>
+        <li><strong>Un contesto settimanale.</strong> Create «SCUOLA» dal lunedì al venerdì dalle 8 alle 13, accensione
+          automatica. In quegli orari si accende da solo e fa salire le combinazioni che il bambino usa a scuola, come
+          «andare → bagno» o «finito → merenda», comprese quelle dell’anno scorso. Non c’è niente da insegnargli: impara
+          da ciò che il bambino dice in quegli orari.</li>
+        <li><strong>Un periodo dell’anno.</strong> Create «MARE» come periodo dal 1° luglio al 31 agosto e, in
+          <strong>Storico usato</strong>, scegliete il periodo preciso delle due settimane di mare dell’anno scorso.
+          Tornati in spiaggia riaffiorano «voglio → secchiello» o «andiamo → acqua», parole che a casa non si usano.</li>
+        <li><strong>Una parola nuova.</strong> «Compagni» non è ancora nelle abitudini: aggiungetela a mano a SCUOLA con
+          <strong>Aggiungi una combinazione</strong> e un peso più alto, e verrà suggerita da subito. Quando il bambino
+          comincerà a usarla davvero, il suo uso prenderà il sopravvento.</li>
+        <li><strong>Un contesto preparato da altri.</strong> La logopedista crea «TERAPIA», aggiunge le combinazioni su
+          cui sta lavorando e tocca <strong>Esporta questo contesto</strong>. A casa lo importate: prima di confermare
+          vedete nome, orari, prevalenza e le combinazioni preparate (vedi
+          <a href="#contesto-condiviso">Dare un contesto a un’altra persona</a>).</li>
+      </ul>
       <p class="tip">Tutto viene calcolato su questo dispositivo, anche senza internet: nessun dato viene inviato.</p>
       <p class="to-index"><a href="#indice">↑ Torna all’indice</a></p>
     </section>
@@ -785,7 +859,7 @@
       <h4 id="contesti-pronti">Partire da un contesto pronto</h4>
       <p>In fondo alla pagina dei contesti, <strong>Contesti pronti</strong> propone otto contesti tipici già preparati:
         CASA, SCUOLA, PASTI, GIOCO, BAGNO E IGIENE, FUORI E PARCO, TERAPIA ed ESTATE E MARE (in inglese HOME, SCHOOL…).
-        Ognuno ha orari di esempio e da 11 a 22 combinazioni di parole adatte a quel momento, con pesi bassi. La sezione è chiusa all’inizio: toccate il suo titolo, con la freccia <strong>▸</strong>, per
+        Ognuno ha orari di esempio e da 11 a 22 combinazioni di parole adatte a quel momento, con pesi bassi. Se la sezione è chiusa, toccate il suo titolo, con la freccia <strong>▸</strong>, per
         vedere l’elenco.</p>
       <ol class="steps">
         <li>Toccate <strong>Aggiungi</strong> accanto al contesto che vi serve: compare nell’elenco dei vostri contesti,
@@ -803,7 +877,7 @@
         <li>Come le combinazioni di base, sono pensati per le schede pronte <strong>Parole di base</strong>.</li>
         <li>Se avete già un contesto con lo stesso nome, per aggiungere quello pronto rinominate il vostro.</li>
         <li>Eliminato un contesto pronto, lo potete aggiungere di nuovo dall’elenco: riparte com’era all’inizio.</li>
-        <li>Se spostate storico e contesti su un altro dispositivo con <strong>Sostituisci</strong>, i contesti pronti
+        <li>Se riportate le abitudini e i contesti da un <a href="#backup">backup</a>, i contesti pronti
           arrivano come contesti normali (senza <strong>Riporta all’originale</strong>) e le combinazioni di base come
           pesi normali. Se vi servono di nuovo come pronti, aggiungeteli dall’elenco.</li>
       </ul>
@@ -856,14 +930,27 @@
         (all’inizio è spento). Il nome compare piccolo e chiaro
         accanto ai tre puntini, solo da leggere: toccarlo non fa nulla e il bambino non può cambiare il contesto. Se non
         c’è nessun contesto acceso non compare niente; sui telefoni il nome lungo viene accorciato con i puntini.</p>
-      <h4>Dare un contesto a un’altra persona</h4>
-      <p>Nella pagina del contesto toccate <strong>Esporta questo contesto</strong>: il file contiene la regola, le date e
-        le correzioni fatte a mano, non lo storico. Sull’altro dispositivo toccate <strong>Importa un contesto da
-        file</strong>; se esiste già un contesto con lo stesso nome viene sostituito. Un contesto pronto invece non viene
-        mai sostituito: quello del file si aggiunge accanto con un numero dopo il nome (per esempio «SCUOLA 2»), così
-        potete tenere sia l’originale sia la versione personalizzata. Tutti i contesti, insieme allo
-        storico, si esportano anche da <span class="where"><span>Previsione</span><span>Esporta storico e
-        contesti</span></span>.</p>
+      <h4 id="contesto-condiviso">Dare un contesto a un’altra persona</h4>
+      <p>Un contesto si può passare da casa a scuola, dalla logopedista alla famiglia o tra due famiglie. Il file contiene
+        solo la regola, le date, la prevalenza e le combinazioni preparate a mano: <strong>mai lo storico del
+        bambino</strong> di chi l’ha creato.</p>
+      <ol class="steps">
+        <li>Nella pagina del contesto toccate <strong>Esporta questo contesto</strong> e mandate il file.</li>
+        <li>Sull’altro dispositivo, in <span class="where"><span>Previsione</span><span>Contesti</span></span>, toccate
+          <strong>Importa un contesto da file</strong>.</li>
+        <li>Prima di importare vedete cosa c’è nel file: il nome, quando vale, la prevalenza, quante combinazioni sono
+          state preparate e le più importanti. Se non ce n’è nessuna, il contesto prenderà le parole dalle abitudini già
+          registrate su quel dispositivo.</li>
+        <li>Se non avete un contesto con lo stesso nome toccate <strong>Importa</strong>. Se invece c’è già, scegliete
+          <strong>Sostituisci</strong> (il vostro prende la versione del file) oppure <strong>Tieni entrambi</strong>
+          (quello del file arriva con un numero dopo il nome, per esempio «SCUOLA 2»: potete confrontarli e poi eliminare
+          quello che non serve).</li>
+      </ol>
+      <p>Un contesto pronto non viene mai sostituito: quello del file si aggiunge accanto con un numero dopo il nome, così
+        potete tenere sia l’originale sia la versione personalizzata. Le abitudini registrate non cambiano con
+        l’importazione. Per spostare <strong>tutti</strong> i contesti insieme alle abitudini usate il
+        <a href="#backup">backup completo</a>; se scegliete per sbaglio un file di backup o un vecchio file «storico e
+        contesti», PicSpeak vi ricorda di aprirlo da <strong>Apri backup…</strong>.</p>
       <p class="tip">Eliminare un contesto non cancella lo storico d’uso del bambino.</p>
       <p class="to-index"><a href="#indice">↑ Torna all’indice</a></p>
     </section>
@@ -888,8 +975,7 @@
         <li><strong>Disposizione e tocco</strong>: striscia frase in alto o in basso, altezza della striscia frase, pulsanti a destra o a sinistra, nome
           della pagina, evidenziazione al tocco, gesti «Scuoti per ricominciare» e «Spingi via la frase».</li>
       </ul>
-      <p>Le sezioni <strong>Simboli</strong>, <strong>Testo</strong>, <strong>Celle</strong> e <strong>Disposizione e
-        tocco</strong> sono chiuse all’inizio: toccate il titolo, con la freccia <strong>▸</strong>, per aprirle.</p>
+      <p>Ogni sezione si apre toccando il suo titolo, con la freccia <strong>▸</strong>.</p>
       <p class="tip">Pensate alla persona: chi si distrae con i colori sta meglio con «Bianco e nero» o «Essenziale»; chi
         vede poco con «Alto contrasto»; la sera «Notte»; chi legge può passare a «Solo parole». L’aspetto può crescere
         con la persona.</p>
@@ -939,7 +1025,7 @@
       <p>L’Open Board Format è un formato aperto usato da diverse app di comunicazione (per esempio CoughDrop, Board
         Builder di Global Symbols, Asterics Grid). Un file <strong>.obf</strong> contiene una scheda; un file
         <strong>.obz</strong> un pacchetto con più schede collegate e le loro immagini.</p>
-      <p>La sezione è chiusa all’inizio: toccate il suo titolo, con la freccia <strong>▸</strong>, per aprirla.</p>
+      <p>Se la sezione è chiusa, toccate il suo titolo, con la freccia <strong>▸</strong>, per aprirla.</p>
       <figure class="shot shot-narrow">
         <img src="guida/open-board.webp" width="764" height="964" alt="La sezione Scambio con altre app con i pulsanti Importa un file .obf o .obz, Esporta tutte le schede (.obz) ed Esporta questa scheda (.obf)." loading="lazy">
       </figure>
@@ -1071,44 +1157,111 @@
 
     <section id="dati" data-search>
       <h3>Sapere dove restano i dati</h3>
-      <p>Tessere, foto e impostazioni restano <strong>solo su questo dispositivo</strong>, nel browser. Non ci sono account e
+      <p>Tessere, foto e impostazioni di tutti i profili restano <strong>solo su questo dispositivo</strong>, nel browser. Non ci sono account e
         nessun dato della persona viene inviato su internet: quando cercate un simbolo esce soltanto la parola cercata.</p>
       <p class="warn">Cancellare i dati di navigazione del browser per questo sito cancella anche le tessere personalizzate.
-        Per avere una copia usate <strong>Esporta le schede attuali in un file</strong> (vedi
-        <a href="#modelli">Salvare, esportare e importare</a>). Il backup completo, con impostazioni e abitudini d’uso, è
-        in arrivo.</p>
+        Salvate ogni tanto un backup completo (vedi <a href="#backup">Fare un backup e ripristinarlo</a>) e
+        conservatelo in un posto sicuro.</p>
+      <p class="to-index"><a href="#indice">↑ Torna all’indice</a></p>
+    </section>
+
+    <section id="backup" data-search>
+      <h3>Fare un backup e ripristinarlo</h3>
+      <p>Il backup è un unico file <strong>.picspeak</strong> con tutto il lavoro fatto: schede con immagini e foto,
+        abitudini d’uso e contesti, modelli salvati, aspetto e impostazioni. Serve per non perdere nulla e per passare a
+        un altro dispositivo. Il <strong>PIN non entra mai</strong> nel file.</p>
+      <h4>Salvare un backup</h4>
+      <ol class="steps">
+        <li><a href="#pin">Sbloccate le impostazioni</a> e aprite
+          <span class="where"><span>Impostazioni</span><span>Backup e ripristino</span></span>.</li>
+        <li>In <strong>Backup locale</strong> toccate <strong>Salva backup…</strong>.</li>
+        <li>Scrivete il <strong>nome del profilo</strong>: meglio un soprannome o le iniziali che nome e cognome. Compare
+          nel nome del file, insieme a data e ora (per esempio <code>PicSpeak-Luca-2026-11-23-2130.picspeak</code>), così
+          si capisce subito di chi è il backup e quando è stato fatto.</li>
+        <li>Se volete, scrivete una <strong>password</strong> (almeno 4 caratteri, meglio 8 o più) e ripetetela. È
+          facoltativa: lasciando vuoti i due campi il backup si salva senza password. Anche con la password restano
+          leggibili il nome del profilo e la data, che servono a riconoscere il file.</li>
+        <li>Toccate <strong>Salva backup</strong>. Il file va nella cartella Download; su iPad e iPhone si sceglie dove
+          tenerlo nell’app File.</li>
+      </ol>
+      <p>Prima di consegnare il file PicSpeak lo riapre da solo, come farebbe un ripristino, e controlla che ci siano
+        tutte le schede, tutti i modelli e tutte le immagini. Se qualcosa non torna rifà il backup da capo; solo se
+        non riesce nemmeno così compare un avviso e il file non viene salvato.</p>
+      <p>Sotto il pulsante compare la data dell’ultimo backup salvato da questo dispositivo per il profilo in uso. Il nome del profilo si può
+        cambiare anche con <strong>Cambia…</strong>, accanto a «Nome del profilo».</p>
+      <p class="warn">Il file contiene foto e abitudini del bambino: conservatelo con cura. Se mettete una password e la
+        dimenticate, il backup non si può più aprire: nessuno può recuperarla.</p>
+      <h4>Ripristinare un backup</h4>
+      <ol class="steps">
+        <li>In <strong>Ripristina un backup</strong> toccate <strong>Apri backup…</strong> e scegliete il file
+          .picspeak.</li>
+        <li>Se il backup ha una password, scrivetela.</li>
+        <li>PicSpeak mostra di chi è il backup, quando e da quale dispositivo è stato salvato e cosa contiene, e chiede
+          dove ripristinarlo:
+          <ul>
+            <li><strong>In un profilo nuovo</strong>: si crea un profilo con il nome del backup e tutto il suo
+              contenuto; il profilo in uso resta com’è e lo ritrovate in <a href="#profili">Profili</a>. È la scelta
+              evidenziata quando il backup è di un’altra persona. Se c’è già un profilo con quel nome, il nuovo prende
+              un numero, per esempio «Luca (2)».</li>
+            <li><strong>Nel profilo in uso</strong>: il backup prende il posto del profilo in uso. È la scelta
+              evidenziata quando il backup ha lo stesso nome del profilo in uso.</li>
+          </ul>
+        </li>
+        <li>Nel profilo in uso scegliete poi <strong>Ripristina tutto</strong> oppure <strong>Scegli cosa ripristinare</strong>.</li>
+      </ol>
+      <p><strong>Ripristina tutto</strong> sostituisce tutto quello che c’è con il contenuto del backup. Prima di
+        confermare potete toccare <strong>Prima salva un backup di adesso</strong>. Il PIN resta quello del dispositivo.</p>
+      <p>Con <strong>Scegli cosa ripristinare</strong> decidete parte per parte; quelle lasciate su «No» non cambiano:</p>
+      <ul>
+        <li><strong>Schede</strong>: <em>Sostituisci</em> (le schede di adesso restano recuperabili da
+          <span class="where"><span>Schede</span><span>Recupero</span><span>Ripristina le schede di prima</span></span>) oppure
+          <em>Aggiungi</em> (le schede del backup entrano come una cartella nella Home, con il nome del profilo e la data).</li>
+        <li><strong>Abitudini d’uso e contesti</strong>: <em>Unisci</em> (i conteggi si sommano, i contesti con lo stesso nome
+          si aggiornano) oppure <em>Sostituisci</em>.</li>
+        <li><strong>Modelli salvati</strong>: si aggiungono a quelli che ci sono già.</li>
+        <li><strong>Aspetto</strong> e <strong>Altre impostazioni</strong>: prendono il posto di quelli di adesso.</li>
+      </ul>
+      <p>Il ripristino non si blocca mai: se il file si è rovinato (per esempio durante una copia), PicSpeak recupera
+        tutto quello che può e alla fine dice cosa mancava. Le tessere con un’immagine rovinata mostrano la parola e
+        l’immagine si rimette dalla modifica della tessera.</p>
+      <p>Alla fine PicSpeak si riavvia. Restano fuori dal backup la scelta sull’uso di internet, che rimane quella del
+        dispositivo, e i pacchetti di simboli scaricati (Mulberry, OpenMoji): se servono, un avviso ricorda di
+        riscaricarli da <span class="where"><span>Impostazioni</span><span>Simboli</span></span>. Anche le emoji
+        Twemoji, che si cercano su internet, restano accese o spente come erano su questo dispositivo: se nel backup
+        erano accese, un avviso lo ricorda e si possono attivare dalla stessa pagina.</p>
+      <p>La sezione <strong>Backup online</strong>, con la copia automatica nel proprio spazio cloud, è in arrivo.</p>
       <p class="to-index"><a href="#indice">↑ Torna all’indice</a></p>
     </section>
 
     <section id="ripristino" data-search>
-      <h3>Tornare alle impostazioni iniziali</h3>
+      <h3>Azzerare l’app</h3>
+      <p>Nella sezione <strong>Azzera l’app</strong> di
+        <span class="where"><span>Impostazioni</span><span>Backup e ripristino</span></span> ci sono due comandi. Per
+        recuperare un backup si usa invece <a href="#backup">Ripristina un backup</a>.</p>
+      <h4>Tornare alle impostazioni iniziali</h4>
       <p>Se avete provato molte regolazioni e volete ripartire da capo:</p>
       <ol class="steps">
         <li><a href="#pin">Sbloccate le impostazioni</a>.</li>
         <li>Aprite <span class="where"><span>Impostazioni</span><span>Backup e ripristino</span></span>.</li>
-        <li>In <strong>Ripristino</strong> toccate <strong>Ripristina…</strong> accanto a «Ripristina le impostazioni
-          iniziali» e confermate.</li>
+        <li>In <strong>Azzera l’app</strong> toccate <strong>Impostazioni iniziali…</strong> accanto a «Torna alle
+          impostazioni iniziali» e confermate.</li>
       </ol>
       <p>Tornano come alla prima apertura aspetto, colori, sfondo, misura delle tessere, voce, lingua, «Tocco e frase»,
         previsione, stampa, fonti dei simboli, schermo sempre acceso e schermo intero. <strong>Restano come sono</strong> le schede, le immagini e le foto, le
         abitudini d’uso, i modelli salvati, la scelta sull’uso di internet e il PIN. PicSpeak si riavvia e torna alla modalità di
         comunicazione.</p>
       <h4>Cancellare tutto e ricominciare da zero</h4>
-      <p>Per consegnare il dispositivo a un’altra persona o ripartire davvero da capo, nella stessa pagina c’è
+      <p>Per consegnare il dispositivo a un’altra persona o ripartire davvero da capo, nella stessa sezione c’è
         <strong>Cancella tutto…</strong>. Cancella da questo dispositivo schede, immagini e foto, abitudini d’uso, modelli,
         simboli scaricati, impostazioni e PIN; PicSpeak riparte come la prima volta e alla prossima apertura delle
         impostazioni si crea un nuovo PIN.</p>
       <ol class="steps">
-        <li>Il primo avviso ricorda che non esiste ancora una copia di sicurezza completa. Se volete tenere le schede
-          toccate <strong>Prima esporta le schede (.obz)</strong>: il file, con immagini e foto, si potrà riaprire da
-          <span class="where"><span>Schede</span><span>Scambio con altre app</span></span>. Le abitudini d’uso si salvano
-          a parte da <span class="where"><span>Previsione</span><span>Esporta storico e contesti</span></span>.</li>
+        <li>Il primo avviso ricorda che dopo si potrà recuperare tutto solo da un backup. Se non l’avete ancora fatto
+          toccate <strong>Prima salva un backup</strong> (vedi <a href="#backup">Fare un backup</a>).</li>
         <li>Toccate <strong>Continua</strong>, scrivete il PIN attuale e la parola <strong>CANCELLA</strong>, poi
           <strong>Cancella tutto</strong>.</li>
       </ol>
       <p class="warn">La cancellazione non si può annullare.</p>
-      <p>Nella stessa pagina sono già visibili, in grigio, le funzioni che arriveranno: salvare una copia di sicurezza,
-        il backup automatico e il ripristino da una copia.</p>
       <p class="to-index"><a href="#indice">↑ Torna all’indice</a></p>
     </section>
 
@@ -1172,6 +1325,9 @@
           (vedi <a href="#posizioni">Posizioni</a>).</dd>
         <dt>Ho cambiato troppe impostazioni e non ritrovo quelle di partenza.</dt>
         <dd>Vedi <a href="#ripristino">Tornare alle impostazioni iniziali</a>: schede, foto e PIN restano.</dd>
+        <dt>Ho cambiato tablet, oppure ho cancellato i dati del browser.</dt>
+        <dd>Se avete un backup, aprite <a href="#backup">Ripristina un backup</a> sul nuovo dispositivo e scegliete
+          «Ripristina tutto». Il PIN si crea di nuovo.</dd>
         <dt>Ho sostituito le schede per sbaglio.</dt>
         <dd><span class="where"><span>Impostazioni</span><span>Schede</span><span>Recupero</span><span>Ripristina le schede di prima</span></span>.</dd>
       </dl>
@@ -1186,7 +1342,9 @@
         <li><a href="#pulsanti-rapidi">Aiuto (pulsante)</a></li>
         <li><a href="#aspetto">Alto contrasto</a></li>
         <li><a href="#simboli">ARASAAC</a></li>
-        <li><a href="#ripristino">Backup e ripristino</a></li>
+        <li><a href="#ripristino">Azzera l’app</a></li>
+        <li><a href="#backup">Backup</a></li>
+        <li><a href="#backup">Backup e ripristino</a></li>
         <li><a href="#aspetto">Bianco e nero</a></li>
         <li><a href="#posizioni">Blocco delle posizioni</a></li>
         <li><a href="#ripristino">Cancella tutto</a></li>
@@ -1217,16 +1375,21 @@
         <li><a href="#modelli">Modelli</a></li>
         <li><a href="#simboli">Mulberry, OpenMoji, Twemoji</a></li>
         <li><a href="#tessere">Nascondere una tessera</a></li>
+        <li><a href="#backup">Nome del profilo</a></li>
         <li><a href="#altre-app">.obf / .obz</a></li>
         <li><a href="#altre-app">Open Board Format</a></li>
         <li><a href="#schermo">Percorso</a></li>
         <li><a href="#pulsanti-rapidi">Ops</a></li>
+        <li><a href="#backup">Password del backup</a></li>
         <li><a href="#stampa">PDF</a></li>
         <li><a href="#pin">PIN</a></li>
+        <li><a href="#profili">Più persone sullo stesso dispositivo</a></li>
         <li><a href="#previsione">Previsione</a></li>
+        <li><a href="#profili">Profili</a></li>
         <li><a href="#frase">Pronuncia</a></li>
         <li><a href="#schede-pronte">Recupero</a></li>
         <li><a href="#ripristino">Ripristino delle impostazioni</a></li>
+        <li><a href="#backup">Ripristino di un backup</a></li>
         <li><a href="#schede-pronte">Schede pronte</a></li>
         <li><a href="#accesso-guidato">Schermo intero</a></li>
         <li><a href="#accesso-guidato">Schermo sempre acceso</a></li>
