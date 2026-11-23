@@ -482,7 +482,7 @@
   // ---------- Impostazioni ----------
 
   // Sezioni richiudibili: ogni sezione ha il titolo sempre visibile, con una freccia che apre o chiude il contenuto.
-  // All'inizio è aperta solo la prima sezione di ogni categoria; quelle che l'adulto apre o chiude restano così
+  // All'inizio sono tutte chiuse: si vede l'elenco dei titoli; quelle che l'adulto apre o chiude restano così
   // (stato salvato sul dispositivo). Chiudere una sezione non cambia nulla: i valori scelti continuano a valere.
   let sectionState = {};
 
@@ -491,15 +491,14 @@
   }
 
   // options.collapsible: false = sezione sempre aperta, senza freccia (avvisi, pulsanti di salvataggio)
-  // options.open: true = aperta all'inizio anche se non è la prima; options.key: nome con cui ricordarla
+  // options.open: true = aperta all'inizio (scheda di un contesto); options.key: nome con cui ricordarla
   function section(titleKey, helpKey, options = {}) {
     const wrap = document.createElement('section');
     wrap.className = 'settings-section';
     const title = document.createElement('h3');
     if (options.collapsible !== false) {
       const key = options.key || titleKey;
-      const first = !currentPanel.querySelector('.settings-section.is-collapsible');
-      const open = typeof sectionState[key] === 'boolean' ? sectionState[key] : Boolean(first || options.open);
+      const open = typeof sectionState[key] === 'boolean' ? sectionState[key] : Boolean(options.open);
       wrap.classList.add('is-collapsible');
       wrap.classList.toggle('is-collapsed', !open);
       const toggle = document.createElement('button');

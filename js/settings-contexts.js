@@ -616,7 +616,7 @@
   }
 
   function renderEditor() {
-    const head = ui.section(draft.id ? 'ctxEditTitle' : 'ctxNewTitle', 'ctxEditHelp');
+    const head = ui.section(draft.id ? 'ctxEditTitle' : 'ctxNewTitle', 'ctxEditHelp', { open: true });
     head.id = 'ctx-section';
     if (draft.error) {
       const box = el('p', 'tpl-status is-error', draft.error);
