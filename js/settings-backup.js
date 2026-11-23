@@ -48,9 +48,18 @@
     return date.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' });
   }
 
-  function showNotice(text, error) {
-    notice = { text, error: Boolean(error) };
+  // where: sezione in cui mostrare l'avviso ('local' = Backup locale, 'restore' = Ripristina un backup)
+  function showNotice(text, error, where = 'local') {
+    notice = { text, error: Boolean(error), where };
     ui.render();
+  }
+
+  function renderNotice(wrap, where) {
+    if (!notice || notice.where !== where) return;
+    const box = el('p', `tpl-status${notice.error ? ' is-error' : ''}`, notice.text);
+    box.setAttribute('role', 'status');
+    wrap.append(box);
+    notice = null;
   }
 
   // Riga con un pulsante disattivato e l'etichetta «Prossimamente»
@@ -84,7 +93,7 @@
    * Chiede nome e password facoltativa, poi crea e salva il file. Restituisce true se il backup è stato salvato.
    * Usata anche prima di «Ripristina tutto» e di «Cancella tutto».
    */
-  async function saveBackup() {
+  async function saveBackup(where = 'local') {
     const values = await ui.runDialog({
       title: t('backupSaveTitle'),
       help: t('backupSaveHelp'),
@@ -98,34 +107,29 @@
       onSubmit: (v) => {
         if (!v.name) return t('backupNameMissing');
         if (v.pass || v.pass2) {
-          if (v.pass.length < 4) return t('backupPassShort');
+          if ([...v.pass].length < 4) return t('backupPassShort');
           if (v.pass !== v.pass2) return t('backupPassMismatch');
         }
         return v;
       },
     });
     if (!values) return false;
-    showNotice(t('backupSaving'));
+    showNotice(t('backupSaving'), false, where);
     try {
       const file = await backup.create({ name: values.name, password: values.pass, fallbackName: t('backupFileWord') });
       backup.save(file.blob, file.name);
-      showNotice(format('backupSaved', { file: file.name }));
+      showNotice(format('backupSaved', { file: file.name }), false, where);
       return true;
     } catch (error) {
       const unsupported = error instanceof backup.BackupError && error.message === 'unsupported';
-      showNotice(t(unsupported ? 'backupOpenError_unsupported' : 'backupSaveFailed'), true);
+      showNotice(t(unsupported ? 'backupOpenError_unsupported' : 'backupSaveFailed'), true, where);
       return false;
     }
   }
 
   function renderLocalSection() {
     const wrap = ui.section('secBackupLocalTitle', 'secBackupLocalHelp');
-    if (notice) {
-      const box = el('p', `tpl-status${notice.error ? ' is-error' : ''}`, notice.text);
-      box.setAttribute('role', 'status');
-      wrap.append(box);
-      notice = null;
-    }
+    renderNotice(wrap, 'local');
 
     const name = data.profile && data.profile.name;
     const nameControl = el('div', 'choice-group backup-profile');
@@ -309,7 +313,7 @@
         secondary: t('cancel'),
       });
       if (!answer) return false;
-      if (answer.link) { await saveBackup(); continue; }
+      if (answer.link) { await saveBackup('restore'); continue; }
       return true;
     }
   }
@@ -320,6 +324,11 @@
   const channel = 'BroadcastChannel' in window ? new BroadcastChannel(`${storage.name}-reset`) : null;
   if (channel) {
     channel.onmessage = async (event) => {
+      if (event.data === 'restoring') {
+        // Un'altra scheda sta ripristinando: questa smette di scrivere le abitudini e aspetta di ripartire
+        if (predict && typeof predict.freeze === 'function') predict.freeze();
+        return;
+      }
       if (event.data === 'restored') {
         location.reload();
         return;
@@ -381,13 +390,14 @@
       for (;;) {
         const answer = await askParts(parts, initial);
         if (!answer) return;
-        if (answer.safety) { initial = answer.choice; await saveBackup(); continue; }
+        if (answer.safety) { initial = answer.choice; await saveBackup('restore'); continue; }
         choice = answer.choice;
         break;
       }
     }
 
-    showNotice(t('backupRestoring'));
+    showNotice(t('backupRestoring'), false, 'restore');
+    if (channel) channel.postMessage('restoring');
     let report;
     try {
       const when = opened.info.createdAt ? ` ${dateText(opened.info.createdAt)}` : '';
@@ -397,6 +407,7 @@
       });
     } catch (error) {
       await ui.runDialog({ title: t('backupRestoreFailed'), primary: t('close') });
+      if (channel) channel.postMessage('restored');
       location.reload();
       return;
     }
@@ -411,6 +422,7 @@
 
   function renderRestoreSection() {
     const wrap = ui.section('secBackupRestoreTitle', 'secBackupRestoreHelp');
+    renderNotice(wrap, 'restore');
     wrap.append(ui.settingRow('backupRestore', 'backupRestoreHelp', ui.button(t('backupRestoreBtn'), restoreBackup, false)));
   }
 
@@ -443,7 +455,7 @@
       });
       if (!first) return;
       if (first.link) {
-        await saveBackup();
+        await saveBackup('reset');
         continue;
       }
       break;
@@ -493,6 +505,7 @@
 
   function renderResetSection() {
     const wrap = ui.section('secResetTitle');
+    renderNotice(wrap, 'reset');
     const btn = ui.button(t('resetSettingsBtn'), resetSettings, false);
     btn.classList.add('dlg-btn-danger');
     wrap.append(
