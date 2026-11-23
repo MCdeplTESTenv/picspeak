@@ -77,7 +77,7 @@
   // ---------- Finestra di dialogo generica (PIN, recupero, messaggi) ----------
 
   /*
-   * cfg: { title, help, code, fields: [{ id, label, text }], primary, secondary, link, onSubmit }
+   * cfg: { title, help, code, fields: [{ id, label, text | plain | secret, value, maxLength }], primary, secondary, link, onSubmit }
    * onSubmit(values) restituisce: una stringa = errore (la finestra resta aperta),
    * altrimenti il risultato con cui chiudere. Risolve null se annullata.
    */
@@ -116,7 +116,20 @@
         input.autocomplete = 'off';
         input.autocapitalize = 'characters';
         input.spellcheck = false;
-        if (field.text) {
+        if (field.secret) {
+          // Password libera (backup): lettere e numeri, nessun limite a 6 cifre
+          input.type = 'password';
+          input.className = 'is-plain';
+          input.autocapitalize = 'off';
+          input.maxLength = 128;
+        } else if (field.plain) {
+          // Testo normale (es. nome del profilo): maiuscole e minuscole come le scrive l'adulto
+          input.type = 'text';
+          input.className = 'is-plain';
+          input.autocapitalize = 'words';
+          input.maxLength = field.maxLength || 60;
+          if (field.value) input.value = field.value;
+        } else if (field.text) {
           input.type = 'text';
         } else {
           input.type = 'password';
@@ -170,13 +183,14 @@
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         primary.disabled = true;
-        const values = Object.fromEntries(inputs.map((input) => [input.name, input.value.trim()]));
+        const values = Object.fromEntries(inputs.map((input) => [input.name, input.type === 'password' && input.classList.contains('is-plain') ? input.value : input.value.trim()]));
         const outcome = cfg.onSubmit ? await cfg.onSubmit(values) : true;
         primary.disabled = false;
         if (typeof outcome === 'string') {
           error.textContent = outcome;
-          inputs.forEach((input) => { input.value = ''; });
-          if (inputs[0]) inputs[0].focus();
+          inputs.forEach((input) => { if (input.type === 'password' || !input.classList.contains('is-plain')) input.value = ''; });
+          const firstEmpty = inputs.find((input) => !input.value) || inputs[0];
+          if (firstEmpty) firstEmpty.focus();
           return;
         }
         close(outcome ?? true);
@@ -416,6 +430,7 @@
 
   function enterAdult() {
     app.setMode('adult');
+    if (window.PicSpeak.profiles) window.PicSpeak.profiles.showProfileInBar();
     storage.requestPersistence();
     setTimeout(updateZoomLabel, 0);
     el.adultBar.hidden = false;
@@ -1547,6 +1562,38 @@
     if (kiosk.autoFullscreen()) kiosk.enterFullscreen();
   }
 
+  // ---------- Riapertura dopo il cambio di profilo ----------
+
+  // Il cambio di profilo ricarica la pagina: per non chiedere di nuovo il PIN all'adulto che lo ha appena
+  // inserito, si lascia un segno valido una sola volta e per pochi secondi, solo in questa scheda del browser.
+  const REOPEN_KEY = 'picspeak-reopen';
+  const REOPEN_MS = 20000;
+
+  function reopenAfterReload(categoryId) {
+    try {
+      sessionStorage.setItem(REOPEN_KEY, JSON.stringify({ at: Date.now(), category: String(categoryId) }));
+    } catch (error) {
+      // Senza sessionStorage si riapre sulla comunicazione: l'adulto rientra con il PIN
+    }
+    location.reload();
+  }
+
+  function resumeAfterReload() {
+    let saved = null;
+    try {
+      saved = JSON.parse(sessionStorage.getItem(REOPEN_KEY) || 'null');
+      sessionStorage.removeItem(REOPEN_KEY);
+    } catch (error) {
+      return;
+    }
+    if (!saved || typeof saved.at !== 'number' || typeof saved.category !== 'string') return;
+    const age = Date.now() - saved.at;
+    if (age < 0 || age > REOPEN_MS) return;
+    if (window.top !== window.self) return;
+    enterAdult();
+    openSettings(saved.category);
+  }
+
   // ---------- Avvio ----------
 
   function bindEvents() {
@@ -1668,6 +1715,7 @@
     render: () => { if (!el.settings.hidden) renderSettings(); },
     closeSettings,
     openSettings,
+    reopenAfterReload,
     // Nuova categoria nel menu delle impostazioni, dopo quella indicata
     addCategory(category, afterId) {
       const index = CATEGORIES.findIndex((cat) => cat.id === afterId);
@@ -1683,4 +1731,9 @@
   restoreLanguage();
   restoreVoice();
   restoreColorMode();
+  // Dopo il cambio di profilo: si torna nelle impostazioni quando le schede del nuovo profilo sono pronte
+  // (e quando tutti gli script sono caricati, compresa la pagina «Profili»)
+  const pageLoaded = document.readyState === 'complete'
+    ? Promise.resolve() : new Promise((resolve) => window.addEventListener('load', resolve, { once: true }));
+  if (app.ready) Promise.all([app.ready, pageLoaded]).then(resumeAfterReload);
 })();

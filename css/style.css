@@ -370,6 +370,7 @@ button:focus-visible {
   color: var(--text);
 }
 .dialog-field input[type="text"] { letter-spacing: 0.08em; font-size: 22px; text-transform: uppercase; }
+.dialog-field input.is-plain { letter-spacing: normal; font-size: 20px; text-transform: none; }
 
 .dialog-error { margin: 0; min-height: 1.2em; color: var(--fz-negation); font-weight: 600; }
 
@@ -2127,3 +2128,80 @@ body > .adult-bar { order: 0; }
 .settings-section.is-collapsed .section-arrow::before { content: '▸'; }
 .settings-section.is-collapsed > h3 { border-bottom: 0; }
 .settings-section.is-collapsed > :not(h3) { display: none !important; }
+
+/* ---------- Backup e ripristino ---------- */
+.backup-profile { align-items: center; }
+.backup-profile-name { font-weight: 700; font-size: 17px; overflow-wrap: anywhere; }
+.backup-profile-name.is-empty { font-weight: 400; color: var(--text-muted); }
+.backup-last { padding-top: 4px; }
+.backup-summary { display: flex; flex-direction: column; gap: 12px; }
+.backup-parts { display: flex; flex-direction: column; gap: 14px; }
+.backup-part { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid #eef0f3; }
+.backup-part-text { display: flex; flex-direction: column; gap: 3px; }
+.backup-part-text small { color: var(--text-muted); line-height: 1.35; }
+.backup-part .segmented { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; width: 100%; max-width: 420px; }
+.backup-part .segmented button { min-height: 44px; padding: 0 8px; white-space: normal; line-height: 1.15; }
+
+
+/* ---------- Profili ---------- */
+/* Nome del profilo in uso nella barra della modalità adulto (solo con più profili) */
+.adult-profile {
+  flex: 0 0 auto;
+  max-width: min(16ch, 28vw);
+  margin-right: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.adult-profile[hidden] { display: none; }
+.adult-badge:has(+ .adult-profile:not([hidden])) { margin-right: 0; min-width: 22px; }
+
+.profile-list { display: flex; flex-direction: column; gap: 8px; width: calc(100% - 32px); margin-top: 8px; }
+.profile-list .setting-row.profile-row {
+  width: auto;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 2px solid #eef0f3;
+  border-radius: 14px;
+}
+.profile-list .setting-row.profile-row.is-current { border: 2px solid var(--focus); background: var(--pressed); }
+.profile-who { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1 1 220px; }
+.profile-avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 700;
+}
+.profile-who .setting-text strong { overflow-wrap: anywhere; }
+.profile-current {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--focus);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 2px;
+}
+.profile-actions { flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+.profile-add { width: calc(100% - 32px); margin: 14px 0 6px; }
+.profile-only { margin-top: 6px; }
+@media (max-width: 720px) {
+  .profile-list .setting-row.profile-row { flex-direction: column; align-items: stretch; }
+  .profile-who { flex: none; }
+  .profile-actions { justify-content: flex-start; margin-left: 0; }
+}
+@media (max-width: 520px) {
+  .adult-profile { max-width: 20vw; padding: 4px 8px; font-size: 14px; }
+}
