@@ -2105,9 +2105,25 @@ body > .adult-bar { order: 0; }
 .ctx-names-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ctx-names-more { flex: none; white-space: nowrap; }
 
-/* Impostazioni avanzate: nascoste finché l'adulto non le mostra (i valori scelti continuano a valere) */
-.settings-panel.hide-advanced .is-advanced { display: none !important; }
-.advanced-toggle { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 4px 4px 12px; }
-.advanced-toggle-btn { min-height: 64px; }
-.advanced-toggle-btn::after { content: ' ▾'; }
-.advanced-toggle-btn[aria-expanded="true"]::after { content: ' ▴'; }
+/* Sezioni richiudibili delle impostazioni: il titolo è un pulsante con la freccia, il contenuto si apre al tocco */
+.settings-section.is-collapsible > h3 { padding: 0; }
+.section-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 64px;
+  padding: 0 16px;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.section-arrow::before { content: '▾'; display: inline-block; width: 1em; font-size: 16px; color: var(--focus); }
+.settings-section.is-collapsed .section-arrow::before { content: '▸'; }
+.settings-section.is-collapsed > h3 { border-bottom: 0; }
+.settings-section.is-collapsed > :not(h3) { display: none !important; }
