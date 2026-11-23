@@ -2,7 +2,7 @@
  * Backup completo di PicSpeak (Tappa 5, primo passo: backup locale in un file).
  *
  * Il file «.picspeak» è un archivio zip (scritto e letto da zip.js, senza librerie):
- *   manifest.json   { format: 'picspeak', kind: 'backup', formatVersion: 1, app, createdAt, timeZone,
+ *   manifest.json   { format: 'picspeak', kind: 'backup', formatVersion: 1, app, createdAt,
  *                     profile: { id, name }, device, parts: [...], encryption: null | {…} }
  *   boards.json     schede del profilo nel formato dei modelli, con immagini e foto dentro
  *   habits.json     abitudini d'uso, pesi di partenza e contesti (stesso formato di «Esporta storico e contesti»)
@@ -11,7 +11,8 @@
  *   settings.json   altre impostazioni: voce, lingua, tocco e frase, previsione, stampa, simboli, schermo
  * Con la password facoltativa gli ultimi cinque file stanno in un secondo zip, cifrato con AES-GCM
  * (chiave ricavata dalla password con PBKDF2-SHA-256, tutto con la crittografia già presente nel browser):
- * nel file resta in chiaro solo manifest.json (nome del profilo, data e ora, dispositivo).
+ * nel file resta in chiaro solo manifest.json (formato, nome e id del profilo, data e ora, tipo di dispositivo,
+ * elenco delle parti): l'adulto ne è avvisato quando sceglie la password.
  *
  * Fuori dal backup, di proposito: PIN e codice di recupero, la scelta sull'uso di Internet, i pacchetti di simboli
  * scaricati (si riscaricano), la copia delle schede di prima e la data dell'ultimo backup di questo dispositivo.
@@ -28,8 +29,20 @@
   const FORMAT = 'picspeak';
   const KIND = 'backup';
   const FORMAT_VERSION = 1;
-  const MAX_FILE_BYTES = 200 * 1024 * 1024;
-  const ZIP_LIMITS = { maxEntries: 50, maxEntryBytes: 200 * 1024 * 1024, maxTotalBytes: 400 * 1024 * 1024 };
+  const MB = 1024 * 1024;
+  const MAX_FILE_BYTES = 100 * MB;
+  // Un solo tetto per tutto ciò che si decomprime, archivio esterno e interno (cifrato) insieme
+  const MAX_TOTAL_BYTES = 150 * MB;
+  const ZIP_LIMITS = { maxEntries: 50, maxEntryBytes: 80 * MB, maxTotalBytes: MAX_TOTAL_BYTES };
+  // Dimensione massima di ogni parte, controllata prima di leggerla come JSON
+  const PART_MAX_BYTES = {
+    'manifest.json': 64 * 1024,
+    'boards.json': 60 * MB,
+    'habits.json': 40 * MB,
+    'templates.json': 40 * MB,
+    'appearance.json': MB,
+    'settings.json': MB,
+  };
   const ITERATIONS = 310000; // PBKDF2: lento abbastanza contro i tentativi, veloce su un tablet
   const MIN_ITERATIONS = 100000;
   const MAX_ITERATIONS = 2000000; // un file non può chiedere un calcolo che blocca il dispositivo
@@ -114,7 +127,8 @@
   }
 
   async function deriveKey(password, salt, iterations) {
-    const base = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveKey']);
+    // Forma unica dei caratteri accentati (NFC): la stessa password scritta su iPad o su PC dà la stessa chiave
+    const base = await crypto.subtle.importKey('raw', encoder.encode(String(password).normalize('NFC')), 'PBKDF2', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
       { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
       base,
@@ -228,7 +242,6 @@
       formatVersion: FORMAT_VERSION,
       app: 'PicSpeak',
       createdAt: now.toISOString(),
-      timeZone: (Intl.DateTimeFormat().resolvedOptions().timeZone || ''),
       profile: { id: data.profile ? data.profile.id : null, name: profileName },
       device: deviceLabel(),
       parts,
@@ -328,11 +341,23 @@
     if (!archive.has('manifest.json')) throw new BackupError('format');
     let raw;
     try {
-      raw = JSON.parse(await archive.text('manifest.json'));
+      raw = JSON.parse(new TextDecoder().decode(await readPart(archive, 'manifest.json')));
     } catch (error) {
       throw error instanceof SyntaxError ? new BackupError('format') : zipProblem(error);
     }
     return { info: cleanManifest(raw), archive };
+  }
+
+  // Byte di una parte, con il suo limite di dimensione
+  async function readPart(archive, name) {
+    let bytes;
+    try {
+      bytes = await archive.read(name);
+    } catch (error) {
+      throw zipProblem(error);
+    }
+    if (bytes.length > (PART_MAX_BYTES[name] || MB)) throw new BackupError('size');
+    return bytes;
   }
 
   // Archivio con le parti: quello del file o, con la password, quello interno decifrato
@@ -356,7 +381,9 @@
       throw new BackupError('password');
     }
     try {
-      return await zip.open(new Blob([plain]), ZIP_LIMITS);
+      // L'archivio interno può decomprimere solo quanto resta del tetto complessivo
+      const left = Math.max(0, MAX_TOTAL_BYTES - sealed.length);
+      return await zip.open(new Blob([plain]), { ...ZIP_LIMITS, maxTotalBytes: left });
     } catch (error) {
       throw zipProblem(error);
     }
@@ -364,12 +391,29 @@
 
   async function readJson(archive, name) {
     if (!archive.has(name)) return undefined;
+    const bytes = await readPart(archive, name);
     try {
-      return JSON.parse(await archive.text(name));
+      return JSON.parse(new TextDecoder().decode(bytes));
     } catch (error) {
-      if (error instanceof SyntaxError) return undefined;
-      throw zipProblem(error);
+      return undefined;
     }
+  }
+
+  // Immagini dentro un modello: si tengono solo quelle con la firma reale di PNG, JPEG o WebP
+  async function checkTemplateImages(template) {
+    for (const entry of Object.values(template.images)) {
+      if (!entry.data) continue;
+      try {
+        const binary = atob(entry.data);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+        await symbols.checkImage(new Blob([bytes], { type: entry.mime }));
+      } catch (error) {
+        delete entry.data;
+        delete entry.mime;
+      }
+    }
+    return template;
   }
 
   /*
@@ -391,7 +435,7 @@
       }
     }
 
-    const habitsRaw = archive.has('habits.json') ? await archive.read('habits.json').catch((error) => { throw zipProblem(error); }) : null;
+    const habitsRaw = archive.has('habits.json') ? await readPart(archive, 'habits.json') : null;
     if (habitsRaw && predict && typeof predict.readHistoryFile === 'function') {
       try {
         const { parsed, summary: s } = await predict.readHistoryFile(new Blob([habitsRaw]));
@@ -407,10 +451,10 @@
     const templatesRaw = await readJson(archive, 'templates.json');
     if (Array.isArray(templatesRaw)) {
       const list = [];
-      templatesRaw.slice(0, MAX_TEMPLATES * 2).forEach((entry) => {
-        if (!entry || typeof entry !== 'object') return;
+      for (const entry of templatesRaw.slice(0, MAX_TEMPLATES * 2)) {
+        if (!entry || typeof entry !== 'object') continue;
         try {
-          const template = templates.validate(entry.template, { fromFile: true });
+          const template = await checkTemplateImages(templates.validate(entry.template, { fromFile: true }));
           const id = typeof entry.id === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(entry.id) ? entry.id : data.newId('tpl');
           const savedAt = typeof entry.savedAt === 'string' && !Number.isNaN(Date.parse(entry.savedAt))
             ? new Date(entry.savedAt).toISOString() : new Date().toISOString();
@@ -418,7 +462,7 @@
         } catch (error) {
           // Modello non valido: si salta
         }
-      });
+      }
       parts.templates = list;
       summary.templates = { n: list.length };
     }
