@@ -23,7 +23,7 @@
   const SETTINGS_KEYS = [
     'language', 'voice', 'colorMode', 'pageBackground', 'appearance', 'preset',
     'labelCase', 'communication', 'prediction', 'printOptions', 'lockPositions', 'symbolSources',
-    'keepScreenOn', 'autoFullscreen', 'openSections',
+    'keepScreenOn', 'autoFullscreen', 'sectionState', 'openSections',
   ];
 
   // Avviso da mostrare nella sezione del backup locale al prossimo disegno della pagina
