@@ -187,8 +187,13 @@
       const snapshot = await storage.get(`previousPages:${other.id}`);
       if (snapshot && Array.isArray(snapshot.pages)) collect(snapshot.pages);
     }
+    // Candidate: le immagini delle sue schede attuali e della sua copia delle schede di prima
     const candidates = new Set();
-    own.forEach((p) => (p.cells || []).forEach((c) => { if (c && c.imageId) candidates.add(c.imageId); }));
+    const addCandidates = (list) => list.forEach((p) => (p && Array.isArray(p.cells) ? p.cells : [])
+      .forEach((c) => { if (c && c.imageId) candidates.add(c.imageId); }));
+    addCandidates(own);
+    const ownSnapshot = await storage.get(`previousPages:${profileId}`);
+    if (ownSnapshot && Array.isArray(ownSnapshot.pages)) addCandidates(ownSnapshot.pages);
     // Solo le immagini salvate sul dispositivo (foto, pittogrammi scaricati): quelle incluse nel tool non pesano
     const orphanImages = images
       .filter((img) => img && candidates.has(img.id) && !used.has(img.id) && img.blob)
@@ -202,6 +207,21 @@
     await storage.removeProfileSettings(profileId);
     await storage.remove(`previousPages:${profileId}`);
     await storage.deleteRecord('profiles', profileId);
+    if (channel) channel.postMessage({ deleted: profileId });
+  }
+
+  /*
+   * PicSpeak aperto in un'altra scheda sullo stesso profilo appena eliminato: si fermano i salvataggi e la scheda
+   * si ricarica sul profilo in uso, così non riscrive dati del profilo cancellato.
+   */
+  const channel = 'BroadcastChannel' in window ? new BroadcastChannel(`${storage.name}-profiles`) : null;
+  if (channel) {
+    channel.onmessage = (event) => {
+      const deleted = event.data && event.data.deleted;
+      if (typeof deleted !== 'string' || !data.profile || data.profile.id !== deleted) return;
+      if (predict) predict.freeze();
+      location.reload();
+    };
   }
 
   // ---------- Finestre ----------

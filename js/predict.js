@@ -962,7 +962,7 @@
       const next = strip(entries);
       if (next.length !== entries.length) {
         months.set(start, next);
-        if (next.length) storage.putRecord('usage', { id: monthId(start), profileId, kind: 'month', day: start, entries: next });
+        if (next.length && !frozen) storage.putRecord('usage', { id: monthId(start), profileId, kind: 'month', day: start, entries: next });
         else deletedIds.add(monthId(start));
       }
     });
