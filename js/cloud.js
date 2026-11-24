@@ -29,7 +29,7 @@
   const { storage, data, backup, predict } = window.PicSpeak;
 
   // Chiave pubblica dell'app registrata su Dropbox (App key): non è un segreto
-  const APP_KEY = '';
+  const APP_KEY = '6zf88jq7xuhph7m';
   const AUTH_URL = 'https://www.dropbox.com/oauth2/authorize';
   const TOKEN_URL = 'https://api.dropboxapi.com/oauth2/token';
   const API = 'https://api.dropboxapi.com/2/';
