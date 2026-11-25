@@ -1515,7 +1515,7 @@
       render: [renderSourcesSection] },
     { id: 'voice', icon: '<path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
-    { id: 'security', icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
+    { id: 'security', icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>', titleKey: 'catSecurity', introKey: 'catSecurityIntro', deviceWide: true,
       render: [renderSecuritySection, renderKeepDataSection, renderGuidedSection] },
     { id: 'coming', icon: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/>', titleKey: 'catComing', introKey: 'catComingIntro',
       render: [renderComingSection] },
@@ -1580,6 +1580,13 @@
     const title = document.createElement('h3');
     title.className = 'settings-panel-title';
     title.textContent = t(category.titleKey);
+    // Categoria che vale per il dispositivo (non per il profilo in uso): lo si dice accanto al titolo
+    if (category.deviceWide) {
+      const tag = document.createElement('span');
+      tag.className = 'settings-device-tag';
+      tag.textContent = t('deviceWideTag');
+      title.append(tag);
+    }
     const intro = document.createElement('p');
     intro.className = 'settings-panel-intro';
     intro.textContent = t(category.introKey);
