@@ -406,6 +406,9 @@ button:focus-visible {
   font-weight: 600;
 }
 
+/* Link con l'aspetto di un pulsante (es. «Privacy» nel backup online) */
+a.link-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+
 .dlg-btn-primary { background: var(--focus); border-color: var(--focus); color: #fff; }
 .dlg-btn:disabled { opacity: 0.5; }
 
@@ -897,6 +900,32 @@ body > .adult-bar { order: 0; }
 }
 .settings-header { background: #ffffff; color: #1d1d1f; border-bottom: 1px solid #dcdfe4; padding: 10px 16px; }
 .settings-header h2 { font-size: 19px; font-weight: 700; }
+/* Titolo e, accanto, il nome del profilo in uso: più piccolo, maiuscolo, su sfondo diverso (è un dato che cambia) */
+.settings-heading { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+.settings-heading h2 { flex: none; }
+.settings-profile {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 40ch;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #e2e8f3;
+  color: #2b3a52;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.settings-profile[hidden] { display: none; }
+/* Telefono: il nome va sotto il titolo, così resta leggibile; l'intestazione non diventa più alta */
+@media (max-width: 480px) {
+  .settings-heading { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .settings-heading h2 { line-height: 1.15; }
+  .settings-profile { max-width: 100%; padding: 1px 7px; font-size: 11px; line-height: 1.4; }
+}
 .settings-header .adult-btn { min-height: 40px; border: 1px solid #c9cdd3; border-radius: 8px; padding: 0 12px; font-weight: 600; }
 .settings-layout { gap: 24px; padding: 20px 24px; }
 .settings-nav { background: transparent; border: 0; padding: 0; gap: 2px; top: 76px; }
@@ -1680,6 +1709,13 @@ body > .adult-bar { order: 0; }
 .tpl-tools .dlg-btn { flex: 1 1 220px; min-height: 44px; white-space: normal; }
 .tpl-status { margin: 0; padding: 10px 12px; border-radius: 10px; background: #e8f0fe; color: #17325c; line-height: 1.4; width: calc(100% - 32px); box-sizing: border-box; }
 .tpl-status.is-error { background: #fdecec; color: #8a1c1c; }
+/* Avviso «sto lavorando»: in basso sopra la pagina, così la sezione non si sposta sotto il dito */
+.settings-section > .tpl-status.is-busy {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: min(480px, calc(100% - 32px)); margin: 0; z-index: 15;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); text-align: center;
+}
 .tpl-page-name { font-weight: 600; }
 .dlg-btn-danger { color: #b3261e; }
 
@@ -1704,6 +1740,9 @@ body > .adult-bar { order: 0; }
 .choice-option strong { font-size: 16px; }
 .choice-option small { color: #5b616b; font-size: 13px; line-height: 1.35; }
 .choice-option:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Elenco dei dispositivi del backup online: testo a sinistra, «Escludi» a destra (sotto, se lo spazio non basta) */
+.choice-option.cloud-device { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; cursor: default; }
+.cloud-device-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 180px; }
 .name-form { display: flex; gap: 8px; flex-wrap: wrap; }
 .name-input {
   flex: 1 1 200px; min-height: 48px; padding: 0 12px; font-size: 18px; font-family: inherit;

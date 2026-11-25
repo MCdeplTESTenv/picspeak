@@ -69,6 +69,7 @@
     settings: document.getElementById('settings-screen'),
     settingsBody: document.getElementById('settings-body'),
     settingsBack: document.getElementById('btn-settings-back'),
+    settingsProfile: document.getElementById('settings-profile'),
   };
 
   let inactivityTimer = null;
@@ -129,6 +130,14 @@
           input.autocapitalize = 'words';
           input.maxLength = field.maxLength || 60;
           if (field.value) input.value = field.value;
+        } else if (field.raw) {
+          // Codice da incollare così com'è (es. quello di Dropbox): maiuscole e minuscole contano
+          input.type = 'text';
+          input.className = 'is-plain';
+          input.autocapitalize = 'off';
+          input.autocomplete = 'off';
+          input.spellcheck = false;
+          input.maxLength = 400;
         } else if (field.text) {
           input.type = 'text';
         } else {
@@ -323,10 +332,6 @@
     window.location.assign('guida.html');
   }
 
-  function lockedMessage(seconds) {
-    return t('pinLocked').replace('{s}', String(seconds));
-  }
-
   // ---------- Flussi del PIN ----------
 
   async function createPinFlow() {
@@ -363,7 +368,7 @@
       onSubmit: async (values) => {
         const res = await security.verifyRecovery(values.code);
         if (res.ok) return true;
-        return res.waitSeconds ? lockedMessage(res.waitSeconds) : t('recoveryWrong');
+        return t('recoveryWrong');
       },
     });
     // Codice corretto: si crea un nuovo PIN (e un nuovo codice di recupero)
@@ -384,7 +389,7 @@
         if (!security.isValidPin(values.pin)) return t('pinInvalid');
         if (values.pin !== values.pin2) return t('pinMismatch');
         const res = await security.verifyPin(values.current);
-        if (!res.ok) return res.waitSeconds ? lockedMessage(res.waitSeconds) : t('pinWrong');
+        if (!res.ok) return t('pinWrong');
         // Il codice di recupero esistente resta valido
         await security.setPin(values.pin, { newRecovery: false });
         return true;
@@ -416,7 +421,7 @@
       onSubmit: async (values) => {
         const res = await security.verifyPin(values.pin);
         if (res.ok) return true;
-        return res.waitSeconds ? lockedMessage(res.waitSeconds) : t('pinWrong');
+        return t('pinWrong');
       },
     });
     if (result === true) {
@@ -437,6 +442,8 @@
     el.lock.hidden = true;
     resetInactivity();
     app.layoutGrid();
+    // Il backup online può chiedere all'adulto quale versione delle schede tenere
+    document.dispatchEvent(new CustomEvent('picspeak:adult-enter'));
   }
 
   function exitAdult() {
@@ -447,6 +454,8 @@
     el.adultBar.hidden = true;
     el.lock.hidden = false;
     app.layoutGrid();
+    // Il backup online invia subito le modifiche fatte dall'adulto
+    document.dispatchEvent(new CustomEvent('picspeak:adult-exit'));
   }
 
   function resetInactivity() {
@@ -1486,7 +1495,20 @@
       render: [renderComingSection] },
   ];
 
+  // Accanto al titolo «Impostazioni»: il nome del profilo in uso, perché le scelte valgono solo per lui.
+  // Si aggiorna a ogni disegno della pagina (anche dopo una rinomina o un cambio di lingua).
+  function showSettingsProfile() {
+    const tag = el.settingsProfile;
+    const profiles = window.PicSpeak.profiles;
+    if (!tag) return;
+    const name = profiles && data.profile ? profiles.displayName(data.profile) : '';
+    tag.textContent = name;
+    tag.title = name;
+    tag.hidden = !name;
+  }
+
   function renderSettings() {
+    showSettingsProfile();
     const layout = document.createElement('div');
     layout.className = 'settings-layout';
     layout.classList.toggle('show-panel', showPanelOnPhone);

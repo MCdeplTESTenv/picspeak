@@ -2,8 +2,12 @@
  * Impostazioni: «Backup e ripristino», in quattro sezioni.
  * - Backup locale: nome del profilo, «Salva un backup adesso» (file .picspeak, password facoltativa), data dell'ultimo
  *   backup salvato da questo dispositivo. La logica del file è in backup.js.
- * - Backup online: in arrivo (pulsante in grigio con l'etichetta «Prossimamente»).
- * - Ripristina un backup: apre un file .picspeak, mostra di chi è, quando è stato salvato e cosa contiene, poi
+ * - Backup online su Dropbox (logica in cloud.js): «Collega Dropbox» (si incolla il codice mostrato da Dropbox), stato
+ *   dell'ultima copia, aggiornamento manuale o automatico, «Aggiorna adesso», «Salva una copia» (con nome),
+ *   «Apri un profilo», dispositivi, «Scollega». Il link alla pagina sulla
+ *   privacy compare solo qui, all'adulto, tra le prime voci di «Backup online».
+ * - Ripristina: un file .picspeak dal dispositivo o una copia su Dropbox; mostra di chi è, quando è stato salvato e
+ *   cosa contiene, poi
  *   «Ripristina tutto» (sostituisce) oppure «Scegli cosa ripristinare» (per ogni parte: no, sostituisci, aggiungi o unisci).
  * - Azzera l'app: «Torna alle impostazioni iniziali» (solo le scelte delle impostazioni; restano schede, immagini,
  *   abitudini, modelli, pacchetti scaricati, uso di Internet e PIN) e «Cancella tutto e ricomincia da zero» (svuota
@@ -13,11 +17,11 @@
 (function () {
   'use strict';
 
-  const { i18n, storage, security, symbols, predict, data, backup, settingsUi: ui } = window.PicSpeak;
+  const { i18n, storage, security, symbols, predict, data, backup, cloud, settingsUi: ui } = window.PicSpeak;
   const t = i18n.t;
 
   // Chiavi dell'archivio "settings" che contengono solo scelte delle impostazioni.
-  // Restano fuori, di proposito: security e securityAttempts (PIN), activeProfileId, previousPages:*,
+  // Restano fuori, di proposito: security (PIN), activeProfileId, previousPages:*,
   // userTemplates (modelli salvati), symbolPacks (pacchetti già scaricati), lastBackup e onlineSearch: una scelta
   // di privacy sull'uso di internet non deve tornare «Attiva» senza che l'adulto se ne accorga.
   const SETTINGS_KEYS = [
@@ -29,8 +33,9 @@
   // Avviso da mostrare nella sezione del backup locale al prossimo disegno della pagina
   let notice = null;
 
+  // Un solo passaggio: un nome che contiene «{here}» resta com'è, non viene sostituito a sua volta
   function format(key, values) {
-    return Object.entries(values).reduce((text, [name, value]) => text.split(`{${name}}`).join(String(value)), t(key));
+    return t(key).replace(/\{(\w+)\}/g, (all, name) => (Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : all));
   }
 
   function el(tag, className, text) {
@@ -54,9 +59,18 @@
     ui.render();
   }
 
+  /*
+   * Avviso «sto lavorando» (elenco delle copie, scaricamento, salvataggio...): si mostra in basso sopra la pagina,
+   * senza spingere giù il resto della sezione. In cima alla sezione farebbe saltellare il pulsante appena toccato.
+   */
+  function showBusy(text, where = 'local') {
+    notice = { text, error: false, where, busy: true };
+    ui.render();
+  }
+
   function renderNotice(wrap, where) {
     if (!notice || notice.where !== where) return;
-    const box = el('p', `tpl-status${notice.error ? ' is-error' : ''}`, notice.text);
+    const box = el('p', `tpl-status${notice.error ? ' is-error' : ''}${notice.busy ? ' is-busy' : ''}`, notice.text);
     box.setAttribute('role', 'status');
     wrap.append(box);
     notice = null;
@@ -122,7 +136,7 @@
       },
     });
     if (!values) return false;
-    showNotice(t('backupSaving'), false, where);
+    showBusy(t('backupSaving'), where);
     try {
       const file = await backup.create({ name: values.name, password: values.pass, fallbackName: t('backupFileWord') });
       backup.save(file.blob, file.name);
@@ -159,9 +173,571 @@
     }).catch(() => { last.textContent = t('backupLastNone'); });
   }
 
+  // ---------- Backup online (Dropbox) ----------
+
+  // Coppia PKCE preparata prima del tocco: la pagina di Dropbox si apre subito, dentro il tocco (Safari lo richiede)
+  let pkce = null;
+
+  function prepareLink() {
+    if (pkce || !cloud || !cloud.isConfigured()) return;
+    cloud.newPkce().then((value) => { pkce = value; }).catch(() => { pkce = null; });
+  }
+
+  function cloudErrorText(error) {
+    const code = error instanceof cloud.CloudError ? error.message : '';
+    const key = `cloudErr_${code}`;
+    return t(key) === key ? t('cloudErr_server') : t(key);
+  }
+
+  /*
+   * Collega un account Dropbox per il profilo in uso. account: chiave di un account da ricollegare (permesso scaduto);
+   * senza, se ne aggiunge uno nuovo (con un nome dato dall'adulto, se sul dispositivo ce n'è già un altro).
+   */
+  async function connectDropbox(options = {}) {
+    // addOnly: solo un account in più (per aprire un profilo da un altro Dropbox); risolve con la sua chiave
+    const { account, addOnly } = options && typeof options === 'object' && !(options instanceof Event) ? options : {};
+    if (!pkce) {
+      prepareLink();
+      showBusy(t('cloudPreparing'), 'online');
+      return;
+    }
+    const current = pkce;
+    // La pagina di Dropbox si apre in una scheda nuova: lì l'adulto preme «Consenti» e copia il codice
+    window.open(cloud.authorizeUrl(current), '_blank', 'noopener,noreferrer');
+    const done = await ui.runDialog({
+      title: t('cloudCodeTitle'),
+      help: t('cloudCodeHelp'),
+      fields: [
+        { id: 'code', label: t('cloudCodeField'), raw: true },
+        // Più account sullo stesso dispositivo: un nome per riconoscerlo (PicSpeak non chiede a Dropbox nome o email)
+        ...((!account && cloud.listAccounts().length) || addOnly ? [{ id: 'name', label: t('cloudAccountName'), plain: true, maxLength: 40 }] : []),
+      ],
+      primary: t('cloudCodeBtn'),
+      secondary: t('cancel'),
+      onSubmit: async (v) => {
+        try {
+          // hold: prima di salvare questo profilo si chiede se continuare con uno già su Dropbox
+          const result = await cloud.connect(v.code, current, { name: v.name, account, hold: true, attach: !addOnly });
+          return result || true;
+        } catch (error) {
+          return cloudErrorText(error);
+        }
+      },
+    });
+    // Ogni collegamento usa una coppia nuova
+    pkce = null;
+    if (addOnly) return done && done.key ? done.key : null;
+    if (done && done.held) await offerExisting();
+    else if (done && done.sameAs) showNotice(format('cloudAccountSame', { name: done.sameAs }), false, 'online');
+    else if (done) showNotice(t('cloudConnected'), false, 'online');
+    else ui.render();
+  }
+
+  /*
+   * Profili su Dropbox che su questo dispositivo non ci sono ancora. Risolve con l'elenco (anche vuoto) oppure lancia
+   * l'errore di rete. Mostra l'avviso di attesa mentre legge.
+   */
+  async function dropboxProfiles(account) {
+    showBusy(t('cloudListing'), 'online');
+    try {
+      return (await viaAccount(account, () => cloud.listProfiles())).filter((p) => !cloud.linkedHere(p.id));
+    } finally {
+      notice = null;
+      ui.render();
+    }
+  }
+
+  function profileChoices(profiles) {
+    return profiles.map((p) => ({
+      value: p.id,
+      label: p.name || t('backupRestoredProfileName'),
+      help: [whenText(p.updatedAt), p.device].filter(Boolean).join(' · '),
+    }));
+  }
+
+  /*
+   * «Apri un profilo»: un profilo che è su Dropbox (secondo dispositivo, dispositivo nuovo, un altro bambino da
+   * seguire, anche da un altro account) diventa un profilo nuovo qui, sincronizzato. Il profilo in uso non cambia.
+   */
+  async function openProfile() {
+    if (!(await window.PicSpeak.profiles.canAddProfile())) {
+      await ui.runDialog({ title: format('profileTooMany', { n: window.PicSpeak.profiles.MAX_PROFILES }), primary: t('close') });
+      return;
+    }
+    prepareLink(); // se servirà collegare un altro Dropbox
+    let account = await pickAccount();
+    if (account === null) return;
+    for (;;) {
+      let profiles;
+      try {
+        profiles = await dropboxProfiles(account);
+      } catch (error) {
+        await ui.runDialog({ title: t('cloudOpenTitle'), help: cloudErrorText(error), primary: t('close') });
+        return;
+      }
+      // In fondo, sempre: un altro Dropbox (per esempio quello dei genitori)
+      const folder = await askChoice(t('cloudOpenTitle'), t(profiles.length ? 'cloudOpenPick' : 'cloudOpenNone'), [
+        ...profileChoices(profiles),
+        { value: 'other', label: t('cloudOpenOther'), help: t('cloudOpenOtherHelp') },
+      ]);
+      if (!folder) return;
+      if (folder !== 'other') {
+        const picked = profiles.find((p) => p.id === folder);
+        await openSynced(account, folder, (picked && picked.name) || t('backupRestoredProfileName'));
+        return;
+      }
+      const current = account || (cloud.listAccounts().find((a) => a.here) || {}).key;
+      const others = cloud.listAccounts().filter((a) => a.key !== current);
+      const next = await askChoice(t('cloudAccountTitle'), t('cloudAccountPick'), [
+        ...others.map((a) => ({ value: a.key, label: a.name })),
+        { value: 'new', label: t('cloudAccountNew'), help: t('cloudAccountNewHelp') },
+      ]);
+      if (!next) return;
+      account = next === 'new' ? await connectDropbox({ addOnly: true }) : next;
+      if (!account) { ui.render(); return; }
+    }
+  }
+
+  // Profilo nuovo legato alla cartella scelta, solo download; poi la pagina si ricarica su questa sezione
+  async function openSynced(account, folder, name) {
+    // Account vero (quello scelto, o quello del profilo in uso): il profilo nuovo non ne ha ancora uno
+    const own = cloud.listAccounts().find((a) => a.here);
+    const key = account || (own && own.key);
+    if (!key) { showNotice(t('cloudErr_auth'), true, 'online'); return; }
+    showBusy(t('cloudDownloading'), 'online');
+    let created = false;
+    try {
+      // withAccount ferma le copie automatiche: nessuna copia del profilo di prima mentre si cambia profilo
+      await cloud.withAccount(key, async () => {
+        if (!(await window.PicSpeak.profiles.startRestoredProfile(name))) throw new cloud.CloudError('server');
+        created = true;
+        await cloud.follow(folder);
+      });
+    } catch (error) {
+      notice = null;
+      ui.render();
+      const help = created ? `${cloudErrorText(error)} ${format('cloudOpenFailed', { name })}` : cloudErrorText(error);
+      await ui.runDialog({ title: t('cloudOpenTitle'), help, primary: t('close') });
+      if (created) ui.reopenAfterReload('backup');
+      return;
+    }
+    ui.reopenAfterReload('backup');
+  }
+
+  /*
+   * Appena collegato Dropbox: se ci sono già dei profili (dispositivo nuovo, perso o cambiato) si propone di
+   * continuare con uno di quelli nel profilo appena collegato, solo scaricando. Finché l'adulto non sceglie, cloud non
+   * invia nulla (connect con hold); «No», finestra chiusa o un errore lasciato così: il profilo si salva come nuovo.
+   */
+  async function offerExisting() {
+    let profiles;
+    try {
+      // Il profilo appena collegato non c'è: dropboxProfiles toglie quelli già collegati qui
+      profiles = await dropboxProfiles('');
+    } catch (error) {
+      await existingFailed(error);
+      return;
+    }
+    if (!profiles.length) {
+      cloud.release();
+      showNotice(t('cloudConnected'), false, 'online');
+      return;
+    }
+    const here = (data.profile && data.profile.name) || t('backupRestoredProfileName');
+    for (;;) {
+      const folder = await askChoice(t('cloudExistingTitle'), t('cloudExistingHelp'), [
+        ...profileChoices(profiles),
+        { value: 'new', label: format('cloudExistingNew', { name: here }), help: t('cloudExistingNewHelp') },
+      ]);
+      if (!folder || folder === 'new') {
+        cloud.release();
+        showNotice(t('cloudConnected'), false, 'online');
+        return;
+      }
+      const picked = profiles.find((p) => p.id === folder);
+      const ok = await ui.runDialog({
+        title: t('cloudExistingTitle'),
+        help: format('cloudExistingConfirm', { name: (picked && picked.name) || t('backupRestoredProfileName'), here }),
+        primary: t('cloudExistingBtn'),
+        secondary: t('cancel'),
+      });
+      if (!ok) continue;
+      showBusy(t('cloudDownloading'), 'online');
+      try {
+        await cloud.follow(folder);
+        location.reload();
+      } catch (error) {
+        await existingFailed(error);
+      }
+      return;
+    }
+  }
+
+  // Errore mentre si sceglie: «Riprova» oppure si salva come profilo nuovo (il backup non resta mai fermo in silenzio)
+  async function existingFailed(error) {
+    notice = null;
+    ui.render();
+    const again = await ui.runDialog({
+      title: t('cloudExistingTitle'),
+      help: cloudErrorText(error),
+      primary: t('cloudExistingRetry'),
+      secondary: t('cloudExistingSaveNew'),
+    });
+    if (again) { await offerExisting(); return; }
+    cloud.release();
+    showNotice(t('cloudConnected'), false, 'online');
+  }
+
+  /*
+   * Account da usare in un profilo che non ha ancora il backup online: quello unico, oppure scelto dall'adulto.
+   * Risolve con la chiave, con '' se il profilo usa già il suo, con null se l'adulto annulla.
+   * withNew: aggiunge «Collega un altro account Dropbox» (risolve con 'new').
+   */
+  async function pickAccount(withNew = false) {
+    if (cloud.isEnabledHere()) return '';
+    const accounts = cloud.listAccounts();
+    if (accounts.length === 1 && !withNew) return accounts[0].key;
+    const choices = accounts.map((a) => ({
+      value: a.key,
+      label: a.name,
+      help: format(a.profiles === 1 ? 'cloudAccountUsedOne' : 'cloudAccountUsed', { n: a.profiles }),
+    }));
+    if (withNew) choices.push({ value: 'new', label: t('cloudAccountNew'), help: t('cloudAccountNewHelp') });
+    return (await askChoice(t('cloudAccountTitle'), t('cloudAccountPick'), choices)) || null;
+  }
+
+  // Esegue una richiesta a Dropbox con l'account scelto ('' = quello del profilo in uso)
+  function viaAccount(key, fn) {
+    return key ? cloud.withAccount(key, fn) : fn();
+  }
+
+  async function enableProfile() {
+    const key = await pickAccount(true);
+    if (!key) return;
+    if (key === 'new') { await connectDropbox(); return; }
+    await cloud.enableHere(key);
+    showNotice(t('cloudConnected'), false, 'online');
+  }
+
+  async function disconnectDropbox() {
+    const ok = await ui.runDialog({
+      title: t('cloudDisconnectTitle'),
+      help: t('cloudDisconnectHelp'),
+      primary: t('cloudDisconnectBtn'),
+      secondary: t('cancel'),
+    });
+    if (!ok) return;
+    await cloud.disconnect();
+    showNotice(t('cloudDisconnected'), false, 'online');
+  }
+
+  async function saveNamedCopy() {
+    const values = await ui.runDialog({
+      title: t('cloudPhotoTitle'),
+      help: t('cloudPhotoHelp'),
+      fields: [{ id: 'name', label: t('cloudPhotoName'), plain: true, maxLength: 30 }],
+      primary: t('cloudPhotoBtn'),
+      secondary: t('cancel'),
+      // Senza onSubmit la finestra restituirebbe solo «true» e il nome scritto andrebbe perso
+      onSubmit: (v) => v,
+    });
+    if (!values) return;
+    showBusy(t('cloudPhotoSaving'), 'online');
+    try {
+      await cloud.saveSnapshot('photo', values.name);
+      showNotice(t('cloudPhotoSaved'), false, 'online');
+    } catch (error) {
+      showNotice(cloudErrorText(error), true, 'online');
+    }
+  }
+
+  async function syncDropbox() {
+    showBusy(t('cloudSyncing'), 'online');
+    await cloud.syncNow();
+    if (cloud.isAuto()) {
+      // Si guarda anche se altri dispositivi hanno inviato qualcosa (le schede arrivano all'uscita dalla modalità adulto)
+      await cloud.pullNow();
+    } else {
+      // Manuale: è l'unico momento in cui arrivano le modifiche degli altri dispositivi, quindi si applicano subito
+      let changed = false;
+      try { changed = await cloud.applyNow(); } catch (error) { /* senza rete: lo dice la riga di stato */ }
+      if (changed) {
+        // Ricarica la pagina e riapre questa sezione delle impostazioni
+        ui.reopenAfterReload('backup');
+        return;
+      }
+    }
+    if (cloud.hasConflict()) { await askConflict(); return; }
+    const st = cloud.status();
+    showNotice(st === 'idle' ? t('cloudSynced') : t(`cloudStatus_${st}`), st !== 'idle', 'online');
+  }
+
+  function cloudStatusText() {
+    const st = cloud.status();
+    const last = cloud.lastCopy();
+    const lastText = last ? format('cloudLast', { date: dateText(last), time: timeText(last) }) : t('cloudLastNone');
+    const synced = cloud.isSynced() ? ` ${t('cloudSyncedDevices')}` : '';
+    const accounts = cloud.listAccounts();
+    const own = accounts.find((a) => a.here);
+    const which = accounts.length > 1 && own ? `${format('cloudAccountIs', { name: own.name })} ` : '';
+    if (st === 'idle' || st === 'off') return which + lastText + (cloud.pending() ? ` ${t('cloudPending')}` : '') + synced;
+    return `${which}${t(`cloudStatus_${st}`)} ${lastText}`;
+  }
+
+  /*
+   * Le schede sono state cambiate qui e su un altro dispositivo prima che si potessero scambiare le modifiche:
+   * l'adulto sceglie quale versione tenere. L'altra resta su Dropbox come copia «prima di…».
+   */
+  let asking = false;
+  async function askConflict() {
+    if (asking || !cloud || !cloud.hasConflict()) return;
+    asking = true;
+    try {
+      const info = await cloud.conflictInfo();
+      const there = info.there ? format('cloudConflictThere', { device: info.there }) : t('cloudConflictThereUnknown');
+      const which = await askChoice(t('cloudConflictTitle'), t('cloudConflictHelp'), [
+        { value: 'mine', label: t('cloudConflictMine'), help: format('cloudConflictHere', { device: info.here }), className: 'is-primary' },
+        { value: 'theirs', label: t('cloudConflictTheirs'), help: `${there}${info.thereAt ? ` ${whenText(info.thereAt)}` : ''}` },
+      ]);
+      if (!which) return;
+      showBusy(t('cloudSyncing'), 'online');
+      const reload = await cloud.resolveConflict(which);
+      if (reload) { location.reload(); return; }
+      showNotice(t('cloudConflictDone'), false, 'online');
+    } catch (error) {
+      if (error instanceof cloud.CloudError && error.message === 'conflict') {
+        asking = false;
+        showNotice(t('cloudConflictAgain'), true, 'online');
+        await askConflict();
+        return;
+      }
+      showNotice(cloudErrorText(error), true, 'online');
+    } finally {
+      asking = false;
+    }
+  }
+
+  // Dispositivi che usano questo profilo, con «Escludi» per uno perso, rubato o non più usato
+  async function showDevices() {
+    showBusy(t('cloudListing'), 'online');
+    let devices;
+    try {
+      devices = await cloud.listDevices();
+    } catch (error) {
+      showNotice(cloudErrorText(error), true, 'online');
+      return;
+    }
+    notice = null;
+    ui.render();
+    const picked = await ui.runPanelDialog({
+      title: t('cloudDevicesTitle'),
+      help: t('cloudDevicesHelp'),
+      className: 'choice-dialog',
+      build(close) {
+        const list = el('div', 'choice-options cloud-choices');
+        devices.forEach((d) => {
+          const row = el('div', 'choice-option cloud-device');
+          const text = el('div', 'cloud-device-text');
+          text.append(el('strong', null, d.label || t('cloudDeviceUnknown')));
+          const when = d.at ? format('cloudDeviceLast', { when: whenText(d.at) }) : '';
+          text.append(el('small', null, [d.here ? t('cloudDeviceHere') : '', when].filter(Boolean).join(' · ')));
+          row.append(text);
+          if (d.here) {
+            // Il nome si cambia solo da qui: ogni dispositivo scrive solo il suo
+            row.append(ui.button(t('cloudDeviceRename'), () => close({ rename: true }), false));
+          } else {
+            const btn = ui.button(t('cloudDeviceExclude'), () => close(d), false);
+            btn.classList.add('dlg-btn-danger');
+            row.append(btn);
+          }
+          list.append(row);
+        });
+        return list;
+      },
+    });
+    if (!picked) return;
+    if (picked.rename) {
+      const values = await ui.runDialog({
+        title: t('cloudDeviceNameTitle'),
+        help: t('cloudDeviceNameHelp'),
+        fields: [{ id: 'name', label: t('cloudDeviceNameField'), plain: true, maxLength: 30, value: cloud.deviceName() }],
+        primary: t('confirm'),
+        secondary: t('cancel'),
+        onSubmit: (v) => v,
+      });
+      if (!values) return;
+      await cloud.setDeviceName(values.name);
+      showNotice(t('cloudDeviceNamed'), false, 'online');
+      return;
+    }
+    const ok = await ui.runDialog({
+      title: t('cloudDeviceExcludeTitle'),
+      help: format('cloudDeviceExcludeHelp', { device: picked.label || t('cloudDeviceUnknown') }),
+      primary: t('cloudDeviceExclude'),
+      secondary: t('cancel'),
+    });
+    if (!ok) return;
+    try {
+      await cloud.excludeDevice(picked.id);
+      showNotice(t('cloudDeviceExcluded'), false, 'online');
+    } catch (error) {
+      showNotice(cloudErrorText(error), true, 'online');
+    }
+  }
+
+  // Riga «Privacy» tra le prime voci della sezione, sempre visibile: cosa succede ai dati con il backup online.
+  // Il testo è generico (oggi Dropbox, domani anche altri servizi): la pagina privacy.html elenca i servizi usati.
+  function privacyRow() {
+    const a = el('a', 'dlg-btn link-btn', t('cloudPrivacyBtn'));
+    a.href = 'privacy.html';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    return ui.settingRow('cloudPrivacy', 'cloudPrivacyHelp', a);
+  }
+
   function renderOnlineSection() {
     const wrap = ui.section('secBackupOnlineTitle', 'secBackupOnlineHelp');
-    wrap.append(comingRow('backupAuto', 'backupAutoHelp', 'backupAutoBtn'));
+    renderNotice(wrap, 'online');
+    if (!cloud || !cloud.isConfigured()) {
+      wrap.append(comingRow('cloudDropbox', 'cloudDropboxHelp', 'cloudConnectBtn'));
+      return;
+    }
+    if (!cloud.isConnected()) {
+      prepareLink();
+      wrap.append(ui.settingRow('cloudDropbox', 'cloudDropboxHelp', ui.button(t('cloudConnectBtn'), connectDropbox, true)), privacyRow());
+      return;
+    }
+    if (!cloud.isEnabledHere()) {
+      // Collegato da un altro profilo: questo profilo non va su Dropbox finché l'adulto non lo decide
+      wrap.append(el('p', 'settings-help backup-last', t(cloud.wasExcluded() ? 'cloudExcludedHere' : 'cloudOtherProfile')));
+      wrap.append(ui.settingRow('cloudEnable', 'cloudEnableHelp', ui.button(t('cloudEnableBtn'), enableProfile, true)), privacyRow());
+      wrap.append(ui.settingRow('cloudOpen', 'cloudOpenHelp', ui.button(t('cloudOpenBtn'), openProfile, false)));
+      return;
+    }
+    const status = el('p', `settings-help backup-last${['error', 'reconnect', 'full'].includes(cloud.status()) ? ' is-error' : ''}`,
+      `${t('cloudConnectedPlain')} ${cloudStatusText()}`);
+    status.setAttribute('role', 'status');
+    wrap.append(status, privacyRow());
+    if (cloud.hasConflict()) {
+      wrap.append(ui.settingRow('cloudConflictRow', 'cloudConflictRowHelp', ui.button(t('cloudConflictRowBtn'), askConflict, true)));
+    }
+    if (cloud.status() === 'reconnect') {
+      const control = el('div', 'choice-group');
+      // Si ricollega lo stesso account (stesso nome, stessi profili): basta il codice nuovo di Dropbox
+      const own = cloud.listAccounts().find((a) => a.here);
+      prepareLink();
+      control.append(ui.button(t('cloudReconnectBtn'), () => connectDropbox({ account: own && own.key }), true));
+      wrap.append(ui.settingRow('cloudReconnect', 'cloudReconnectHelp', control));
+    }
+    // Aggiornamento automatico o manuale (si parte da manuale): vale per questo profilo su questo dispositivo
+    const auto = cloud.isAuto();
+    wrap.append(ui.settingRow('cloudAuto', 'cloudAutoHelp', ui.segmented(
+      [['manual', 'valCloudManual'], ['auto', 'valCloudAuto']], auto ? 'auto' : 'manual',
+      async (value) => {
+        if ((value === 'auto') === auto) return;
+        await cloud.setAuto(value === 'auto');
+        ui.render();
+      },
+    )));
+    wrap.append(ui.settingRow('cloudSync', auto ? 'cloudSyncHelp' : 'cloudSyncHelpManual', ui.button(t('cloudSyncBtn'), syncDropbox, !auto && cloud.pending())));
+    wrap.append(ui.settingRow('cloudPhoto', 'cloudPhotoRowHelp', ui.button(t('cloudPhotoRowBtn'), saveNamedCopy, true)));
+    wrap.append(ui.settingRow('cloudOpen', 'cloudOpenHelp', ui.button(t('cloudOpenBtn'), openProfile, false)));
+    if (cloud.isSynced()) wrap.append(ui.settingRow('cloudDevices', 'cloudDevicesRowHelp', ui.button(t('cloudDevicesBtn'), showDevices, false)));
+    const off = ui.button(t('cloudDisconnectBtn'), disconnectDropbox, false);
+    off.classList.add('dlg-btn-danger');
+    wrap.append(ui.settingRow('cloudDisconnect', 'cloudDisconnectRowHelp', off));
+  }
+
+  // Elenco di scelte (profili o copie) in una finestra; risolve con il valore scelto o null
+  function askChoice(title, help, choices) {
+    return ui.runPanelDialog({
+      title,
+      help,
+      className: 'choice-dialog',
+      build(close) {
+        const options = el('div', 'choice-options cloud-choices');
+        choices.forEach((opt) => {
+          const btn = el('button', `choice-option ${opt.className || ''}`.trim());
+          btn.type = 'button';
+          btn.append(el('strong', null, opt.label));
+          if (opt.help) btn.append(el('small', null, opt.help));
+          btn.addEventListener('click', () => close(opt.value));
+          options.append(btn);
+        });
+        return options;
+      },
+    });
+  }
+
+  function whenText(date) {
+    return date ? format('cloudWhen', { date: dateText(date), time: timeText(date) }) : '';
+  }
+
+  async function restoreFromDropbox() {
+    const account = await pickAccount();
+    if (account === null) return;
+    showBusy(t('cloudListing'), 'restore');
+    let profiles;
+    try {
+      profiles = await viaAccount(account, () => cloud.listProfiles());
+    } catch (error) {
+      showNotice(cloudErrorText(error), true, 'restore');
+      return;
+    }
+    ui.render();
+    if (!profiles.length) {
+      await ui.runDialog({ title: t('cloudRestoreTitle'), help: t('cloudNoCopies'), primary: t('close') });
+      return;
+    }
+    const hereId = data.profile && data.profile.id;
+    const profileId = profiles.length === 1 ? profiles[0].id : await askChoice(t('cloudRestoreTitle'), t('cloudPickProfile'),
+      profiles.map((p) => ({
+        value: p.id,
+        label: (p.name || t('backupRestoredProfileName')) + (p.id === hereId ? ` ${t('cloudThisProfile')}` : ''),
+        help: [whenText(p.updatedAt), p.device].filter(Boolean).join(' · '),
+        className: p.id === hereId ? 'is-primary' : '',
+      })));
+    if (!profileId) return;
+    let copies;
+    try {
+      copies = await viaAccount(account, () => cloud.listCopies(profileId));
+    } catch (error) {
+      showNotice(cloudErrorText(error), true, 'restore');
+      return;
+    }
+    if (!copies.length) {
+      await ui.runDialog({ title: t('cloudRestoreTitle'), help: t('cloudNoCopies'), primary: t('close') });
+      return;
+    }
+    // Copia più recente del profilo in uso: è quasi uguale a quello che c'è già sul dispositivo, quindi va in fondo,
+    // non evidenziata, con la spiegazione di quando serve (dispositivo nuovo, dopo «Cancella tutto»)
+    const same = profileId === hereId;
+    const choices = copies.map((c, index) => {
+      const kind = c.kind === 'latest' && same ? 'latestHere' : c.kind;
+      return {
+        value: String(index),
+        kind,
+        label: c.kind === 'photo' && c.label ? format('cloudKind_photoNamed', { name: c.label }) : t(`cloudKind_${kind}`),
+        // Data e, sotto, a cosa serve quella copia
+        help: format(`cloudExplain_${kind}`, { when: c.kind === 'daily' && c.date ? dateText(c.date) : whenText(c.date) }),
+        className: kind === 'latest' ? 'is-primary' : '',
+      };
+    });
+    const ordered = [...choices.filter((c) => c.kind !== 'latestHere'), ...choices.filter((c) => c.kind === 'latestHere')];
+    const picked = await askChoice(t('cloudRestoreTitle'), t('cloudPickCopy'), ordered);
+    if (picked === null || picked === undefined) return;
+    const copy = copies[Number(picked)];
+    showBusy(t('cloudDownloading'), 'restore');
+    let result;
+    try {
+      result = await viaAccount(account, () => cloud.openCopy(profileId, copy));
+    } catch (error) {
+      if (error instanceof backup.BackupError) await showError(error);
+      else showNotice(cloudErrorText(error), true, 'restore');
+      return;
+    }
+    ui.render();
+    await restoreOpened(result.opened, result.parts);
   }
 
   // ---------- Ripristina un backup ----------
@@ -392,9 +968,38 @@
     };
   }
 
+  /*
+   * Un solo «Ripristina»: con Dropbox collegato si sceglie da dove (un file sul dispositivo o una copia su Dropbox),
+   * altrimenti si apre subito la scelta del file.
+   */
   async function restoreBackup() {
-    // Il file si sceglie subito, dentro il tocco
-    const file = await pickFile();
+    let filePicked = null;
+    if (cloud && cloud.isConfigured() && cloud.listAccounts().length) {
+      const from = await ui.runPanelDialog({
+        title: t('restoreFromTitle'),
+        className: 'choice-dialog',
+        build(close) {
+          const options = el('div', 'choice-options');
+          [['file', 'restoreFromFile', 'restoreFromFileHelp'], ['dropbox', 'restoreFromDropbox', 'restoreFromDropboxHelp']]
+            .forEach(([value, labelKey, helpKey]) => {
+              const btn = el('button', 'choice-option');
+              btn.type = 'button';
+              btn.append(el('strong', null, t(labelKey)), el('small', null, t(helpKey)));
+              btn.addEventListener('click', () => {
+                // La scelta del file si apre dentro il tocco (Safari non la apre più tardi)
+                if (value === 'file') filePicked = pickFile();
+                close(value);
+              });
+              options.append(btn);
+            });
+          return options;
+        },
+      });
+      if (!from) return;
+      if (from === 'dropbox') { await restoreFromDropbox(); return; }
+    }
+    // Senza Dropbox il file si sceglie subito, dentro il tocco
+    const file = await (filePicked || pickFile());
     if (!file) return;
     let opened;
     let parts;
@@ -405,6 +1010,22 @@
       await showError(error);
       return;
     }
+    await restoreOpened(opened, parts);
+  }
+
+  // Copia automatica su Dropbox prima di un'operazione grande (se collegato); non blocca l'operazione se non riesce
+  async function cloudSafetyCopy(where) {
+    if (!cloud || !cloud.isConnected()) return;
+    showBusy(t('cloudSafetySaving'), where);
+    try {
+      await cloud.saveSnapshot('before');
+    } catch (error) {
+      // Si prosegue: l'adulto ha già avuto la proposta del backup sul dispositivo
+    }
+  }
+
+  // Ripristino di un backup già aperto (da un file o da Dropbox); parts è null se il backup è protetto da password
+  async function restoreOpened(opened, parts) {
     if (opened.info.encryption) {
       parts = await ui.runDialog({
         title: t('backupPassTitle'),
@@ -433,7 +1054,10 @@
     if (!target) return;
     let mode;
     if (target === 'new') {
-      if (!(await window.PicSpeak.profiles.startRestoredProfile(opened.info.name))) {
+      const started = cloud && cloud.pauseDuring
+        ? await cloud.pauseDuring(() => window.PicSpeak.profiles.startRestoredProfile(opened.info.name))
+        : await window.PicSpeak.profiles.startRestoredProfile(opened.info.name);
+      if (!started) {
         await showError(new backup.BackupError('damaged'));
         return;
       }
@@ -461,7 +1085,8 @@
       }
     }
 
-    showNotice(t('backupRestoring'), false, 'restore');
+    await cloudSafetyCopy('restore');
+    showBusy(t('backupRestoring'), 'restore');
     if (channel) channel.postMessage('restoring');
     let report;
     try {
@@ -550,16 +1175,16 @@
         }
         if (needPin) {
           const res = await security.verifyPin(values.pin);
-          if (!res.ok) {
-            return res.waitSeconds ? t('pinLocked').replace('{s}', res.waitSeconds) : t('pinWrong');
-          }
+          if (!res.ok) return t('pinWrong');
         }
         return true;
       },
     });
     if (!confirmed) return;
 
-    // 3. Cancellazione e ripartenza come alla prima apertura
+    // 3. Cancellazione e ripartenza come alla prima apertura (prima una copia su Dropbox, se collegato, poi si scollega)
+    await cloudSafetyCopy('reset');
+    if (cloud && cloud.isConnected()) await cloud.disconnectAll();
     try {
       // Prima le abitudini in memoria: un salvataggio rimasto in sospeso non deve riscriverle dopo
       if (predict) await predict.clearAll();
@@ -585,6 +1210,9 @@
     erase.classList.add('dlg-btn-danger');
     wrap.append(ui.settingRow('resetAll', 'resetAllHelp', erase));
   }
+
+  // Entrando in modalità adulto: se ci sono due versioni delle schede, si chiede subito quale tenere
+  document.addEventListener('picspeak:adult-enter', () => { setTimeout(askConflict, 300); });
 
   ui.addCategory({
     id: 'backup',

@@ -216,6 +216,7 @@
     await storage.deleteRecords('images', orphanImages);
     await storage.removeProfileSettings(profileId);
     await storage.remove(`previousPages:${profileId}`);
+    if (window.PicSpeak.cloud) await window.PicSpeak.cloud.forgetProfile(profileId);
     await storage.deleteRecord('profiles', profileId);
     if (channel) channel.postMessage({ deleted: profileId });
   }
@@ -376,7 +377,7 @@
         }
         if (needPin) {
           const res = await security.verifyPin(values.pin);
-          if (!res.ok) return res.waitSeconds ? t('pinLocked').replace('{s}', res.waitSeconds) : t('pinWrong');
+          if (!res.ok) return t('pinWrong');
         }
         return true;
       },
@@ -501,5 +502,5 @@
     return true;
   }
 
-  window.PicSpeak.profiles = { cleanName, displayName, showProfileInBar, canAddProfile, startRestoredProfile };
+  window.PicSpeak.profiles = { cleanName, displayName, showProfileInBar, canAddProfile, startRestoredProfile, MAX_PROFILES };
 })();
