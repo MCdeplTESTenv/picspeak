@@ -221,7 +221,8 @@
    * Finestra informativa o di scelta, senza campi: contenuto già costruito con createElement,
    * pulsante "Chiudi" in fondo. Risolve con il valore passato a close (null se chiusa).
    */
-  function runPanelDialog({ title, help, build, className }) {
+  // actions: false = nessun pulsante «Chiudi» in fondo (i pulsanti li mette build, es. il tutorial)
+  function runPanelDialog({ title, help, build, className, actions: withClose = true }) {
     return new Promise((resolve) => {
       const dialog = el.dialog;
       const box = document.createElement('div');
@@ -247,15 +248,17 @@
 
       box.append(build(close));
 
-      const actions = document.createElement('div');
-      actions.className = 'dialog-actions';
-      const closeBtn = document.createElement('button');
-      closeBtn.type = 'button';
-      closeBtn.className = 'dlg-btn';
-      closeBtn.textContent = t('close');
-      closeBtn.addEventListener('click', () => close(null));
-      actions.append(closeBtn);
-      box.append(actions);
+      if (withClose) {
+        const actions = document.createElement('div');
+        actions.className = 'dialog-actions';
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'dlg-btn';
+        closeBtn.textContent = t('close');
+        closeBtn.addEventListener('click', () => close(null));
+        actions.append(closeBtn);
+        box.append(actions);
+      }
 
       dialog.oncancel = (event) => {
         event.preventDefault();
@@ -263,7 +266,7 @@
       };
       dialog.replaceChildren(box);
       dialog.showModal();
-      const first = box.querySelector('button');
+      const first = box.querySelector('button[data-autofocus]') || box.querySelector('button');
       if (first) first.focus();
     });
   }
@@ -278,6 +281,8 @@
       icon: '<circle cx="12" cy="12" r="9"/><path d="M15 9.5a3.5 3.5 0 1 0 0 5"/>' },
     { id: 'guide', labelKey: 'menuGuide', descKey: 'menuGuideDesc',
       icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/>' },
+    { id: 'tutorial', labelKey: 'menuTutorial', descKey: 'menuTutorialDesc',
+      icon: '<path d="M5 21V4"/><path d="M5 4h12l-2.5 4 2.5 4H5"/>' },
   ];
 
   async function openMainMenu() {
@@ -314,6 +319,12 @@
     if (choice === 'settings') requestAdultAccess();
     else if (choice === 'credits') showCredits();
     else if (choice === 'guide') openGuide();
+    else if (choice === 'tutorial') openTutorial();
+  }
+
+  // Tutorial «Come iniziare» (js/tutorial.js), senza PIN come la guida
+  function openTutorial() {
+    if (window.PicSpeak.tutorial) window.PicSpeak.tutorial.open();
   }
 
   // Crediti senza PIN: sono solo da leggere e devono restare sempre raggiungibili (obbligo delle licenze)
@@ -436,7 +447,8 @@
   function enterAdult() {
     app.setMode('adult');
     if (window.PicSpeak.profiles) window.PicSpeak.profiles.showProfileInBar();
-    storage.requestPersistence();
+    // Archiviazione persistente: sempre chiesta (al massimo una volta a settimana se il browser non la concede)
+    storage.keepData();
     setTimeout(updateZoomLabel, 0);
     el.adultBar.hidden = false;
     el.lock.hidden = true;
@@ -782,6 +794,25 @@
     wrap.append(button(t('changePin'), changePinFlow, false));
   }
 
+  // Conservare i dati: PicSpeak chiede sempre al browser di non cancellarli da solo (scelta fissa, non modificabile);
+  // qui l'adulto vede solo lo stato reale
+  const KEEP_DATA_STATUS = { granted: 'keepDataGranted', not: 'keepDataNot', unsupported: 'keepDataUnsupported' };
+
+  function renderKeepDataSection() {
+    const wrap = section('secKeepDataTitle', 'secKeepDataHelp');
+    const state = document.createElement('span');
+    state.className = 'setting-status keep-data-on';
+    state.textContent = `✓ ${t('keepDataAlways')}`;
+    wrap.append(settingRow('optKeepData', 'optKeepDataHelp', state));
+    const status = statusLine();
+    status.hidden = true;
+    wrap.append(status);
+    storage.persistenceStatus().then((value) => {
+      status.textContent = t(KEEP_DATA_STATUS[value]);
+      status.hidden = false;
+    });
+  }
+
   // Ricerca online di nuovi simboli: attiva, solo con Wi-Fi, disattivata (nessun traffico dati)
   const ONLINE_SEARCH_VALUES = [['on', 'valOnlineOn'], ['wifi', 'valOnlineWifi'], ['off', 'valOnlineOff']];
   let onlineSearch = 'on';
@@ -1038,7 +1069,7 @@
 
   function renderGuideSection() {
     const wrap = section('secGuideTitle', 'secGuideHelp');
-    wrap.append(button(t('guideOpen'), openGuide));
+    wrap.append(button(t('guideOpen'), openGuide), button(t('menuTutorial'), openTutorial));
   }
 
   function renderComingSection() {
@@ -1490,7 +1521,7 @@
     { id: 'voice', icon: '<path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
     { id: 'security', icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>', titleKey: 'catSecurity', introKey: 'catSecurityIntro',
-      render: [renderSecuritySection, renderGuidedSection] },
+      render: [renderSecuritySection, renderKeepDataSection, renderGuidedSection] },
     { id: 'coming', icon: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/>', titleKey: 'catComing', introKey: 'catComingIntro',
       render: [renderComingSection] },
   ];
@@ -1506,6 +1537,9 @@
     tag.title = name;
     tag.hidden = !name;
   }
+
+  // Avvisi da mostrare in cima alle impostazioni: funzioni (id della categoria) → elemento oppure null
+  const banners = [];
 
   function renderSettings() {
     showSettingsProfile();
@@ -1558,6 +1592,11 @@
     currentPanel = panel;
     category.render.forEach((fn) => fn());
 
+    // Avvisi in cima alla pagina (es. promemoria del backup), sopra il menu e la categoria
+    banners.forEach((make) => {
+      const node = make(category.id);
+      if (node) layout.append(node);
+    });
     layout.append(nav, panel);
     el.settingsBody.replaceChildren(layout);
   }
@@ -1735,10 +1774,12 @@
     list,
     runDialog,
     runPanelDialog,
+    requestAccess: requestAdultAccess,
     render: () => { if (!el.settings.hidden) renderSettings(); },
     closeSettings,
     openSettings,
     reopenAfterReload,
+    addBanner: (make) => { banners.push(make); },
     // Nuova categoria nel menu delle impostazioni, dopo quella indicata
     addCategory(category, afterId) {
       const index = CATEGORIES.findIndex((cat) => cat.id === afterId);
