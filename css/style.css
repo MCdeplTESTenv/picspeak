@@ -453,8 +453,13 @@ a.link-btn { display: inline-flex; align-items: center; justify-content: center;
 .tutorial-icon { display: flex; justify-content: center; color: var(--focus); padding: 4px 0; }
 .tutorial-step-title { margin: 0; font-size: 20px; }
 .tutorial-body { display: flex; flex-direction: column; gap: 8px; min-height: 7.5em; }
+/* La finestra ha l'altezza del passo più alto (js/tutorial.js): lo spazio in più va sotto il testo, così punti e
+   pulsanti restano sempre nello stesso posto */
+.tutorial-body { flex: 1 0 auto; }
 .tutorial-text { margin: 0; line-height: 1.45; font-size: 17px; }
 .tutorial-again { margin: 0; color: var(--text-muted); line-height: 1.4; font-size: 15px; }
+.tutorial-steps { margin: 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 6px; line-height: 1.45; font-size: 17px; }
+.tutorial-install-btn { align-self: flex-start; min-height: 64px; }
 .tutorial-dots { display: flex; justify-content: center; gap: 8px; padding: 4px 0; }
 .tutorial-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
 .tutorial-dot.is-current { background: var(--focus); }
@@ -1301,7 +1306,7 @@ body > .adult-bar { order: 0; }
   transform: scaleX(0);
   transform-origin: left center;
 }
-.hold-indicator.is-running .hold-bar { transform: scaleX(1); transition: transform 3s linear !important; }
+.hold-indicator.is-running .hold-bar { transform: scaleX(1); transition: transform var(--hold-duration, 3s) linear !important; }
 .hold-hint {
   margin: 0;
   padding: 8px 16px;
@@ -1765,6 +1770,14 @@ body > .adult-bar { order: 0; }
 /* Elenco dei dispositivi del backup online: testo a sinistra, «Escludi» a destra (sotto, se lo spazio non basta) */
 .choice-option.cloud-device { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; cursor: default; }
 .cloud-device-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 180px; }
+/* Elenco delle copie online del profilo in uso: la copia a sinistra, il cestino a destra (tocco di 64px) */
+.cloud-copy-row { display: flex; align-items: center; gap: 8px; }
+.cloud-copy-row .choice-option { flex: 1 1 auto; min-width: 0; }
+.cloud-copy-delete {
+  flex: 0 0 64px; height: 64px; display: flex; align-items: center; justify-content: center; padding: 0;
+  font: inherit; color: #b3261e; cursor: pointer; background: #ffffff; border: 2px solid #e0a3a0; border-radius: 12px;
+}
+.cloud-copy-delete:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .name-form { display: flex; gap: 8px; flex-wrap: wrap; }
 .name-input {
   flex: 1 1 200px; min-height: 48px; padding: 0 12px; font-size: 18px; font-family: inherit;
@@ -2298,4 +2311,16 @@ body > .adult-bar { order: 0; }
 .setting-status.keep-data-on {
   align-self: flex-start; padding: 6px 12px; border-radius: 999px;
   background: #e6f4ea; color: #1e5e2f; white-space: nowrap;
+}
+/* Accanto al titolo di una categoria che vale per tutti i profili (es. Sicurezza): diverso dal nome del profilo */
+.settings-device-tag {
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: #e3f1e6;
+  color: #1f5130;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
