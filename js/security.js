@@ -148,15 +148,11 @@
     return min + (value % (max - min + 1));
   }
 
-  // Operazione da risolvere: somma di due numeri di due cifre, con riporto (facile per un adulto, difficile per un
-  // bambino piccolo). Ogni volta diversa.
+  // Operazione da risolvere: somma semplice di due numeri di due cifre, senza riporto (es. 23 + 14): immediata per un
+  // adulto, difficile per un bambino piccolo. Ogni volta diversa.
   function makeChallenge() {
-    let a;
-    let b;
-    do {
-      a = randomInt(12, 48);
-      b = randomInt(12, 48);
-    } while ((a % 10) + (b % 10) < 10);
+    const a = randomInt(1, 5) * 10 + randomInt(1, 4);
+    const b = randomInt(1, 4) * 10 + randomInt(1, 5);
     return { text: `${a} + ${b}`, answer: a + b };
   }
 
