@@ -695,6 +695,11 @@
     const start = (event) => {
       if (event.type === 'pointerdown' && event.button !== 0) return;
       cancel();
+      // Durata 0: niente pressione lunga, il menu si apre al tocco (al rilascio, vedi «click») o con Invio
+      if (holdMs <= 0) {
+        if (event.type === 'keydown') openMainMenu();
+        return;
+      }
       el.lock.classList.add('is-holding');
       // La barra parte in cima allo schermo, dove il dito non la copre
       indicator.hidden = false;
@@ -719,6 +724,7 @@
     el.lock.addEventListener('keyup', (event) => {
       if (event.key === 'Enter' || event.key === ' ') cancel();
     });
+    el.lock.addEventListener('click', () => { if (holdMs <= 0) openMainMenu(); });
     el.lock.addEventListener('contextmenu', (event) => event.preventDefault());
   }
 
@@ -1017,7 +1023,7 @@
       body.append(settingRow('optLock', `lockDesc_${lock.mode}`, segmented(choices, lock.mode, chooseLock)));
       if (lock.mode === 'pin') body.append(button(t('changePin'), changePinFlow, false));
 
-      // Durata della pressione sui tre puntini: da 1 a 10 secondi
+      // Durata della pressione sui tre puntini: da 0 (basta un tocco) a 10 secondi
       const row = document.createElement('label');
       row.className = 'settings-field';
       const text = document.createElement('span');
@@ -1029,7 +1035,9 @@
       range.max = String(security.HOLD_SECONDS.max);
       range.step = '1';
       range.value = String(lock.holdSeconds);
-      const show = () => { value.textContent = t('holdSecondsValue').replace('{n}', range.value); };
+      const show = () => {
+        value.textContent = range.value === '0' ? t('holdSecondsTap') : t('holdSecondsValue').replace('{n}', range.value);
+      };
       show();
       range.addEventListener('input', show);
       range.addEventListener('change', async () => {
