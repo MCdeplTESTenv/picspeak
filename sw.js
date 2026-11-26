@@ -3,7 +3,7 @@
  * Strategia "prima la rete": online si riceve sempre l'ultima versione,
  * offline si usa la copia salvata. Cambiare CACHE_VERSION quando si aggiungono file.
  */
-const CACHE_VERSION = 'picspeak-v105';
+const CACHE_VERSION = 'picspeak-v106';
 // I pacchetti di simboli scaricati dall'adulto (Mulberry, OpenMoji) e gli indici delle fonti online (Twemoji)
 // stanno in cache separate ("picspeak-pack-…"), mai cancellate dagli aggiornamenti
 
@@ -53,6 +53,7 @@ const APP_FILES = [
   'guida/telefono.webp',
   'guida/tre-puntini.webp',
   'guida/usa-scheda.webp',
+  'js/version.js',
   'js/i18n.js',
   'js/storage.js',
   'js/security.js',
