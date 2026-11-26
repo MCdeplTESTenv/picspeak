@@ -62,62 +62,69 @@
     return /^\d{4,6}$/.test(String(pin || ''));
   }
 
-  async function hasPin() {
-    const data = await storage.get('security');
-    return Boolean(data && data.pinHash);
-  }
-
-  // Salva un nuovo PIN; con newRecovery crea anche un nuovo codice di recupero e lo restituisce
-  async function setPin(pin, { newRecovery }) {
-    const previous = (await storage.get('security')) || {};
-    const pinSalt = randomHex(16);
-    const data = {
-      ...previous,
-      iterations: ITERATIONS,
-      pinSalt,
-      pinHash: await derive(pin, pinSalt, ITERATIONS),
-    };
-    let recoveryCode = null;
-    if (newRecovery || !previous.recoveryHash) {
-      recoveryCode = makeRecoveryCode();
-      data.recoverySalt = randomHex(16);
-      data.recoveryHash = await derive(normalizeCode(recoveryCode), data.recoverySalt, ITERATIONS);
+  // Archivio di un PIN con il suo codice di recupero, sotto una chiave del dispositivo: «security» per il PIN delle
+  // impostazioni, «predictionSecurity» per il PIN privacy (vedi sotto). Mai nei backup.
+  function pinStore(key) {
+    async function hasPin() {
+      const data = await storage.get(key);
+      return Boolean(data && data.pinHash);
     }
-    await storage.set('security', data);
-    await storage.remove(OLD_ATTEMPTS_KEY);
-    return recoveryCode;
+
+    // Salva un nuovo PIN; con newRecovery crea anche un nuovo codice di recupero e lo restituisce
+    async function setPin(pin, { newRecovery }) {
+      const previous = (await storage.get(key)) || {};
+      const pinSalt = randomHex(16);
+      const data = {
+        ...previous,
+        iterations: ITERATIONS,
+        pinSalt,
+        pinHash: await derive(pin, pinSalt, ITERATIONS),
+      };
+      let recoveryCode = null;
+      if (newRecovery || !previous.recoveryHash) {
+        recoveryCode = makeRecoveryCode();
+        data.recoverySalt = randomHex(16);
+        data.recoveryHash = await derive(normalizeCode(recoveryCode), data.recoverySalt, ITERATIONS);
+      }
+      await storage.set(key, data);
+      await storage.remove(OLD_ATTEMPTS_KEY);
+      return recoveryCode;
+    }
+
+    // Confronta il segreto con l'impronta salvata. Si può riprovare subito, senza limiti.
+    async function check(secret, saltKey, hashKey) {
+      const data = await storage.get(key);
+      if (!data || !data[hashKey] || !data[saltKey]) return { ok: false };
+      const hash = await derive(secret, data[saltKey], data.iterations || ITERATIONS);
+      const ok = hash === data[hashKey];
+      // Le versioni precedenti potevano aver salvato un'attesa: dopo un accesso riuscito non resta traccia
+      if (ok) await storage.remove(OLD_ATTEMPTS_KEY);
+      return { ok };
+    }
+
+    return {
+      hasPin,
+      setPin,
+      verifyPin: (pin) => check(String(pin || ''), 'pinSalt', 'pinHash'),
+      verifyRecovery: (code) => check(normalizeCode(code), 'recoverySalt', 'recoveryHash'),
+      // Toglie PIN e codice di recupero (quando l'adulto sceglie un'altra protezione)
+      async clearPin() {
+        await storage.remove(key);
+        await storage.remove(OLD_ATTEMPTS_KEY);
+      },
+    };
   }
 
-  // Confronta il segreto con l'impronta salvata. Si può riprovare subito, senza limiti.
-  async function check(secret, saltKey, hashKey) {
-    const data = await storage.get('security');
-    if (!data || !data[hashKey]) return { ok: false };
-    const hash = await derive(secret, data[saltKey], data.iterations || ITERATIONS);
-    const ok = hash === data[hashKey];
-    // Le versioni precedenti potevano aver salvato un'attesa: dopo un accesso riuscito non resta traccia
-    if (ok) await storage.remove(OLD_ATTEMPTS_KEY);
-    return { ok };
-  }
-
-  function verifyPin(pin) {
-    return check(String(pin || ''), 'pinSalt', 'pinHash');
-  }
-
-  function verifyRecovery(code) {
-    return check(normalizeCode(code), 'recoverySalt', 'recoveryHash');
-  }
-
-  // Toglie PIN e codice di recupero (quando l'adulto sceglie un'altra protezione)
-  async function clearPin() {
-    await storage.remove('security');
-    await storage.remove(OLD_ATTEMPTS_KEY);
-  }
+  // PIN delle impostazioni
+  const settingsPin = pinStore('security');
+  const { hasPin, setPin, verifyPin, verifyRecovery, clearPin } = settingsPin;
 
   // ---------- Protezione scelta e durata della pressione ----------
 
   const LOCK_KEY = 'adultLock';
   const LOCK_MODES = ['hold', 'math', 'pin'];
-  const HOLD_SECONDS = { min: 1, max: 10, def: 3 };
+  // 0 = nessuna pressione lunga: basta un tocco sui tre puntini (scelta dell'adulto)
+  const HOLD_SECONDS = { min: 0, max: 10, def: 3 };
 
   // Legge la scelta salvata, controllando i valori (dati letti dal dispositivo: non affidabili)
   async function getLock() {
@@ -148,11 +155,22 @@
     return min + (value % (max - min + 1));
   }
 
-  // Operazione da risolvere: somma semplice di due numeri di due cifre, senza riporto (es. 23 + 14): immediata per un
-  // adulto, difficile per un bambino piccolo. Ogni volta diversa.
+  // Operazione da risolvere, immediata per un adulto e difficile per un bambino piccolo, ogni volta diversa:
+  // addizione o sottrazione tra un numero di due cifre e uno di una cifra (es. 34 + 7, 52 − 6),
+  // oppure moltiplicazione tra due numeri di una cifra (es. 7 × 8). Mai divisioni.
   function makeChallenge() {
-    const a = randomInt(1, 5) * 10 + randomInt(1, 4);
-    const b = randomInt(1, 4) * 10 + randomInt(1, 5);
+    // Niente casi banali che un bambino indovina (10 + 1, 2 × 2): fattori da 3 a 9, secondo numero da 2 a 9,
+    // primo numero di due cifre che non è una decina tonda
+    const kind = randomInt(0, 2);
+    if (kind === 2) {
+      const a = randomInt(3, 9);
+      const b = randomInt(3, 9);
+      return { text: `${a} × ${b}`, answer: a * b };
+    }
+    const b = randomInt(2, 9);
+    let a = randomInt(11, 89);
+    if (a % 10 === 0) a += 1;
+    if (kind === 1) return { text: `${a} − ${b}`, answer: a - b };
     return { text: `${a} + ${b}`, answer: a + b };
   }
 
@@ -161,8 +179,34 @@
     return /^\d{1,4}$/.test(typed) && Number(typed) === challenge.answer;
   }
 
+  // ---------- PIN privacy (previsione e backup) ----------
+  // Facoltativa e separata da quella delle impostazioni: nella previsione ci sono le abitudini del bambino (coppie di
+  // parole, contesti), che chi entra nelle impostazioni (es. un terapista) potrebbe non dover vedere. Scelta del
+  // dispositivo (chiave «predictionLock»): 'none' (nessuna, scelta normale) o 'pin' (PIN privacy, diverso da
+  // quello delle impostazioni, che vale anche per il backup). Senza scelta salvata: nessuna protezione, e la prima
+  // apertura della previsione chiede quale si vuole.
+  const PRIVATE_LOCK_KEY = 'predictionLock';
+  const PRIVATE_MODES = ['none', 'pin'];
+  const privatePin = pinStore('predictionSecurity');
+
+  async function getPrivateLock() {
+    const saved = await storage.get(PRIVATE_LOCK_KEY);
+    const chosen = Boolean(saved && PRIVATE_MODES.includes(saved.mode));
+    let mode = chosen ? saved.mode : 'none';
+    // Il PIN scelto ma non più presente (archivio cambiato a mano): non c'è nulla da chiedere
+    if (mode === 'pin' && !(await privatePin.hasPin())) mode = 'none';
+    return { mode, chosen };
+  }
+
+  async function setPrivateLock(mode) {
+    if (!PRIVATE_MODES.includes(mode)) return getPrivateLock();
+    await storage.set(PRIVATE_LOCK_KEY, { mode });
+    return getPrivateLock();
+  }
+
   window.PicSpeak.security = {
     supported, isValidPin, hasPin, setPin, verifyPin, verifyRecovery, clearPin,
     getLock, setLock, makeChallenge, checkChallenge, LOCK_MODES, HOLD_SECONDS,
+    privatePin, getPrivateLock, setPrivateLock, PRIVATE_MODES,
   };
 })();

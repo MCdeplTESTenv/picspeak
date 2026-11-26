@@ -151,6 +151,41 @@
     }
   }
 
+  /*
+   * Salva un modello tra «I miei modelli». Se ce n'è già uno con lo stesso nome chiede se sostituirlo
+   * (così non si accumulano doppioni) o tenerli tutti e due. Restituisce false se l'adulto annulla.
+   */
+  async function storeTemplate(template) {
+    const name = templates.localized(template.name);
+    const existing = await templates.findUserTemplateByName(name);
+    if (existing) {
+      const choice = await choose(format('tplSameNameTitle', { name }), t('tplSameNameHelp'), [
+        { value: 'replace', label: t('tplSameNameReplace'), help: t('tplSameNameReplaceHelp'), primary: true },
+        { value: 'both', label: t('tplSameNameBoth'), help: t('tplSameNameBothHelp') },
+      ]);
+      if (!choice) return false;
+      if (choice === 'replace') {
+        await templates.replaceUserTemplate(existing.id, template);
+        return true;
+      }
+    }
+    await templates.saveUserTemplate(template);
+    return true;
+  }
+
+  // «Salva come modello» dalla modifica di una cartella: la cartella con le sue sottocartelle
+  async function saveFolderAsTemplate(pageId, folderName) {
+    try {
+      const name = await askName(t('tplSaveFolder'), t('tplSaveFolderHelp'), folderName || '');
+      if (!name) return;
+      const template = await templates.fromCurrentPages(name, { embed: false, rootPageId: pageId });
+      if (!(await storeTemplate(template))) return;
+      app.notice(format('tplSaved', { name }));
+    } catch (error) {
+      app.notice(errorText(error));
+    }
+  }
+
   // ---------- Sezioni della categoria «Schede» ----------
 
   function renderStatus() {
@@ -246,7 +281,7 @@
         const name = await askName(t('tplSaveCurrent'), t('tplNameHelp'), '');
         if (!name) return;
         const template = await templates.fromCurrentPages(name, { embed: false });
-        await templates.saveUserTemplate(template);
+        if (!(await storeTemplate(template))) return;
         notice = { text: format('tplSaved', { name }) };
         ui.render();
       })),
@@ -429,16 +464,117 @@
     )));
   }
 
+  // Tipo di parola con la tavolozza aperta (una sola alla volta), resta aperta mentre si ridisegna la pagina
+  let paletteType = null;
+
   function renderLegendSection() {
     const wrap = ui.section('secLegendTitle', 'secLegendHelp');
+    const colors = window.PicSpeak.typeColors;
     const legend = el('ul', 'type-legend');
+    let resetBtn = null;
+    // Dopo una scelta si aggiorna solo quello che cambia (la pagina non salta e la tavolozza resta aperta)
+    const refresh = () => {
+      legend.querySelectorAll('.palette-swatch').forEach((sw) => {
+        sw.setAttribute('aria-pressed', String(colors.colorOf(sw.dataset.type) === sw.dataset.color));
+      });
+      legend.querySelectorAll('.palette-custom input').forEach((input) => { input.value = colors.colorOf(input.dataset.type); });
+      legend.querySelectorAll('.legend-state').forEach((note) => {
+        note.hidden = !colors.isCustom(note.dataset.type);
+      });
+      if (resetBtn) resetBtn.disabled = !colors.hasCustom();
+    };
+    const choose = async (type, color) => {
+      await colors.setColor(type, color);
+      refresh();
+    };
+
     [...data.WORD_TYPES, 'folder'].forEach((type) => {
       const li = el('li', `type-${type}`);
-      li.append(el('span', 'legend-swatch'), el('span', null, t(type === 'folder' ? 'legendFolder' : `wordType_${type}`)),
-        el('small', null, t(`legendExample_${type}`)));
+      const name = t(type === 'folder' ? 'legendFolder' : `wordType_${type}`);
+      if (type === 'folder' || !colors) {
+        li.append(el('span', 'legend-swatch'), el('span', null, name), el('small', null, t(`legendExample_${type}`)));
+        legend.append(li);
+        return;
+      }
+      // Tutta la riga è il pulsante che apre la tavolozza (bersaglio grande anche col dito)
+      const open = paletteType === type;
+      const toggle = el('button', 'legend-toggle');
+      toggle.type = 'button';
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute('aria-label', format('legendChange', { type: name }));
+      const words = el('span', 'legend-words');
+      const state = el('span', 'legend-state', t('legendCustom'));
+      state.dataset.type = type;
+      state.hidden = !colors.isCustom(type);
+      words.append(el('span', 'legend-name', name), el('small', null, t(`legendExample_${type}`)), state);
+      toggle.append(el('span', 'legend-swatch'), words);
+      li.classList.add('is-editable');
+      li.classList.toggle('is-open', open);
+      li.append(toggle);
+
+      const palette = el('div', 'type-palette');
+      palette.setAttribute('role', 'group');
+      palette.setAttribute('aria-label', format('legendChange', { type: name }));
+      palette.hidden = !open;
+      colors.PALETTE.forEach(([color, colorName]) => {
+        const sw = el('button', 'palette-swatch');
+        sw.type = 'button';
+        sw.dataset.type = type;
+        sw.dataset.color = color;
+        sw.style.background = color;
+        const isDefault = colors.DEFAULTS[type] === color;
+        if (isDefault) {
+          sw.classList.add('is-default');
+          sw.append(el('span', 'palette-default-mark', 'F'));
+        }
+        const label = t(`colorName_${colorName}`) + (isDefault ? ` (${t('legendFitzgerald')})` : '');
+        sw.setAttribute('aria-label', label);
+        sw.title = label;
+        sw.addEventListener('click', () => choose(type, color));
+        palette.append(sw);
+      });
+      // «Altro colore»: qualsiasi colore con il selettore del browser
+      const custom = el('label', 'palette-custom');
+      const input = el('input');
+      input.type = 'color';
+      input.dataset.type = type;
+      input.value = colors.colorOf(type);
+      input.addEventListener('change', () => choose(type, input.value));
+      custom.append(input, el('span', null, t('legendOtherColor')));
+      palette.append(custom);
+      li.append(palette);
+
+      toggle.addEventListener('click', () => {
+        const nowOpen = palette.hidden;
+        // Si chiude la tavolozza eventualmente aperta su un altro tipo
+        legend.querySelectorAll('.type-palette').forEach((other) => { other.hidden = true; });
+        legend.querySelectorAll('.legend-toggle').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+        legend.querySelectorAll('li.is-open').forEach((row) => row.classList.remove('is-open'));
+        li.classList.toggle('is-open', nowOpen);
+        palette.hidden = !nowOpen;
+        toggle.setAttribute('aria-expanded', String(nowOpen));
+        paletteType = nowOpen ? type : null;
+      });
       legend.append(li);
     });
     wrap.append(legend);
+
+    if (!colors) return;
+    // «Ripristina colori Fitzgerald»: tutti i tipi tornano ai colori del metodo, dopo una conferma
+    resetBtn = ui.button(t('legendReset'), async () => {
+      const ok = await ui.runDialog({
+        title: t('legendResetTitle'),
+        help: t('legendResetHelp'),
+        primary: t('legendResetConfirm'),
+        secondary: t('cancel'),
+      });
+      if (!ok) return;
+      await colors.reset();
+      refresh();
+    });
+    resetBtn.classList.add('legend-reset');
+    wrap.append(resetBtn);
+    refresh();
   }
 
   async function renderPreviousSection() {
@@ -709,6 +845,8 @@
       () => { if (!contextEditing()) renderHowSection(); },
     ],
   }, 'boards');
+
+  window.PicSpeak.boardsUi = { saveFolderAsTemplate };
 
   restoreLock();
 })();

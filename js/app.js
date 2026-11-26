@@ -152,6 +152,15 @@
         pencil.setAttribute('aria-hidden', 'true');
         button.append(pencil);
       }
+      // In modifica una ✕ nell'angolo opposto alla matita elimina la tessera o la cartella (con conferma).
+      // Non c'è sulle tessere bloccate, né quando sono bloccate tutte (css/style.css): lì l'angolo ha il lucchetto
+      if (editing && !item.locked) {
+        const remove = document.createElement('span');
+        remove.className = 'cell-delete';
+        remove.dataset.action = 'delete-cell';
+        remove.setAttribute('aria-hidden', 'true');
+        button.append(remove);
+      }
       return button;
     });
     if (editing) {
@@ -590,6 +599,12 @@
         window.PicSpeak.editor.add(state.pageId);
         return;
       }
+      // ✕ nell'angolo: elimina dopo la conferma
+      if (event.target.closest('.cell-delete') && !state.preview && !cell.classList.contains('is-locked-cell')
+        && document.documentElement.dataset.lockPositions !== 'on') {
+        window.PicSpeak.editor.confirmDelete(state.pageId, cell.dataset.id);
+        return;
+      }
       const page = data.page(state.pageId);
       const item = page && page.cells.find((c) => c.id === cell.dataset.id);
       if (item && item.kind === 'folder' && !event.target.closest('.folder-edit') && !state.preview) {
@@ -684,7 +699,7 @@
     if (window.PicSpeak.communication) window.PicSpeak.communication.refresh();
   }
 
-  // "Scuoti per tornare alla Home" (opzione in Impostazioni → Aspetto → Disposizione e tocco).
+  // "Scuoti per tornare alla Home" (opzione in Impostazioni → Tocco e frase → Gesti).
   // Servono due scosse decise entro un secondo: un movimento normale del tablet non basta.
   // Effetto: torna alla Home e cancella la frase.
   function bindShakeToHome() {
@@ -726,7 +741,7 @@
       start = { x: event.clientX, y: event.clientY, t: Date.now() };
     });
     el.strip.addEventListener('pointerup', (event) => {
-      // Il gesto è attivo solo se abilitato in Impostazioni → Aspetto → Disposizione e tocco
+      // Il gesto è attivo solo se abilitato in Impostazioni → Tocco e frase → Gesti
       if (document.documentElement.dataset.swipeClear !== 'on') { start = null; return; }
       if (!start || !state.sentence.length) { start = null; return; }
       const dx = event.clientX - start.x;

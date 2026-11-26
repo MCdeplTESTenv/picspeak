@@ -25,7 +25,7 @@
   // userTemplates (modelli salvati), symbolPacks (pacchetti già scaricati), lastBackup e onlineSearch: una scelta
   // di privacy sull'uso di internet non deve tornare «Attiva» senza che l'adulto se ne accorga.
   const SETTINGS_KEYS = [
-    'language', 'voice', 'colorMode', 'pageBackground', 'appearance', 'preset',
+    'language', 'voice', 'colorMode', 'pageBackground', 'appearance', 'preset', 'typeColors',
     'labelCase', 'communication', 'prediction', 'printOptions', 'lockPositions', 'symbolSources',
     'keepScreenOn', 'autoFullscreen', 'sectionState', 'openSections',
   ];
@@ -116,6 +116,8 @@
    * Usata anche prima di «Ripristina tutto» e di «Cancella tutto».
    */
   async function saveBackup(where = 'local') {
+    // Il backup contiene le abitudini del bambino: con il PIN privacy serve anche qui (es. dal promemoria)
+    if (ui.requestPrivateAccess && !(await ui.requestPrivateAccess())) return false;
     const values = await ui.runDialog({
       title: t('backupSaveTitle'),
       help: t('backupSaveHelp'),

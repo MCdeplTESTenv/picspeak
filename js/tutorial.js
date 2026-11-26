@@ -20,6 +20,7 @@
   const ICONS = {
     sentence: '<path d="M4 5h16v11H9.5L5 20v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/>',
     pin: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>',
+    privacy: '<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.3 7.5 9.5 4.3-1.2 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2 2 4-4"/>',
     profile: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
     boards: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="m14 20 1-3 4.5-4.5 2 2L17 19z"/>',
     settings: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
@@ -158,7 +159,9 @@
           // innerHTML solo con icone costanti scritte qui sopra
           icon.innerHTML = `<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONS[step.id] || ICONS.sentence}</svg>`;
           heading.textContent = step.title;
-          body.replaceChildren(...step.text.map((line) => el('p', 'tutorial-text', line.replace('{n}', holdSeconds))));
+          // Con durata 0 la prima riga del passo sul menu dice di toccare (non di tenere premuto)
+          const lines = step.id === 'pin' && holdSeconds === 0 ? [t('tutorialMenuTap'), ...step.text.slice(1)] : step.text;
+          body.replaceChildren(...lines.map((line) => el('p', 'tutorial-text', line.replace('{n}', holdSeconds))));
           if (step.id === 'install') body.append(...installBlock(show));
           if (last) body.append(el('p', 'tutorial-again', t('tutorialAgain')));
           dots.replaceChildren(...list.map((_, i) => el('span', i === index ? 'tutorial-dot is-current' : 'tutorial-dot')));

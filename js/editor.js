@@ -18,6 +18,16 @@
   const IMAGE_SIZE = 256;
   const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/heic', 'image/heif'];
   const SWATCHES = ['#e0ac00', '#2e9a47', '#e57a12', '#2a6fd6', '#d0468f', '#cf3439', '#7a4fc9', '#6b717b'];
+  const SWATCH_TYPES = ['pronoun', 'verb', 'noun', 'adjective', 'social', 'negation', 'question'];
+
+  // Colori proposti: quelli dei tipi di parola scelti nelle impostazioni (di Fitzgerald se non cambiati), più il grigio
+  function swatchColors() {
+    const colors = window.PicSpeak.typeColors;
+    if (!colors) return SWATCHES;
+    const list = SWATCH_TYPES.map((type, i) => colors.colorOf(type) || SWATCHES[i]);
+    list.push(SWATCHES[SWATCHES.length - 1]);
+    return list.filter((color, i) => list.indexOf(color) === i); // due tipi con lo stesso colore: uno solo
+  }
 
   const dialog = document.createElement('dialog');
   dialog.className = 'pin-dialog editor-dialog';
@@ -99,11 +109,13 @@
     return blob;
   }
 
-  function pickFile() {
+  // capture: true = si apre direttamente la fotocamera (tablet e telefono; sul computer si sceglie un file)
+  function pickFile(capture = false) {
     return new Promise((resolve) => {
       const input = el('input');
       input.type = 'file';
       input.accept = 'image/*';
+      if (capture) input.setAttribute('capture', 'environment');
       input.addEventListener('change', () => resolve(input.files && input.files[0]), { once: true });
       input.click();
     });
@@ -143,6 +155,16 @@
         close();
         app.openFolder(cell.targetPageId);
       }, 'dlg-btn-primary editor-open-folder'));
+      // Copia della cartella (con le sottocartelle) tra «I miei modelli»
+      const boardsUi = window.PicSpeak.boardsUi;
+      if (boardsUi) {
+        openRow.append(actionButton(t('tplSaveFolder'), () => {
+          // Si propone il nome appena scritto, se c'è
+          const name = labelInput.value.trim() || cell.label;
+          close();
+          boardsUi.saveFolderAsTemplate(cell.targetPageId, name);
+        }, 'editor-save-template'));
+      }
       form.append(openRow, el('small', 'editor-hint', t('editorFolderTapHint')));
     }
 
@@ -155,8 +177,16 @@
           draft.kind = value;
           symbolOnly.forEach((n) => { n.hidden = value === 'folder'; });
           rowSilent.hidden = value !== 'folder';
+          bulkRow.hidden = value === 'folder';
         },
       ));
+      // Più tessere insieme: si scrivono più parole e per ognuna si sceglie solo l'immagine
+      const bulkRow = el('div', 'editor-actions-row editor-bulk-row');
+      bulkRow.append(actionButton(t('editorBulk'), () => {
+        close();
+        window.PicSpeak.bulkAdd.open(pageId);
+      }, 'editor-bulk-btn'));
+      form.append(bulkRow);
     }
 
     const labelInput = textInput(draft.label, MAX_LABEL);
@@ -175,7 +205,7 @@
     const typeChoice = segmentedChoice(
       data.WORD_TYPES.map((type) => [type, t(`wordType_${type}`)]),
       draft.wordType,
-      (value) => { draft.wordType = value; typeTouched = true; },
+      (value) => { draft.wordType = value; typeTouched = true; renderSwatches(); },
     );
     typeChoice.classList.add('word-type-choice');
     typeChoice.querySelectorAll('button').forEach((b) => b.classList.add(`type-${b.dataset.value}`));
@@ -184,6 +214,7 @@
       if (typeTouched || !type || !data.WORD_TYPES.includes(type)) return;
       draft.wordType = type;
       typeChoice.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.value === type)));
+      renderSwatches();
     };
     labelInput.addEventListener('input', () => setWordType(lexicon && lexicon.guess(labelInput.value)));
     form.append(typeField);
@@ -201,7 +232,10 @@
       auto.setAttribute('aria-pressed', String(!draft.color));
       auto.addEventListener('click', () => { draft.color = null; renderSwatches(); });
       swatches.append(auto);
-      SWATCHES.forEach((color) => {
+      // «A» mostra nel bordo il colore che la tessera prende dal suo tipo
+      const typeColor = window.PicSpeak.typeColors && window.PicSpeak.typeColors.colorOf(draft.wordType);
+      if (typeColor) auto.style.borderColor = typeColor;
+      swatchColors().forEach((color) => {
         const sw = el('button', 'editor-swatch');
         sw.type = 'button';
         sw.style.background = color;
@@ -264,10 +298,11 @@
       setWordType((lexicon && lexicon.guess(labelInput.value)) || picked.wordType);
       renderPreview();
     }, 'editor-search-btn');
-    const photoButton = actionButton(t('editorPickImage'), async () => {
+    // Foto dal dispositivo o dalla fotocamera: stessa riduzione e stesso salvataggio
+    const usePhoto = async (capture) => {
       imageError.textContent = '';
       try {
-        const file = await pickFile();
+        const file = await pickFile(capture);
         if (!file) return;
         draft.newImageBlob = await processPhoto(file);
         draft.pending = null;
@@ -275,12 +310,22 @@
       } catch (error) {
         imageError.textContent = error.message;
       }
+    };
+    const photoButton = actionButton(t('editorPickImage'), () => usePhoto(false));
+    const cameraButton = actionButton(t('editorTakePhoto'), () => usePhoto(true));
+    photoButton.hidden = true;
+    cameraButton.hidden = true;
+    // Immagini dal dispositivo e fotocamera si accendono e spengono in Impostazioni → Simboli;
+    // la fotocamera solo su tablet e telefono (sul computer il pulsante aprirebbe la scelta di un file)
+    const hasCamera = Boolean(window.matchMedia && window.matchMedia('(any-pointer: coarse)').matches);
+    symbols.activeSources().then((sources) => {
+      photoButton.hidden = !sources.photo;
+      cameraButton.hidden = !(sources.camera && hasCamera);
     });
-    // Le foto personali si possono spegnere in Impostazioni → Simboli
-    symbols.activeSources().then((sources) => { photoButton.hidden = !sources.photo; });
     imageActions.append(
       searchButton,
       photoButton,
+      cameraButton,
       actionButton(t('editorRemoveImage'), () => {
         draft.imageId = null;
         draft.newImageBlob = null;
@@ -353,11 +398,7 @@
       }
       manage.append(
         actionButton(t('editorDelete'), async () => {
-          // eslint-disable-next-line no-alert
-          if (!window.confirm(t('editorDeleteConfirm'))) return;
-          await data.deleteCell(pageId, cell.id);
-          close();
-          app.renderGrid();
+          if (await confirmDelete(pageId, cell.id)) close();
         }, 'dlg-btn-danger'),
       );
       form.append(manage, el('small', 'editor-hint', canMove ? t('editorMoveHint') : t('editorMoveLocked')));
@@ -442,7 +483,52 @@
     labelInput.focus();
   }
 
+  // ---------- Eliminazione (dal pulsante «Elimina» della modifica o dalla ✕ nell'angolo della tessera) ----------
+
+  // «12 tessere e 2 cartelle»: quello che sparisce insieme a una cartella
+  function contentsText({ tiles, folders }) {
+    const parts = [];
+    if (tiles) parts.push(tiles === 1 ? t('deleteTilesOne') : t('deleteTilesN').replace('{n}', () => String(tiles)));
+    if (folders) parts.push(folders === 1 ? t('deleteFoldersOne') : t('deleteFoldersN').replace('{n}', () => String(folders)));
+    return parts.join(` ${t('deleteAnd')} `);
+  }
+
+  /*
+   * Chiede sempre conferma prima di eliminare; per una cartella dice quante tessere e sottocartelle si cancellano
+   * con lei. Risolve true se la tessera è stata eliminata (la ✕ non compare sulle tessere bloccate, vedi app.js).
+   */
+  async function confirmDelete(pageId, cellId) {
+    const page = data.page(pageId);
+    const cell = page && page.cells.find((c) => c.id === cellId);
+    if (!cell) return false;
+    const isFolder = cell.kind === 'folder';
+    const name = cell.label || (isFolder && data.page(cell.targetPageId) ? data.page(cell.targetPageId).title : '') || '';
+    let title = name ? t('deleteTileTitle').replace('{name}', () => name) : t('editorDeleteConfirm');
+    let help = t('deleteTileHelp');
+    if (isFolder) {
+      const contents = data.folderContents(pageId, cellId);
+      const what = contentsText(contents);
+      title = t('deleteFolderTitle').replace('{name}', () => name);
+      const lines = [];
+      if (what) lines.push(t('deleteFolderHelp').replace('{what}', () => what));
+      else if (!contents.shared) lines.push(t('deleteFolderEmpty'));
+      if (contents.shared) lines.push(t('deleteFolderShared'));
+      help = lines.join(' ');
+    }
+    const ui = window.PicSpeak.settingsUi;
+    const ok = ui
+      ? await ui.runDialog({ title, help, primary: t('editorDelete'), secondary: t('cancel'), destructive: true })
+      : window.confirm(`${title}\n${help}`); // eslint-disable-line no-alert
+    // Nel frattempo le impostazioni potrebbero essersi richiuse: in modalità bambino non si cancella nulla
+    if (!ok || app.mode !== 'adult') return false;
+    await data.deleteCell(pageId, cellId);
+    app.renderGrid();
+    if (name) app.notice(t('deletedNotice').replace('{name}', () => name));
+    return true;
+  }
+
   window.PicSpeak.editor = {
+    confirmDelete,
     edit(pageId, cellId) {
       const page = data.page(pageId);
       const cell = page && page.cells.find((c) => c.id === cellId);

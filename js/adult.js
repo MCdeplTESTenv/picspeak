@@ -350,49 +350,57 @@
   }
 
   // ---------- Flussi del PIN ----------
+  // store: archivio del PIN (quello delle impostazioni, oppure security.privatePin per la previsione);
+  // texts: titolo e spiegazione propri della creazione
 
-  async function createPinFlow() {
+  const SETTINGS_PIN_TEXTS = { title: 'pinCreateTitle', help: 'pinCreateHelp' };
+  const PRIVATE_PIN_TEXTS = { title: 'privatePinCreateTitle', help: 'privatePinCreateHelp', recoveryHelp: 'privateRecoveryHelp', codeHelp: 'privateCodeHelp' };
+
+  async function createPinFlow(store = security, texts = SETTINGS_PIN_TEXTS) {
     const result = await runDialog({
-      title: t('pinCreateTitle'),
-      help: t('pinCreateHelp'),
+      title: t(texts.title),
+      help: t(texts.help),
       fields: [{ id: 'pin', label: t('pinLabel') }, { id: 'pin2', label: t('pinConfirmLabel') }],
       primary: t('confirm'),
       secondary: t('cancel'),
       onSubmit: async (values) => {
         if (!security.isValidPin(values.pin)) return t('pinInvalid');
         if (values.pin !== values.pin2) return t('pinMismatch');
-        const code = await security.setPin(values.pin, { newRecovery: true });
+        const code = await store.setPin(values.pin, { newRecovery: true });
         return { code };
       },
     });
     if (!result) return false;
     await runDialog({
       title: t('recoveryTitle'),
-      help: t('recoveryHelp'),
+      help: t(texts.codeHelp || 'recoveryHelp'),
       code: result.code,
       primary: t('recoveryDone'),
     });
     return true;
   }
 
-  async function recoveryFlow() {
+  // link (facoltativo): testo di un collegamento in fondo alla finestra; se toccato si risolve con 'link'
+  async function recoveryFlow(store = security, texts = SETTINGS_PIN_TEXTS, link) {
     const ok = await runDialog({
       title: t('recoveryEnterTitle'),
-      help: t('recoveryEnterHelp'),
+      help: t(texts.recoveryHelp || 'recoveryEnterHelp'),
       fields: [{ id: 'code', label: t('recoveryLabel'), text: true }],
       primary: t('confirm'),
       secondary: t('cancel'),
+      link,
       onSubmit: async (values) => {
-        const res = await security.verifyRecovery(values.code);
+        const res = await store.verifyRecovery(values.code);
         if (res.ok) return true;
         return t('recoveryWrong');
       },
     });
+    if (ok && ok.link) return 'link';
     // Codice corretto: si crea un nuovo PIN (e un nuovo codice di recupero)
-    return ok === true ? createPinFlow() : false;
+    return ok === true ? createPinFlow(store, texts) : false;
   }
 
-  async function changePinFlow() {
+  async function changePinFlow(store = security) {
     const ok = await runDialog({
       title: t('changePinTitle'),
       fields: [
@@ -405,10 +413,10 @@
       onSubmit: async (values) => {
         if (!security.isValidPin(values.pin)) return t('pinInvalid');
         if (values.pin !== values.pin2) return t('pinMismatch');
-        const res = await security.verifyPin(values.current);
+        const res = await store.verifyPin(values.current);
         if (!res.ok) return t('pinWrong');
         // Il codice di recupero esistente resta valido
-        await security.setPin(values.pin, { newRecovery: false });
+        await store.setPin(values.pin, { newRecovery: false });
         return true;
       },
     });
@@ -463,14 +471,174 @@
     });
     if (result === true) {
       enterAdult();
-    } else if (result && result.link && (await recoveryFlow())) {
+    } else if (result && result.link && (await recoveryFlow()) === true) {
       enterAdult();
     }
+  }
+
+  // ---------- PIN privacy (facoltativo) ----------
+  // Previsione e Backup e ripristino contengono le abitudini del bambino: con il PIN privacy si aprono solo
+  // dopo averlo inserito, una volta per ogni ingresso nella modalità adulto. Senza PIN (scelta normale) sono libere
+  // come il resto delle impostazioni. Contorni e sfumature dei suggerimenti sulle tessere restano sempre visibili.
+
+  const PRIVATE_CATEGORIES = new Set(['prediction', 'backup']);
+  let privateUnlocked = false;
+  // Protezione scelta, tenuta a portata di mano per chi deve decidere subito cosa mostrare (pulsante del contesto)
+  let privateMode = 'none';
+  // Stesso canale di ripristino e «Cancella tutto»: le altre schede aperte smettono di scrivere e si ricaricano
+  const resetChannel = 'BroadcastChannel' in window ? new BroadcastChannel(`${storage.name}-reset`) : null;
+
+  function refreshPrivate() {
+    return security.getPrivateLock().then((lock) => {
+      privateMode = lock.mode;
+      document.dispatchEvent(new CustomEvent('picspeak:private-change'));
+    }).catch(() => {});
+  }
+
+  // true se i dati privati non vanno mostrati (PIN privacy scelto e non ancora inserito)
+  function privateHidden() {
+    return privateMode === 'pin' && !privateUnlocked;
+  }
+
+  // true se si può entrare: nessun PIN privacy, già inserito, oppure inserito adesso
+  async function requestPrivateAccess() {
+    if (privateUnlocked) return true;
+    const lock = await security.getPrivateLock();
+    if (lock.mode !== 'pin') return true;
+    if (!security.supported) {
+      await runDialog({ title: t('privatePinEnterTitle'), help: t('cryptoUnavailable'), primary: t('close') });
+      return false;
+    }
+    const result = await runDialog({
+      title: t('privatePinEnterTitle'),
+      help: t('privatePinEnterHelp'),
+      fields: [{ id: 'pin', label: t('privatePinLabel') }],
+      primary: t('confirm'),
+      secondary: t('cancel'),
+      link: t('pinForgot'),
+      onSubmit: async (values) => ((await security.privatePin.verifyPin(values.pin)).ok ? true : t('pinWrong')),
+    });
+    let ok = result === true;
+    if (result && result.link) {
+      const recovered = await recoveryFlow(security.privatePin, PRIVATE_PIN_TEXTS, t('privateNoCode'));
+      if (recovered === 'link') {
+        await erasePrivateFlow();
+        return false;
+      }
+      ok = recovered === true;
+    }
+    // Nel frattempo la modalità adulto può essersi chiusa da sola (5 minuti senza tocchi): allora non si apre nulla
+    ok = ok && app.mode === 'adult';
+    if (ok) privateUnlocked = true;
+    refreshPrivate();
+    return ok;
+  }
+
+  // PIN privacy e codice di recupero dimenticati: si possono solo cancellare le abitudini e i contesti di
+  // tutti i profili di questo dispositivo, e con loro il PIN. Le schede restano. Così nessuno vede le abitudini.
+  async function erasePrivateFlow() {
+    const word = t('privateEraseWord');
+    const done = await runDialog({
+      title: t('privateEraseTitle'),
+      help: t('privateEraseHelp'),
+      fields: [{ id: 'word', label: t('privateEraseWordLabel').replace('{word}', word), text: true }],
+      primary: t('privateEraseConfirm'),
+      secondary: t('cancel'),
+      destructive: true,
+      onSubmit: async (values) => {
+        if (values.word.trim().toLocaleLowerCase() !== word.toLocaleLowerCase()) return t('privateEraseWordWrong');
+        const { predict, cloud } = window.PicSpeak;
+        // Nessun salvataggio in sospeso (qui e nelle altre schede aperte) deve riscrivere le abitudini cancellate
+        if (predict && typeof predict.freeze === 'function') predict.freeze();
+        if (resetChannel) resetChannel.postMessage('restoring');
+        try {
+          // Abitudini arrivate dagli altri dispositivi dello stesso profilo (backup online), di tutti i profili
+          const profiles = await storage.getAllRecords('profiles');
+          await Promise.all(profiles.map((p) => storage.remove(`syncLayers:${p.id}`)));
+          if (predict && typeof predict.clearRemoteLayers === 'function') predict.clearRemoteLayers();
+          // Backup online scollegato: le copie su Dropbox contengono le abitudini, e per riaverle serve l'account
+          if (cloud && typeof cloud.disconnectAll === 'function') await cloud.disconnectAll();
+          const usage = await storage.getAllRecords('usage');
+          await storage.deleteRecords('usage', usage.map((r) => r.id));
+          const contexts = await storage.getAllRecords('contexts');
+          await storage.deleteRecords('contexts', contexts.filter((c) => c && c.kind === 'prediction').map((c) => c.id));
+          await security.privatePin.clearPin();
+          await security.setPrivateLock('none');
+        } catch (error) {
+          // Scrittura non riuscita (es. memoria piena): le altre schede ripartono, qui si può riprovare
+          if (resetChannel) resetChannel.postMessage('erased');
+          return t('privateEraseFailed');
+        }
+        if (resetChannel) resetChannel.postMessage('erased');
+        return true;
+      },
+    });
+    if (done === true) {
+      await runDialog({ title: t('privateErasedTitle'), help: t('privateErasedHelp'), primary: t('close') });
+      // Si riapre in Sicurezza solo se l'adulto è ancora lì (non dopo l'uscita automatica: davanti c'è il bambino)
+      if (app.mode === 'adult') reopenAfterReload('security');
+      else window.location.reload();
+    }
+  }
+
+  // Prima apertura della previsione (nessuna scelta salvata): si chiede chi può vederla.
+  // Restituisce false solo se l'adulto ha scelto il PIN e poi ha annullato la sua creazione.
+  async function askPrivateLock() {
+    const choice = await runPanelDialog({
+      title: t('privateAskTitle'),
+      help: t('privateAskHelp'),
+      className: 'menu-dialog',
+      build: (close) => {
+        const listNode = document.createElement('div');
+        listNode.className = 'menu-list';
+        [['none', 'privateAskNone', 'privateAskNoneDesc'], ['pin', 'privateAskPin', 'privateAskPinDesc']].forEach(([id, labelKey, descKey]) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'menu-item';
+          const text = document.createElement('span');
+          text.className = 'menu-item-text';
+          const name = document.createElement('strong');
+          name.textContent = t(labelKey);
+          const desc = document.createElement('span');
+          desc.textContent = t(descKey);
+          text.append(name, desc);
+          btn.append(text);
+          btn.addEventListener('click', () => close(id));
+          listNode.append(btn);
+        });
+        return listNode;
+      },
+    });
+    // Chiusa senza scegliere: si entra (nessuna protezione) e la domanda torna la prossima volta
+    if (choice === 'none') await security.setPrivateLock('none');
+    if (choice === 'pin') {
+      if (!(await createPinFlow(security.privatePin, PRIVATE_PIN_TEXTS))) return false;
+      await security.setPrivateLock('pin');
+      if (app.mode === 'adult') privateUnlocked = true;
+    }
+    refreshPrivate();
+    // Finestra chiusa dall'uscita automatica: le impostazioni non si aprono davanti al bambino
+    return app.mode === 'adult';
+  }
+
+  // Si può aprire questa categoria delle impostazioni?
+  async function canOpenCategory(id) {
+    if (!PRIVATE_CATEGORIES.has(id)) return true;
+    let ok;
+    if (id === 'prediction' && security.supported && !(await security.getPrivateLock()).chosen) {
+      ok = await askPrivateLock();
+    } else {
+      ok = await requestPrivateAccess();
+    }
+    // Mai impostazioni aperte se intanto si è tornati alla modalità bambino
+    return ok && app.mode === 'adult';
   }
 
   // ---------- Ingresso e uscita ----------
 
   function enterAdult() {
+    // Ogni ingresso parte con Previsione e Backup chiusi dal PIN privacy (se scelto)
+    privateUnlocked = false;
     app.setMode('adult');
     if (window.PicSpeak.profiles) window.PicSpeak.profiles.showProfileInBar();
     // Archiviazione persistente: sempre chiesta (al massimo una volta a settimana se il browser non la concede)
@@ -486,8 +654,18 @@
 
   function exitAdult() {
     if (closeCurrentDialog) closeCurrentDialog();
+    // Anche le finestre dell'adulto aperte sopra la scheda (modifica tessera, cerca simbolo, più tessere…) si chiudono:
+    // dopo i minuti senza tocchi davanti c'è il bambino. Ognuna si chiude come con Esc (le sue regole: un salvataggio
+    // in corso finisce da solo); quelle senza regole si chiudono e basta
+    document.querySelectorAll('dialog[open]').forEach((dialog) => {
+      if (dialog.dispatchEvent(new Event('cancel', { cancelable: true }))) dialog.close();
+    });
     closeSettings();
     clearTimeout(inactivityTimer);
+    // Uscendo, la previsione (se ha il PIN) si richiude e le impostazioni non si riaprono su di lei
+    privateUnlocked = false;
+    refreshPrivate();
+    if (PRIVATE_CATEGORIES.has(currentCategory)) currentCategory = 'general';
     app.setMode('child');
     el.adultBar.hidden = true;
     el.lock.hidden = false;
@@ -517,6 +695,11 @@
     const start = (event) => {
       if (event.type === 'pointerdown' && event.button !== 0) return;
       cancel();
+      // Durata 0: niente pressione lunga, il menu si apre al tocco (al rilascio, vedi «click») o con Invio
+      if (holdMs <= 0) {
+        if (event.type === 'keydown') openMainMenu();
+        return;
+      }
       el.lock.classList.add('is-holding');
       // La barra parte in cima allo schermo, dove il dito non la copre
       indicator.hidden = false;
@@ -541,6 +724,7 @@
     el.lock.addEventListener('keyup', (event) => {
       if (event.key === 'Enter' || event.key === ' ') cancel();
     });
+    el.lock.addEventListener('click', () => { if (holdMs <= 0) openMainMenu(); });
     el.lock.addEventListener('contextmenu', (event) => event.preventDefault());
   }
 
@@ -839,7 +1023,7 @@
       body.append(settingRow('optLock', `lockDesc_${lock.mode}`, segmented(choices, lock.mode, chooseLock)));
       if (lock.mode === 'pin') body.append(button(t('changePin'), changePinFlow, false));
 
-      // Durata della pressione sui tre puntini: da 1 a 10 secondi
+      // Durata della pressione sui tre puntini: da 0 (basta un tocco) a 10 secondi
       const row = document.createElement('label');
       row.className = 'settings-field';
       const text = document.createElement('span');
@@ -851,7 +1035,9 @@
       range.max = String(security.HOLD_SECONDS.max);
       range.step = '1';
       range.value = String(lock.holdSeconds);
-      const show = () => { value.textContent = t('holdSecondsValue').replace('{n}', range.value); };
+      const show = () => {
+        value.textContent = range.value === '0' ? t('holdSecondsTap') : t('holdSecondsValue').replace('{n}', range.value);
+      };
       show();
       range.addEventListener('input', show);
       range.addEventListener('change', async () => {
@@ -861,6 +1047,43 @@
       text.append(' ', value);
       row.append(text, range);
       body.append(row);
+    });
+  }
+
+  // PIN privacy: nessuno (scelta normale) o PIN privacy. Per toglierla o cambiarla serve
+  // il PIN privacy, altrimenti chi entra nelle impostazioni potrebbe semplicemente toglierla.
+  const PRIVATE_CHOICES = [['none', 'privateNone'], ['pin', 'privatePin']];
+
+  async function choosePrivateLock(mode) {
+    const current = await security.getPrivateLock();
+    if (mode === current.mode && current.chosen) return;
+    if (mode === 'pin') {
+      if (current.mode !== 'pin') {
+        if (!(await createPinFlow(security.privatePin, PRIVATE_PIN_TEXTS))) return;
+        if (app.mode === 'adult') privateUnlocked = true;
+      }
+    } else if (current.mode === 'pin') {
+      if (!(await requestPrivateAccess())) return;
+      await security.privatePin.clearPin();
+    }
+    await security.setPrivateLock(mode);
+    await refreshPrivate();
+    renderSettings();
+  }
+
+  async function changePrivatePinFlow() {
+    // Il PIN attuale si chiede dentro la finestra; dimenticato: si passa dall'apertura con il recupero
+    await changePinFlow(security.privatePin);
+  }
+
+  function renderPrivateLockSection() {
+    if (!security.supported) return;
+    const wrap = section('secPrivateTitle', 'secPrivateHelp');
+    const body = document.createElement('div');
+    wrap.append(body);
+    security.getPrivateLock().then((lock) => {
+      body.append(settingRow('optPrivate', `privateDesc_${lock.mode}`, segmented(PRIVATE_CHOICES, lock.mode, choosePrivateLock)));
+      if (lock.mode === 'pin') body.append(button(t('changePrivatePin'), changePrivatePinFlow, false));
     });
   }
 
@@ -911,18 +1134,45 @@
   }
 
   // Fonti dei simboli: ognuna con stile e "quando sceglierla"; attivazione salvata in 'symbolSources'.
-  // Mulberry e OpenMoji sono pacchetti: si scaricano una sola volta quando vengono attivati.
-  // Twemoji è una fonte online leggera (piccolo indice delle parole + un'immagine alla volta).
-  const SYMBOL_SOURCES = [
-    { id: 'arasaac', nameKey: 'srcArasaac', descKey: 'srcArasaacDesc' },
-    { id: 'mulberry', nameKey: 'srcMulberry', descKey: 'srcMulberryDesc', pack: true, approxMb: '3,8' },
-    { id: 'openmoji', nameKey: 'srcOpenmoji', descKey: 'srcOpenmojiDesc', pack: true, approxMb: '3,1' },
-    // Fonte online leggera: nessun pacchetto, si scarica solo il simbolo scelto
-    { id: 'twemoji', nameKey: 'srcTwemoji', descKey: 'srcTwemojiDesc', online: true },
-    { id: 'photo', nameKey: 'srcPhoto', descKey: 'srcPhotoDesc' },
-    // Promemoria: fonte pronta ma non attivabile finché il repository di Mada non dichiara una licenza
-    { id: 'tawasol', nameKey: 'srcTawasol', descKey: 'srcTawasolPending', pending: true },
+  // Divise in tre sezioni: online (ARASAAC e Twemoji, si cerca su internet ogni volta), pacchetti scaricabili
+  // (Mulberry e OpenMoji, scaricati una sola volta quando vengono attivati) e foto/fotocamera.
+  // site/license: link al sito di chi pubblica la raccolta e alla licenza (solo nelle impostazioni, dietro PIN).
+  const CC_BY_NC_SA = { label: 'CC BY-NC-SA 4.0', path: 'by-nc-sa/4.0' };
+  const CC_BY_SA = { label: 'CC BY-SA 4.0', path: 'by-sa/4.0' };
+  const CC_BY = { label: 'CC BY 4.0', path: 'by/4.0' };
+  const SYMBOL_SOURCE_GROUPS = [
+    { key: 'secSourcesOnline', titleKey: 'secSourcesOnlineTitle', helpKey: 'secSourcesOnlineHelp', sources: [
+      { id: 'arasaac', nameKey: 'srcArasaac', descKey: 'srcArasaacDesc', site: 'https://arasaac.org', license: CC_BY_NC_SA },
+      // Fonte online leggera: nessun pacchetto, si scarica solo il simbolo scelto
+      { id: 'twemoji', nameKey: 'srcTwemoji', descKey: 'srcTwemojiDesc', online: true,
+        site: 'https://github.com/jdecked/twemoji', license: CC_BY },
+    ] },
+    { key: 'secSourcesPacks', titleKey: 'secSourcesPacksTitle', helpKey: 'secSourcesPacksHelp', sources: [
+      { id: 'mulberry', nameKey: 'srcMulberry', descKey: 'srcMulberryDesc', pack: true, approxMb: '3,8',
+        site: 'https://mulberrysymbols.org', license: CC_BY_SA },
+      { id: 'openmoji', nameKey: 'srcOpenmoji', descKey: 'srcOpenmojiDesc', pack: true, approxMb: '3,1',
+        site: 'https://openmoji.org', license: CC_BY_SA },
+      // Promemoria: fonte pronta ma non attivabile finché il repository di Mada non dichiara una licenza
+      { id: 'tawasol', nameKey: 'srcTawasol', descKey: 'srcTawasolPending', pending: true },
+    ] },
+    { key: 'secSourcesPhoto', titleKey: 'secSourcesPhotoTitle', helpKey: 'secSourcesPhotoHelp', sources: [
+      { id: 'photo', nameKey: 'srcPhoto', descKey: 'srcPhotoDesc' },
+      { id: 'camera', nameKey: 'srcCamera', descKey: 'srcCameraDesc' },
+    ] },
   ];
+
+  // Riga piccola sotto la fonte: «Sito di …» e la licenza, aperti in una finestra separata
+  function sourceLinks(src) {
+    const line = document.createElement('small');
+    line.className = 'source-links';
+    const deed = i18n.language === 'it' ? 'deed.it' : 'deed.en';
+    line.append(
+      creditAnchor(src.site, t('srcSiteLink').replace('{name}', t(src.nameKey))),
+      ` · ${t('srcLicenseLabel')} `,
+      creditAnchor(`https://creativecommons.org/licenses/${src.license.path}/${deed}`, src.license.label),
+    );
+    return line;
+  }
 
   // Scaricamenti in corso: id → { done, total }; errori dell'ultimo tentativo: id → messaggio
   const packJobs = new Map();
@@ -1013,52 +1263,58 @@
   }
 
   async function renderSourcesSection() {
-    const wrap = section('secSourcesTitle', 'secSourcesHelp');
     const [saved, status] = await Promise.all([symbols.activeSources(), symbols.packStatus()]);
-    SYMBOL_SOURCES.forEach((src) => {
-      if (src.pending) {
-        const badge = document.createElement('span');
-        badge.className = 'setting-pending';
-        badge.textContent = t('srcPendingBadge');
-        const row = settingRow(src.nameKey, src.descKey, badge);
-        row.classList.add('is-pending');
-        wrap.append(row);
-        return;
-      }
-      const active = saved[src.id];
-      const helpKey = src.pack && !status[src.id] ? null : src.descKey;
-      const row = settingRow(src.nameKey, helpKey, segmented([['on', 'valOn2'], ['off', 'valOff2']], active ? 'on' : 'off',
-        async (value) => {
-          const next = { ...((await storage.get('symbolSources')) || {}), [src.id]: value === 'on' };
-          await storage.set('symbolSources', next);
-          if (src.pack && value === 'on' && !(await symbols.packStatus())[src.id]) {
-            startPackDownload(src.id);
-            return;
-          }
-          if (src.pack && value === 'off') {
-            packErrors.delete(src.id);
-            await symbols.removePack(src.id);
-          }
-          if (src.online && value === 'off') await symbols.removeSource(src.id);
-          // Indice delle parole (pochi KB) preparato subito se la rete lo consente, altrimenti alla prima ricerca
-          if (src.online && value === 'on' && !packNetworkProblem() && onlineSearchStatus() === 'allowed') {
-            symbols.loadSourceIndex(src.id, true).catch(() => {});
-          }
-          renderSettings();
-        }));
-      if (src.online) {
-        const help = row.querySelector('.setting-text small');
-        if (help) help.textContent = `${t(src.descKey)} ${t('srcOnlineLight')}`;
-      }
-      if (src.pack && !status[src.id]) {
-        // Descrizione con il peso del pacchetto, finché non è scaricato
-        const help = document.createElement('small');
-        help.textContent = `${t(src.descKey)} ${t('packSize').replace('{mb}', src.approxMb)}`;
-        row.querySelector('.setting-text').append(help);
-      }
-      wrap.append(row);
-      if (src.pack && active) wrap.append(packStatusLine(src, status));
+    SYMBOL_SOURCE_GROUPS.forEach((group) => {
+      const wrap = section(group.titleKey, group.helpKey, { key: group.key });
+      group.sources.forEach((src) => renderSourceRow(wrap, src, saved, status));
     });
+  }
+
+  function renderSourceRow(wrap, src, saved, status) {
+    if (src.pending) {
+      const badge = document.createElement('span');
+      badge.className = 'setting-pending';
+      badge.textContent = t('srcPendingBadge');
+      const row = settingRow(src.nameKey, src.descKey, badge);
+      row.classList.add('is-pending');
+      wrap.append(row);
+      return;
+    }
+    const active = saved[src.id];
+    const helpKey = src.pack && !status[src.id] ? null : src.descKey;
+    const row = settingRow(src.nameKey, helpKey, segmented([['on', 'valOn2'], ['off', 'valOff2']], active ? 'on' : 'off',
+      async (value) => {
+        const next = { ...((await storage.get('symbolSources')) || {}), [src.id]: value === 'on' };
+        await storage.set('symbolSources', next);
+        if (src.pack && value === 'on' && !(await symbols.packStatus())[src.id]) {
+          startPackDownload(src.id);
+          return;
+        }
+        if (src.pack && value === 'off') {
+          packErrors.delete(src.id);
+          await symbols.removePack(src.id);
+        }
+        if (src.online && value === 'off') await symbols.removeSource(src.id);
+        // Indice delle parole (pochi KB) preparato subito se la rete lo consente, altrimenti alla prima ricerca
+        if (src.online && value === 'on' && !packNetworkProblem() && onlineSearchStatus() === 'allowed') {
+          symbols.loadSourceIndex(src.id, true).catch(() => {});
+        }
+        renderSettings();
+      }));
+    const text = row.querySelector('.setting-text');
+    if (src.online) {
+      const help = text.querySelector('small');
+      if (help) help.textContent = `${t(src.descKey)} ${t('srcOnlineLight')}`;
+    }
+    if (src.pack && !status[src.id]) {
+      // Descrizione con il peso del pacchetto, finché non è scaricato
+      const help = document.createElement('small');
+      help.textContent = `${t(src.descKey)} ${t('packSize').replace('{mb}', src.approxMb)}`;
+      text.append(help);
+    }
+    if (src.site) text.append(sourceLinks(src));
+    wrap.append(row);
+    if (src.pack && active) wrap.append(packStatusLine(src, status));
   }
 
   // Crediti automatici: si elencano le fonti presenti sul dispositivo (ARASAAC c'è sempre: set incluso)
@@ -1210,6 +1466,8 @@
         values: [['rounded', 'valRoundedCorners'], ['square', 'valSquare']] },
       { key: 'cellOpacity', labelKey: 'optCellOpacity', helpKey: 'optCellOpacityHelp',
         values: [['solid', 'valSolid'], ['translucent', 'valTranslucent']] },
+      { key: 'touchFeedback', labelKey: 'optTouchFeedback', helpKey: 'optTouchFeedbackHelp',
+        values: [['on', 'valOn'], ['strong', 'valStrong'], ['off', 'valOff']] },
     ] },
     { titleKey: 'grpLayout', options: [
       { key: 'sentencePosition', labelKey: 'optSentencePosition',
@@ -1218,10 +1476,12 @@
         values: [['normal', 'valNormal'], ['l', 'valLarge'], ['xl', 'valXLarge']] },
       { key: 'controlsSide', labelKey: 'optControlsSide', helpKey: 'optControlsSideHelp',
         values: [['right', 'valRight'], ['left', 'valLeft']] },
-      { key: 'pageTitle', labelKey: 'optPageTitle',
+      { key: 'pageTitle', labelKey: 'optPageTitle', helpKey: 'optPageTitleHelp',
         values: [['shown', 'valShown'], ['hidden', 'valHidden']] },
-      { key: 'touchFeedback', labelKey: 'optTouchFeedback', helpKey: 'optTouchFeedbackHelp',
-        values: [['on', 'valOn'], ['strong', 'valStrong'], ['off', 'valOff']] },
+    ] },
+    // Gesti: si salvano con l'aspetto (stessa chiave «appearance», nessun cambio di formato),
+    // ma si mostrano in Impostazioni → Tocco e frase → Gesti (category: 'communication').
+    { titleKey: 'grpGestures', helpKey: 'grpGesturesHelp', category: 'communication', options: [
       { key: 'shakeHome', labelKey: 'optShakeHome', helpKey: 'optShakeHomeHelp',
         values: [['off', 'valNo'], ['on', 'valYes']] },
       { key: 'swipeClear', labelKey: 'optSwipeClear', helpKey: 'optSwipeClearHelp',
@@ -1504,28 +1764,32 @@
     return settingRow('optTileZoom', 'optTileZoomHelp', control);
   }
 
+  // Sezioni dell'aspetto mostrate nella pagina Aspetto (i gruppi con «category» stanno in un'altra pagina)
   function renderAppearanceGroups() {
-    APPEARANCE_GROUPS.forEach((group) => {
-      const wrap = section(group.titleKey);
-      if (group.titleKey === 'grpCells') wrap.append(tileZoomRow());
-      group.options.forEach((opt) => {
-        const current = appearance[opt.key] || opt.values[0][0];
-        wrap.append(settingRow(opt.labelKey, opt.helpKey, segmented(opt.values, current, async (value) => {
-          // iPad/iPhone chiedono il permesso per i sensori di movimento: va chiesto subito, dentro il tocco
-          if (opt.key === 'shakeHome' && value === 'on' && window.DeviceMotionEvent
-            && typeof DeviceMotionEvent.requestPermission === 'function') {
-            try {
-              if ((await DeviceMotionEvent.requestPermission()) !== 'granted') return;
-            } catch (error) {
-              return;
-            }
+    APPEARANCE_GROUPS.filter((group) => !group.category).forEach(renderAppearanceGroup);
+  }
+
+  // Una sezione di opzioni dell'aspetto (usata anche da Tocco e frase per la sezione «Gesti»)
+  function renderAppearanceGroup(group) {
+    const wrap = section(group.titleKey, group.helpKey);
+    if (group.titleKey === 'grpCells') wrap.append(tileZoomRow());
+    group.options.forEach((opt) => {
+      const current = appearance[opt.key] || opt.values[0][0];
+      wrap.append(settingRow(opt.labelKey, opt.helpKey, segmented(opt.values, current, async (value) => {
+        // iPad/iPhone chiedono il permesso per i sensori di movimento: va chiesto subito, dentro il tocco
+        if (opt.key === 'shakeHome' && value === 'on' && window.DeviceMotionEvent
+          && typeof DeviceMotionEvent.requestPermission === 'function') {
+          try {
+            if ((await DeviceMotionEvent.requestPermission()) !== 'granted') return;
+          } catch (error) {
+            return;
           }
-          appearance = { ...appearance, [opt.key]: value };
-          applyAppearance();
-          await storage.set('appearance', appearance);
-          renderSettings();
-        })));
-      });
+        }
+        appearance = { ...appearance, [opt.key]: value };
+        applyAppearance();
+        await storage.set('appearance', appearance);
+        renderSettings();
+      })));
     });
   }
 
@@ -1591,7 +1855,7 @@
     { id: 'voice', icon: '<path d="M11 5 6.5 9H3.5v6h3L11 19z"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>', titleKey: 'catVoice', introKey: 'catVoiceIntro',
       render: [renderVoiceSection] },
     { id: 'security', icon: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/>', titleKey: 'catSecurity', introKey: 'catSecurityIntro', deviceWide: true,
-      render: [renderSecuritySection, renderKeepDataSection, renderGuidedSection] },
+      render: [renderSecuritySection, renderPrivateLockSection, renderKeepDataSection, renderGuidedSection] },
     { id: 'coming', icon: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><circle cx="12" cy="12" r="4"/>', titleKey: 'catComing', introKey: 'catComingIntro',
       render: [renderComingSection] },
   ];
@@ -1638,7 +1902,9 @@
       chevron.setAttribute('aria-hidden', 'true');
       chevron.textContent = '›';
       btn.append(icon, label, chevron);
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
+        // Previsione e Backup: PIN privacy, se scelto (alla prima apertura della previsione, la domanda)
+        if (!(await canOpenCategory(cat.id))) return;
         currentCategory = cat.id;
         showPanelOnPhone = true;
         renderSettings();
@@ -1679,11 +1945,14 @@
   }
 
 
-  // categoryId (facoltativo): apre direttamente quella categoria (es. 'prediction' dal pulsante del contesto)
-  function openSettings(categoryId) {
+  // categoryId (facoltativo): apre direttamente quella categoria (es. 'prediction' dal pulsante del contesto).
+  // Restituisce false se la categoria chiede il PIN privacy e l'adulto annulla: nulla cambia.
+  async function openSettings(categoryId) {
+    const wanted = typeof categoryId === 'string' && CATEGORIES.some((cat) => cat.id === categoryId) ? categoryId : null;
+    if (wanted && !(await canOpenCategory(wanted))) return false;
     showPanelOnPhone = false;
-    if (typeof categoryId === 'string' && CATEGORIES.some((cat) => cat.id === categoryId)) {
-      currentCategory = categoryId;
+    if (wanted) {
+      currentCategory = wanted;
       showPanelOnPhone = true;
     }
     renderSettings();
@@ -1691,6 +1960,7 @@
     document.body.classList.add('settings-open');
     el.settings.scrollTop = 0;
     el.settingsBack.focus();
+    return true;
   }
 
   function closeSettings() {
@@ -1710,7 +1980,9 @@
 
   function reopenAfterReload(categoryId) {
     try {
-      sessionStorage.setItem(REOPEN_KEY, JSON.stringify({ at: Date.now(), category: String(categoryId), path: location.pathname }));
+      sessionStorage.setItem(REOPEN_KEY, JSON.stringify({
+        at: Date.now(), category: String(categoryId), path: location.pathname, private: privateUnlocked,
+      }));
     } catch (error) {
       // Senza sessionStorage si riapre sulla comunicazione: l'adulto rientra con il PIN
     }
@@ -1730,6 +2002,9 @@
     if (age < 0 || age > REOPEN_MS || saved.path !== location.pathname) return;
     if (window.top !== window.self) return;
     enterAdult();
+    // Il PIN privacy appena inserito non si chiede di nuovo (stesso segno, valido una volta sola)
+    if (saved.private === true) privateUnlocked = true;
+    refreshPrivate();
     openSettings(saved.category);
   }
 
@@ -1737,7 +2012,7 @@
 
   function bindEvents() {
     bindLock();
-    el.openSettings.addEventListener('click', openSettings);
+    el.openSettings.addEventListener('click', () => openSettings());
     el.exitAdult.addEventListener('click', exitAdult);
     // "Indietro": su telefono, dal contenuto di una categoria torna all'elenco; altrimenti chiude
     zoomEl.in.addEventListener('click', () => stepTileZoom(1));
@@ -1852,12 +2127,20 @@
     runDialog,
     runPanelDialog,
     requestAccess: requestAdultAccess,
+    // PIN privacy (se scelto) prima di ciò che mostra o porta fuori le abitudini del bambino (es. un backup)
+    requestPrivateAccess,
+    privateHidden,
     // Dal tutorial: entra (con la protezione in uso) e apre la scelta della protezione
     async openSecurity() {
       await requestAdultAccess();
       if (app.mode === 'adult') openSettings('security');
     },
     render: () => { if (!el.settings.hidden) renderSettings(); },
+    // Sezione di opzioni dell'aspetto che appartiene a un'altra pagina (per ora: «Gesti» in Tocco e frase)
+    renderAppearanceGroup(titleKey) {
+      const group = APPEARANCE_GROUPS.find((g) => g.titleKey === titleKey);
+      if (group) renderAppearanceGroup(group);
+    },
     closeSettings,
     openSettings,
     reopenAfterReload,
@@ -1871,6 +2154,7 @@
 
   bindEvents();
   security.getLock().then((lock) => { holdMs = lock.holdSeconds * 1000; }).catch(() => {});
+  refreshPrivate();
   restoreSectionState();
   restoreOnlineSearch();
   restorePageBackground();
