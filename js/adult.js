@@ -1480,7 +1480,7 @@
         values: [['shown', 'valShown'], ['hidden', 'valHidden']] },
     ] },
     // Gesti: si salvano con l'aspetto (stessa chiave «appearance», nessun cambio di formato),
-    // ma si mostrano in Impostazioni → Tocco e frase → Gesti (category: 'communication').
+    // ma si mostrano in Impostazioni → Tocco → Gesti (category: 'communication').
     { titleKey: 'grpGestures', helpKey: 'grpGesturesHelp', category: 'communication', options: [
       { key: 'shakeHome', labelKey: 'optShakeHome', helpKey: 'optShakeHomeHelp',
         values: [['off', 'valNo'], ['on', 'valYes']] },
@@ -1769,7 +1769,7 @@
     APPEARANCE_GROUPS.filter((group) => !group.category).forEach(renderAppearanceGroup);
   }
 
-  // Una sezione di opzioni dell'aspetto (usata anche da Tocco e frase per la sezione «Gesti»)
+  // Una sezione di opzioni dell'aspetto (usata anche dalla pagina Tocco per la sezione «Gesti»)
   function renderAppearanceGroup(group) {
     const wrap = section(group.titleKey, group.helpKey);
     if (group.titleKey === 'grpCells') wrap.append(tileZoomRow());
@@ -2136,7 +2136,7 @@
       if (app.mode === 'adult') openSettings('security');
     },
     render: () => { if (!el.settings.hidden) renderSettings(); },
-    // Sezione di opzioni dell'aspetto che appartiene a un'altra pagina (per ora: «Gesti» in Tocco e frase)
+    // Sezione di opzioni dell'aspetto che appartiene a un'altra pagina (per ora: «Gesti» in Tocco)
     renderAppearanceGroup(titleKey) {
       const group = APPEARANCE_GROUPS.find((g) => g.titleKey === titleKey);
       if (group) renderAppearanceGroup(group);
@@ -2146,6 +2146,11 @@
     reopenAfterReload,
     addBanner: (make) => { banners.push(make); },
     // Nuova categoria nel menu delle impostazioni, dopo quella indicata
+    // Sezione in più in una categoria esistente (es. «Frase» in Voce e frase, da communication.js)
+    addSection(categoryId, render) {
+      const category = CATEGORIES.find((cat) => cat.id === categoryId);
+      if (category) category.render.push(render);
+    },
     addCategory(category, afterId) {
       const index = CATEGORIES.findIndex((cat) => cat.id === afterId);
       CATEGORIES.splice(index < 0 ? CATEGORIES.length : index + 1, 0, category);
