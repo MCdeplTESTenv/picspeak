@@ -245,6 +245,7 @@
     const info = folderBackup.info();
     if (!info) {
       wrap.append(ui.settingRow('folderChoose', 'folderChooseHelp', ui.button(t('folderChooseBtn'), chooseFolder, true)));
+      wrap.append(ui.settingRow('folderCloud', 'folderCloudHelp', el('span')));
       wrap.append(ui.settingRow('folderKeep', 'folderAllowHelp', el('span')));
       return;
     }
