@@ -85,6 +85,7 @@ const APP_FILES = [
   'js/communication.js',
   'js/backup.js',
   'js/cloud.js',
+  'js/folder-backup.js',
   'js/settings-backup.js',
   'js/profiles.js',
   'js/print.js',
