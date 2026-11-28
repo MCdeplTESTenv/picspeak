@@ -121,6 +121,8 @@
   // Scrive subito la copia del profilo in uso. ask: si può chiedere il permesso (solo dopo un tocco dell'adulto)
   async function writeNow(ask = false) {
     if (running) return running;
+    // Archivio del browser guasto: in memoria potrebbero esserci solo le schede di prova, mai sopra la copia buona
+    if (storage.saveProblem && storage.saveProblem()) return false;
     const e = entry();
     if (!e) return false;
     running = (async () => {

@@ -118,6 +118,8 @@
    * Usata anche prima di «Ripristina tutto» e di «Cancella tutto».
    */
   async function saveBackup(where = 'local') {
+    // Archivio guasto: in memoria potrebbero esserci solo le schede di prova, mai un backup fatto con quelle
+    if (storage.saveProblem()) { await ui.showStorageProblem(); return false; }
     // Il backup contiene le abitudini del bambino: con il PIN privacy serve anche qui (es. dal promemoria)
     if (ui.requestPrivateAccess && !(await ui.requestPrivateAccess())) return false;
     const values = await ui.runDialog({
@@ -792,6 +794,7 @@
   }
 
   async function restoreFromDropbox() {
+    if (storage.saveProblem()) { await ui.showStorageProblem(); return; }
     const account = await pickAccount();
     if (account === null) return;
     showBusy(t('cloudListing'), 'restore');
@@ -1123,6 +1126,7 @@
    * altrimenti si apre subito la scelta del file.
    */
   async function restoreBackup() {
+    if (storage.saveProblem()) { await ui.showStorageProblem(); return; }
     let filePicked = null;
     if (cloud && cloud.isConfigured() && cloud.listAccounts().length) {
       const from = await ui.runPanelDialog({

@@ -795,6 +795,8 @@
   }
 
   async function syncNow() {
+    // Archivio guasto: in memoria potrebbero esserci solo le schede di prova, che non devono andare su Dropbox
+    if (storage.saveProblem()) return;
     const profileId = currentProfileId();
     if (!profileId || !enabledHere() || profileId === holding) return;
     const folder = folderOf(profileId);
@@ -1324,6 +1326,8 @@
     if (!profileId || !enabledHere()) throw new CloudError('auth');
     // In attesa della scelta «continuare con un profilo già su Dropbox?»: nessuna cartella prima della risposta
     if (profileId === holding) throw new CloudError('held');
+    // Archivio guasto: nessuna copia di quello che c'è in memoria (potrebbero essere solo le schede di prova)
+    if (storage.saveProblem()) throw new CloudError('storage');
     if (running) await running.catch(() => {});
     const folder = folderOf(profileId);
     if (!(await findFolder(folder, true))) {
