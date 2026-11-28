@@ -201,6 +201,20 @@
     }
   }
 
+  /*
+   * Griglia con righe fisse senza caselle libere: non si aggiungono né si portano dentro altre tessere (la griglia
+   * non cresce). Vale anche per una pagina con più tessere della griglia scelta (vedi overflowPages).
+   */
+  function isFull(pageRecord) {
+    if (!hasFixedRows(pageRecord)) return false;
+    return firstFreeSlot(pageRecord).row >= pageRecord.grid.fixedRows;
+  }
+
+  // Righe minime per tenere tutte le tessere di una pagina con un certo numero di colonne
+  function minRowsFor(pageRecord, cols) {
+    return Math.max(1, Math.ceil(pageRecord.cells.length / Math.max(1, cols || DEFAULT_COLS)));
+  }
+
   // Righe della griglia: quelle occupate; con le righe fisse almeno quelle scelte dall'adulto
   function updateRows(pageRecord) {
     const maxRow = pageRecord.cells.reduce((max, c) => Math.max(max, c.row), -1);
@@ -523,6 +537,8 @@
     const cell = from && from.cells.find((c) => c.id === cellId);
     if (!cell || !page(toPageId) || toPageId === fromPageId) return false;
     if (cell.kind === 'folder' && cell.targetPageId && pagesUnder(cell.targetPageId).has(toPageId)) return false;
+    // Griglia piena (righe fisse): non entra nulla
+    if (isFull(page(toPageId))) return false;
     return true;
   }
 
@@ -641,6 +657,11 @@
       changed += 1;
     }
     return changed;
+  }
+
+  // Pagine con righe fisse e più tessere di quante ne entrano: tengono tutte le tessere in righe in più
+  function overflowPages() {
+    return [...model.pages.values()].filter((p) => hasFixedRows(p) && p.grid.rows > p.grid.fixedRows);
   }
 
   // La pagina torna a seguire la griglia generale
@@ -788,8 +809,12 @@
     planMove,
     moveToSlot,
     setEmptySlot,
+    isFull,
+    minRowsFor,
+    overflowPages,
     hasFixedRows,
     layoutOf,
+    cleanLayout,
     sameLayout,
     setPageLayout,
     gridDefault,

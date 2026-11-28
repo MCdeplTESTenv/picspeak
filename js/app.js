@@ -163,7 +163,10 @@
       }
       return button;
     });
-    if (editing) {
+    // Griglia con righe fisse piena: niente "+" (la griglia non cresce); in modifica lo dice un avviso sopra la griglia
+    const full = editing && data.isFull(page);
+    showGridFull(full ? page : null);
+    if (editing && !full) {
       const add = document.createElement('button');
       add.type = 'button';
       add.className = 'symbol-cell add-cell';
@@ -207,6 +210,24 @@
     el.grid.dataset.count = String(cells.length);
     layoutGrid();
     applySuggestions();
+  }
+
+  // Avviso «Griglia piena (4×2)» sopra la griglia, solo con le impostazioni sbloccate (mai nella schermata del bambino)
+  let fullNode = null;
+  function showGridFull(page) {
+    if (!page) {
+      if (fullNode) fullNode.hidden = true;
+      return;
+    }
+    if (!fullNode) {
+      fullNode = document.createElement('p');
+      fullNode.className = 'grid-full-note';
+      fullNode.setAttribute('role', 'status');
+      el.grid.before(fullNode);
+    }
+    fullNode.textContent = t('gridFullNote').replace('{cols}', () => String(page.grid.cols))
+      .replace('{rows}', () => String(page.grid.fixedRows));
+    fullNode.hidden = false;
   }
 
   // Breve avviso in basso (es. «Spostata in Cibo»), letto anche dai lettori di schermo
@@ -458,7 +479,7 @@
     // Le righe previste dalla pagina restano anche se le ultime tessere sono nascoste: le misure non cambiano
     let rows = Math.max(1, page.grid.rows || 1, ...placed.map((n) => Number(n.dataset.row) + 1));
     // In modifica la tessera "+" occupa la prima casella libera: se la griglia è piena serve una riga in più
-    if (el.grid.querySelector('.add-cell') && placed.length >= rows * cols) rows += 1;
+    if (el.grid.querySelector('.add-cell') && placed.length >= rows * cols && !data.hasFixedRows(page)) rows += 1;
     const cellH = Math.max(ZOOM.minTile, (metrics.height - metrics.gap * (rows - 1)) / rows);
     return { cols, rows, cellW, cellH };
   }

@@ -909,6 +909,7 @@ body { background: var(--page-bg, var(--bg)); }
 body > .sentence-bar { order: 1; }
 body > .page-nav { order: 2; }
 body > .symbol-grid { order: 3; }
+body > .grid-full-note { order: 3; }
 body > .adult-bar { order: 0; }
 body > .storage-warning { order: 0; }
 [data-sentence-position="bottom"] body > .sentence-bar { order: 4; border-bottom: 0; border-top: 2px solid var(--border); }
@@ -1358,6 +1359,21 @@ body > .storage-warning { order: 0; }
 /* Righe della griglia: «Libere / Fisse» e, con le righe fisse, il loro numero */
 .grid-rows-control { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .grid-custom-list strong { color: #3a3f47; }
+/* Griglia piena (righe fisse), solo in modifica: avviso sopra la griglia (app.js) */
+.grid-full-note {
+  margin: 0 16px 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #fff4e0;
+  color: #6b4200;
+  font-size: 14px;
+  line-height: 1.35;
+}
+.grid-full-note[hidden] { display: none; }
+body:not(.mode-adult) .grid-full-note { display: none; }
+/* Griglia della cartella nella sua finestra: stesse scelte della griglia generale */
+.editor-grid-box { display: flex; flex-direction: column; gap: 8px; }
+.editor-grid-box .setting-row { padding: 6px 0; }
 /* Su telefono le scelte a segmenti si dispongono in colonne regolari a tutta larghezza */
 @media (max-width: 720px) {
   .segmented { display: grid; grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); width: 100%; }

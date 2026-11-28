@@ -223,6 +223,14 @@
     }
     let target = under && under.closest('.symbol-cell');
     if (!target || !grid.contains(target) || target === drag.cell || target.classList.contains('reorder-ghost')) target = null;
+    // Al centro di una cartella con la griglia piena: non si può lasciare dentro, e un avviso lo dice (una volta)
+    if (target && target.dataset.folder && drag.fullNotice !== target.dataset.folder) {
+      const inside = data.page(target.dataset.folder);
+      if (inside && data.isFull(inside)) {
+        drag.fullNotice = target.dataset.folder;
+        app.notice(i18n.t('dropFolderFull').replace('{name}', () => inside.title));
+      }
+    }
     // Sopra una cartella: al centro la tessera va dentro; sul bordo, dopo una breve attesa, si scambiano i posti
     if (target && target.dataset.folder && canDropOn(target.dataset.folder)) {
       const r = target.getBoundingClientRect();

@@ -366,6 +366,46 @@
     optionsField.append(rowSilent);
     form.append(optionsField);
 
+    // Cartella esistente: la griglia della sua pagina, «Come la generale» o «Personalizzata» (si salva con «Salva»)
+    const folderPage = !isNew && cell.kind === 'folder' ? data.page(cell.targetPageId) : null;
+    const boardsUi = window.PicSpeak.boardsUi;
+    if (folderPage && boardsUi) {
+      const gridField = el('div', 'editor-block editor-grid');
+      gridField.append(el('span', 'editor-block-title', t('editorGrid')));
+      const gridBox = el('div', 'editor-grid-box');
+      gridField.append(gridBox);
+      form.append(gridField);
+      const own = data.layoutOf(folderPage);
+      const describe = (layout) => {
+        if (!layout.fixed) return t('valLayoutAuto');
+        return layout.rows ? `${layout.cols} × ${layout.rows}` : t('gridColsOnly').replace('{cols}', () => String(layout.cols));
+      };
+      const renderGrid = () => {
+        gridBox.replaceChildren();
+        gridBox.append(segmentedChoice([['general', t('valGridGeneral')], ['custom', t('valGridCustom')]], draft.gridMode,
+          (value) => {
+            draft.gridMode = value;
+            // «Personalizzata» parte dai valori della griglia generale (o da quelli della cartella, se già sua)
+            if (value === 'custom' && !draft.layout) draft.layout = { ...draft.general };
+            renderGrid();
+          }));
+        if (draft.gridMode === 'general') {
+          gridBox.append(el('small', 'editor-hint', t('editorGridGeneralHint').replace('{grid}', () => describe(draft.general))));
+          return;
+        }
+        boardsUi.gridControls(gridBox, { ...draft.layout, suggestedRows: folderPage.grid.rows }, (next) => {
+          draft.layout = next;
+          renderGrid();
+        }, { withHelp: false, count: folderPage.cells.length });
+      };
+      data.gridDefault().then((general) => {
+        draft.general = general;
+        draft.gridMode = data.sameLayout(own, general) ? 'general' : 'custom';
+        draft.layout = draft.gridMode === 'custom' ? own : null;
+        renderGrid();
+      }).catch(() => { gridField.hidden = true; }); // senza griglia generale la voce non si mostra (nulla si cambia)
+    }
+
     // Dove si trova (tessere esistenti): scegliendo un'altra cartella la tessera si sposta lì
     if (!isNew) {
       const placeField = el('div', 'editor-block');
@@ -374,6 +414,8 @@
         const option = el('option', null, `${'\u00a0\u00a0\u00a0'.repeat(depth)}${depth ? '› ' : ''}${depth ? title : t('editorPlaceHome')}`);
         option.value = id;
         option.disabled = id !== pageId && !data.canMoveCellTo(pageId, cell.id, id);
+        // Cartella con la griglia piena (righe fisse): non ci entra nulla, e si dice perché
+        if (id !== pageId && data.isFull(data.page(id))) option.textContent += ` (${t('editorPlaceFull')})`;
         option.selected = id === pageId;
         select.append(option);
       });
@@ -469,6 +511,14 @@
         if (cell.kind !== 'folder') Object.assign(changes, { speak, wordType: draft.wordType });
         else changes.silent = draft.silent;
         await data.updateCell(pageId, cell.id, changes);
+        // Griglia della cartella: solo se è cambiata
+        if (folderPage && draft.general) {
+          const before = data.layoutOf(folderPage);
+          const next = draft.gridMode === 'general' || !draft.layout ? draft.general : draft.layout;
+          if (!data.sameLayout(before, data.cleanLayout(next))) {
+            await data.setPageLayout(folderPage.id, next);
+          }
+        }
         // Spostata in un'altra cartella
         if (draft.placePageId && draft.placePageId !== pageId) {
           const moved = await data.moveCellToPage(pageId, cell.id, draft.placePageId);

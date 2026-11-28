@@ -65,18 +65,22 @@
    * Il tipo di parola si propone come nella tessera singola: dal lessico, poi da ARASAAC, altrimenti «cosa».
    * Se un'immagine non arriva la tessera si crea lo stesso, solo con la parola.
    * Restituisce { created, withoutImage, skipped } (withoutImage = parole il cui simbolo non è arrivato;
-   * skipped = parole non create perché la pagina ha già 400 tessere).
+   * skipped = parole non create perché la pagina ha già 400 tessere; full = parole non create perché la griglia
+   * con le righe fisse è piena).
    */
   async function createTiles(pageId, rows, onProgress) {
     if (!data.page(pageId)) throw new Error('page-missing');
     const created = [];
     const withoutImage = [];
     let skipped = 0;
+    let full = 0;
     for (let i = 0; i < rows.length; i += 1) {
       const { word, result } = rows[i];
       const label = String(word || '').trim().slice(0, MAX_LABEL);
       if (!label) continue;
       if (data.page(pageId).cells.length >= MAX_CELLS) { skipped += 1; continue; }
+      // Griglia con righe fisse piena: le parole in più non si creano (la griglia non cresce)
+      if (data.isFull(data.page(pageId))) { full += 1; continue; }
       if (onProgress) onProgress(i + 1, rows.length);
       let imageId = null;
       if (result) {
@@ -92,7 +96,7 @@
       const wordType = [guessed, result && result.wordType].find((w) => w && data.WORD_TYPES.includes(w)) || 'noun';
       created.push(await data.addCell(pageId, { label, wordType, imageId }));
     }
-    return { created, withoutImage, skipped };
+    return { created, withoutImage, skipped, full };
   }
 
   // ---------- Interfaccia ----------
@@ -330,7 +334,7 @@
         go.disabled = true;
         cancel.disabled = true;
         try {
-          const { created, withoutImage, skipped } = await createTiles(pageId, chosen.map((r) => ({ word: r.word, result: r.chosen })),
+          const { created, withoutImage, skipped, full } = await createTiles(pageId, chosen.map((r) => ({ word: r.word, result: r.chosen })),
             (n, total) => { create.textContent = t('bulkCreating').replace('{n}', () => String(n)).replace('{total}', () => String(total)); });
           const message = t('bulkDone').replace('{n}', () => String(created.length));
           finish(created.length);
@@ -340,6 +344,7 @@
             const extra = [];
             if (withoutImage.length) extra.push(t('bulkSomeWithoutImage').replace('{n}', () => String(withoutImage.length)));
             if (skipped) extra.push(t('bulkPageFull').replace('{n}', () => String(skipped)).replace('{max}', () => String(MAX_CELLS)));
+            if (full) extra.push(t('bulkGridFull').replace('{n}', () => String(full)));
             app.notice([message, ...extra].join(' '));
           }
         } catch (error) {
