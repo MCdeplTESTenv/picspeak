@@ -2466,3 +2466,11 @@ body > .adult-bar { order: 0; }
   text-transform: uppercase;
   white-space: nowrap;
 }
+
+/* Riga di navigazione (freccia «indietro» e percorso): ogni tocco è di almeno 64 px, come chiede l'accessibilità.
+   Il margine sopra e sotto la riga si riduce per compensare: le tessere non scendono (anzi salgono un poco). */
+.page-nav { padding-top: 6px; padding-bottom: 0; }
+@media (max-height: 500px) { .page-nav { padding-top: 2px; } }
+.nav-up { min-height: 64px; min-width: 64px; }
+.crumbs { padding-top: 0; padding-bottom: 0; }
+.crumbs button { min-height: 64px; min-width: 64px; justify-content: center; }
