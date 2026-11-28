@@ -910,6 +910,7 @@ body > .sentence-bar { order: 1; }
 body > .page-nav { order: 2; }
 body > .symbol-grid { order: 3; }
 body > .adult-bar { order: 0; }
+body > .storage-warning { order: 0; }
 [data-sentence-position="bottom"] body > .sentence-bar { order: 4; border-bottom: 0; border-top: 2px solid var(--border); }
 
 /* Pulsanti della frase a sinistra (utile per chi usa la mano sinistra) */
@@ -2449,6 +2450,14 @@ body > .adult-bar { order: 0; }
 @media (max-width: 720px) {
   .settings-banner { margin-bottom: 12px; }
 }
+/* Archivio del dispositivo che non risponde: avviso sotto la barra dell'adulto e in cima alle impostazioni */
+.storage-warning {
+  margin: 0; padding: 10px 16px;
+  background: #fde8e8; color: #5c0b0b;
+  border-bottom: 2px solid #e5a3a3;
+  font-size: 16px; line-height: 1.4;
+}
+.settings-banner.is-alert { background: #fde8e8; color: #5c0b0b; border-color: #e5a3a3; }
 /* Conservazione dei dati (Sicurezza): scelta fissa, mostrata come etichetta e non come interruttore */
 .setting-status.keep-data-on {
   align-self: flex-start; padding: 6px 12px; border-radius: 999px;
