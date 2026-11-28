@@ -1510,6 +1510,11 @@
         values: [['right', 'valRight'], ['left', 'valLeft']] },
       { key: 'pageTitle', labelKey: 'optPageTitle', helpKey: 'optPageTitleHelp',
         values: [['shown', 'valShown'], ['hidden', 'valHidden']] },
+      // Barra del percorso: spazio bianco uguale sopra e sotto, e grandezza di freccia e HOME
+      { key: 'navSpace', labelKey: 'optNavSpace', helpKey: 'optNavSpaceHelp',
+        values: [['normal', 'valNormal'], ['tight', 'valTight'], ['wide', 'valWide']] },
+      { key: 'navSize', labelKey: 'optNavSize', helpKey: 'optNavSizeHelp',
+        values: [['normal', 'valNormal'], ['l', 'valLarge']] },
     ] },
     // Gesti: si salvano con l'aspetto (stessa chiave «appearance», nessun cambio di formato),
     // ma si mostrano in Impostazioni → Tocco → Gesti (category: 'communication').
@@ -1525,7 +1530,9 @@
 
   function applyAppearance() {
     APPEARANCE_OPTIONS.forEach((opt) => {
-      const value = appearance[opt.key] || opt.values[0][0];
+      // Solo valori ammessi (un backup può contenere altro): altrimenti la scelta normale
+      const ok = opt.values.some(([v]) => v === appearance[opt.key]);
+      const value = ok ? appearance[opt.key] : opt.values[0][0];
       document.documentElement.dataset[opt.key] = value;
     });
     applyImageZoom();
@@ -1563,7 +1570,7 @@
   }
 
   // Scelte che gli stili pronti non cambiano (dipendono dalla persona, non dallo stile)
-  const KEPT_BY_PRESETS = ['sentenceSize'];
+  const KEPT_BY_PRESETS = ['sentenceSize', 'navSpace', 'navSize'];
 
   // Uno stile è "attivo" se tutte le scelte coincidono con le sue
   function presetMatches(preset) {

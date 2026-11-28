@@ -2467,11 +2467,20 @@ body > .adult-bar { order: 0; }
   white-space: nowrap;
 }
 
-/* Riga di navigazione: freccia, percorso e «…» un poco più in basso, così lo spazio bianco sopra (sotto la frase)
-   e sotto (sopra le tessere) è uguale. Il margine negativo sotto compensa: le tessere restano dove sono. */
-.page-nav { padding-top: 18px; padding-bottom: max(0px, calc(12px - var(--gap))); min-height: 0; }
+/* Riga di navigazione (freccia, percorso, «…»): lo stesso spazio bianco sopra (sotto la frase) e sotto (sopra le
+   tessere), scelto in Aspetto › «Spazio intorno al percorso». Sotto, la griglia ha già il suo margine (circa
+   --gap + 6 px): il margine della riga lo compensa, anche in negativo. */
+:root { --nav-space: 18px; }
+[data-nav-space="tight"] { --nav-space: 10px; }
+[data-nav-space="wide"] { --nav-space: 26px; }
+.page-nav { padding-top: var(--nav-space); padding-bottom: 0; margin-bottom: calc(var(--nav-space) - var(--gap) - 6px); min-height: 0; }
+/* Grandezza normale: i pulsanti da 64 px (es. «…») contano come 48, l'altezza di freccia e percorso; i pulsanti
+   rapidi no: quando ci sono, la riga è alta come loro e lo spazio si misura da loro */
 .page-nav > :not(.quick-bar) { margin-top: -8px; margin-bottom: -8px; }
-/* Con i pulsanti rapidi (alti 64 px) la riga è già più alta: meno margine sopra, le tessere non scendono */
-@media (min-width: 641px) { .page-nav:has(.quick-bar:not([hidden])) { padding-top: 10px; } }
+/* Grandezza «Grande»: freccia e HOME alti 64 px */
+[data-nav-size="l"] .page-nav > :not(.quick-bar) { margin-top: 0; margin-bottom: 0; }
+[data-nav-size="l"] .nav-up { min-height: 64px; min-width: 64px; }
+[data-nav-size="l"] .crumbs { padding-top: 0; padding-bottom: 0; }
+[data-nav-size="l"] .crumbs button { min-height: 64px; min-width: 64px; justify-content: center; }
 /* Casetta del percorso leggermente più marcata */
 .crumb-home svg { stroke-width: 2.4; }
