@@ -730,7 +730,11 @@
         const own = extra.find((h) => h.deviceId === cloud.deviceId());
         if (choice.habits === 'replace') await predict.importData({ ...(own || { pairs: [], days: [], months: [] }), contexts: [], base: [] }, 'replace-counts');
       } else {
-        await predict.importData(parts.habits, choice.habits === 'replace' ? 'replace' : 'merge');
+        // Backup dello stesso profilo (per esempio la copia automatica nella cartella o su Dropbox): «Unisci» non somma
+        // i tocchi che ci sono già, altrimenti le statistiche raddoppierebbero. Un backup di un altro profilo si somma
+        const same = Boolean(info && info.profileId && data.profile && info.profileId === data.profile.id);
+        const merge = same ? 'merge-max' : 'merge';
+        await predict.importData(parts.habits, choice.habits === 'replace' ? 'replace' : merge);
         // Conteggi di ogni dispositivo, ognuno sommato una volta sola
         if (extra) for (const habits of extra) await predict.importData(habits, 'merge');
       }

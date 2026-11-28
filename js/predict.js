@@ -1226,13 +1226,16 @@
       const c = map.get(from);
       return c >= 0 ? (((c << 14) | (v & 0x3fff)) >>> 0) : null;
     };
+    // 'merge-max': il file è una copia dello stesso profilo (backup su file, nella cartella o su Dropbox): le voci che
+    // ci sono già sono gli stessi tocchi, quindi vale il conteggio più alto e niente si conta due volte
+    const join = mode === 'merge-max' ? Math.max : (a, b) => a + b;
     const mergeInto = (target, keyFn, entries) => {
       const m = new Map();
       (target || []).forEach((v) => m.set(v & ~255, (m.get(v & ~255) || 0) + (v & 255)));
       entries.forEach((v) => {
         const r = remap(v);
         if (r === null) return;
-        m.set(r & ~255, Math.min(MAX_COUNT, (m.get(r & ~255) || 0) + (r & 255)));
+        m.set(r & ~255, Math.min(MAX_COUNT, join(m.get(r & ~255) || 0, r & 255)));
       });
       const out = new Uint32Array(m.size);
       let i = 0;
@@ -1245,7 +1248,7 @@
           const r = remap(v);
           if (r === null) return;
           const key = (r >>> 14) * 32 + ((r >>> 8) & 31);
-          today.counts.set(key, Math.min(MAX_COUNT, (today.counts.get(key) || 0) + (r & 255)));
+          today.counts.set(key, Math.min(MAX_COUNT, join(today.counts.get(key) || 0, r & 255)));
         });
       } else days.set(day, mergeInto(days.get(day), null, entries));
       dirtyDays.add(day);
