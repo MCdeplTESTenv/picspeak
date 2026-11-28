@@ -1000,6 +1000,8 @@
       text.append(' ', value);
       row.append(text, range);
       wrap.append(row);
+      // Molte voci (spesso quelle «naturali», «migliorate» o solo con internet) ignorano il tono: lo si dice qui
+      if (key === 'pitch') wrap.append(list(t('pitchNote')));
     });
 
     wrap.append(button(t('voiceTest'), () => speech.speak(t('voiceSample'), i18n.speechLocale), true));
