@@ -77,7 +77,7 @@
   // Parte fissa del nome dei file, decisa alla scelta della cartella (cambiare nome al profilo non crea file nuovi)
   // Con un pezzo dell'id: due profili con lo stesso nome nella stessa cartella non si sovrascrivono
   function baseName(name, id) {
-    const tag = String(id).slice(-4).toLowerCase();
+    const tag = String(id).slice(-4);
     return backup.fileName(name, new Date(), 'profilo').replace(/-\d{4}-\d{2}-\d{2}-\d{4}\.picspeak$/, `-automatico-${tag}`);
   }
 
