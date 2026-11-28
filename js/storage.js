@@ -118,15 +118,25 @@
 
   /*
    * Le schede del profilo sono state lette dall'archivio (data.load): da qui in poi la memoria è affidabile.
-   * Si prende il timbro attuale dell'archivio come punto di partenza (un archivio senza timbro, di una versione
-   * precedente o appena svuotato, ne riceve uno subito).
+   * Punto di partenza: il timbro letto da data.load prima di leggere le schede (currentStamp), così una scrittura di
+   * un'altra scheda durante il caricamento fa fallire il confronto (lato prudente). Se questa sessione ha già scritto,
+   * vale il suo timbro; un archivio senza timbro (versione precedente o appena svuotato) ne riceve uno subito.
    */
-  async function markLoaded() {
+  async function currentStamp() {
+    try {
+      return await run(SETTINGS, 'readonly', (store) => store.get(STAMP_KEY));
+    } catch (error) {
+      return undefined;
+    }
+  }
+
+  async function markLoaded(startStamp) {
     if (broken) return;
     try {
-      const stamp = await run(SETTINGS, 'readonly', (store) => store.get(STAMP_KEY));
-      if (stamp === undefined) await run(SETTINGS, 'readwrite', () => {});
-      else lastStamp = stamp;
+      if (lastStamp === undefined) {
+        if (startStamp === undefined) await run(SETTINGS, 'readwrite', () => {});
+        else lastStamp = startStamp;
+      }
       if (!broken) loaded = true;
     } catch (error) {
       // Archivio guasto proprio adesso: le modifiche non si potranno recuperare (loaded resta false)
@@ -163,7 +173,10 @@
     let timedOut = false;
     const opening = new Promise((resolve, reject) => {
       if (!('indexedDB' in window)) {
-        reject(new Error('IndexedDB non disponibile'));
+        // Il browser non ha l'archivio: inutile riprovare
+        const error = new Error('IndexedDB non disponibile');
+        error.name = 'IdbMissing';
+        reject(error);
         return;
       }
       const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -200,7 +213,7 @@
         return await operation();
       } catch (error) {
         if (error && RECORD_ERRORS.has(error.name)) throw error;
-        if (broken || attempt >= RETRY_DELAYS_MS.length) {
+        if (broken || attempt >= RETRY_DELAYS_MS.length || (error && error.name === 'IdbMissing')) {
           markBroken();
           throw error;
         }
@@ -576,7 +589,12 @@
         });
         tx.objectStore(SETTINGS).put(stamp, STAMP_KEY);
       };
-      tx.oncomplete = () => { lastStamp = stamp; resolve(true); };
+      tx.oncomplete = () => {
+        // Chiusa senza aver controllato il timbro (lettura non riuscita): nulla è stato salvato, si resta in attesa
+        if (!aligned) { reject(new Error('timbro non letto')); return; }
+        lastStamp = stamp;
+        resolve(true);
+      };
       tx.onerror = (event) => { if (aligned) reject(tx.error); else event.preventDefault(); };
       tx.onabort = () => { if (aligned) reject(tx.error); else resolve(false); };
     });
@@ -635,7 +653,7 @@
   window.PicSpeak = window.PicSpeak || {};
   window.PicSpeak.storage = {
     name: DB_NAME, get, set, remove, clearAll, requestPersistence, persistenceStatus, keepData, getRecord, getAllRecords, putRecord, putRecords, deleteRecord,
-    getRecordsByPrefix, deleteRecords, onChange, saveProblem, onSaveProblem, isKnown, markLoaded, onReloadSuggested, tryRecover,
+    getRecordsByPrefix, deleteRecords, onChange, saveProblem, onSaveProblem, isKnown, markLoaded, currentStamp, onReloadSuggested, tryRecover,
     PROFILE_KEYS, activeProfileId, setActiveProfileId, newProfileId,
     getProfileSettings, setProfileSettings, removeProfileSettings,
   };
