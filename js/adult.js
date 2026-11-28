@@ -1991,6 +1991,12 @@
       chevron.setAttribute('aria-hidden', 'true');
       chevron.textContent = '›';
       btn.append(icon, label, chevron);
+      // Pallino: in questa categoria c'è qualcosa che chiede l'adulto (es. backup fermo); il testo per chi non vede
+      const alertText = typeof cat.alert === 'function' ? cat.alert() : '';
+      if (alertText) {
+        btn.classList.add('has-alert');
+        btn.setAttribute('aria-description', alertText);
+      }
       btn.addEventListener('click', async () => {
         // Previsione e Backup: PIN privacy, se scelto (alla prima apertura della previsione, la domanda)
         if (!(await canOpenCategory(cat.id))) return;
