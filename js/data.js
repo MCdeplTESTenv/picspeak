@@ -125,6 +125,8 @@
     model.profile = profile;
     model.pages = new Map(pages.filter((p) => p.profileId === profileId).map((p) => [p.id, p]));
     model.images = new Map(images.map((img) => [img.id, img]));
+    // Schede lette davvero dall'archivio: se poi si guasta, le modifiche in attesa si potranno salvare al ritorno
+    await storage.markLoaded();
     return model;
   }
 

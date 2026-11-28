@@ -875,7 +875,7 @@
       keepDataUnsupported: 'Questo browser non permette di chiederlo: fate backup regolari.',
       storageProblemTitle: 'PicSpeak non riesce a salvare su questo dispositivo.',
       cloudErr_storage: 'PicSpeak non riesce a salvare su questo dispositivo: chiudete e riaprite PicSpeak, poi riprovate.',
-      storageProblemText: 'Le modifiche fatte da adesso andranno perse alla chiusura. Chiudete e riaprite PicSpeak; se l’avviso resta, controllate di non essere in navigazione privata e che ci sia spazio libero. Finché c’è questo avviso backup e ripristino restano fermi.',
+      storageProblemText: 'PicSpeak riprova da solo e salva le modifiche appena riesce: di solito l’avviso sparisce in pochi secondi. Se resta a lungo, chiudete e riaprite PicSpeak (le ultime modifiche potrebbero perdersi) e controllate di non essere in navigazione privata e che ci sia spazio libero. Finché c’è questo avviso backup e ripristino restano fermi.',
       changePin: 'Cambia PIN',
       // Schede pronte, modelli, disposizione (Impostazioni → Schede)
       catBoards: 'Schede',
@@ -2159,7 +2159,7 @@
       keepDataUnsupported: 'This browser does not allow asking: make regular backups.',
       storageProblemTitle: 'PicSpeak cannot save on this device.',
       cloudErr_storage: 'PicSpeak cannot save on this device: close and reopen PicSpeak, then try again.',
-      storageProblemText: 'Changes made from now on will be lost when it closes. Close and reopen PicSpeak; if this message stays, check that you are not browsing privately and that there is free space. While this message is shown, backup and restore are paused.',
+      storageProblemText: 'PicSpeak keeps trying by itself and saves your changes as soon as it can: usually this message goes away within seconds. If it stays for long, close and reopen PicSpeak (the latest changes may be lost) and check that you are not browsing privately and that there is free space. While this message is shown, backup and restore are paused.',
       changePin: 'Change PIN',
       // Ready-made boards, templates, layout (Settings → Boards)
       catBoards: 'Boards',
